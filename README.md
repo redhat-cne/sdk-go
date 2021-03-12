@@ -1,2 +1,2 @@
 # sdk-go
-GO SDK for O-RAN Events API
+GO SDK for Cloud Native Events API
