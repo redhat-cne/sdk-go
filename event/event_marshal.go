@@ -58,9 +58,41 @@ func WriteJSON(in *Event, writer io.Writer) error {
 	if data != nil {
 		stream.WriteMore()
 		stream.WriteObjectField("data")
-		stream.WriteObjectStart()
+		if err:=writeJSONData(data,writer,stream);err!=nil{
+			return err
+		}
+	} else {
+		return fmt.Errorf("data is not set")
+	}
+	stream.WriteObjectEnd()
+	// Let's do a check on the error
+	if stream.Error != nil {
+		return fmt.Errorf("error while writing the event Data: %w", stream.Error)
+	}
 
-		data := in.GetData()
+	// Let's do a check on the error
+	if stream.Error != nil {
+		return fmt.Errorf("error while writing the event extensions: %w", stream.Error)
+	}
+	return stream.Flush()
+}
+
+// WriteDataJSON writes the in data in the provided writer.
+// Note: this function assumes the input event is valid.
+func WriteDataJSON(in *Data, writer io.Writer ) error {
+	stream := jsoniter.ConfigFastest.BorrowStream(writer)
+	defer jsoniter.ConfigFastest.ReturnStream(stream)
+	if err:=writeJSONData(in,writer,stream);err!=nil{
+		return err
+	}
+	return stream.Flush()
+}
+func writeJSONData(in *Data, writer io.Writer, stream *jsoniter.Stream ) error{
+	stream.WriteObjectStart()
+
+	// Let's write the body
+	if in != nil {
+		data := in
 		stream.WriteObjectField("version")
 		stream.WriteString(data.GetVersion())
 		stream.WriteMore()
@@ -98,7 +130,7 @@ func WriteJSON(in *Event, writer io.Writer) error {
 	} else {
 		return fmt.Errorf("data version is not set")
 	}
-	stream.WriteObjectEnd()
+
 	// Let's do a check on the error
 	if stream.Error != nil {
 		return fmt.Errorf("error while writing the event Data: %w", stream.Error)
@@ -108,7 +140,7 @@ func WriteJSON(in *Event, writer io.Writer) error {
 	if stream.Error != nil {
 		return fmt.Errorf("error while writing the event extensions: %w", stream.Error)
 	}
-	return stream.Flush()
+	return nil
 }
 
 // MarshalJSON implements a custom json marshal method used when this type is
@@ -116,6 +148,15 @@ func WriteJSON(in *Event, writer io.Writer) error {
 func (e Event) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	err := WriteJSON(&e, &buf)
+	log.Printf("json Event is %s", buf.String())
+	return buf.Bytes(), err
+}
+
+// MarshalJSON implements a custom json marshal method used when this type is
+// marshaled using json.Marshal.
+func (d Data) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	err := WriteDataJSON(&d, &buf)
 	log.Printf("json Data is %s", buf.String())
 	return buf.Bytes(), err
 }

@@ -49,7 +49,6 @@ func readDataJSONFromIterator(out *Data, iterator *jsoniter.Iterator) error {
 		// Universally parseable fields.
 		version string
 		data    []DataValue
-
 		// These fields require knowledge about the specversion to be parsed.
 		//schemaurl jsoniter.Any
 	)

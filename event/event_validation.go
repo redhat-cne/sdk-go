@@ -20,7 +20,6 @@ func (e ValidationError) Error() string {
 }
 
 // Validate performs a spec based validation on this event.
-// Validation is dependent on the spec version specified in the event context.
 func (e Event) Validate() error {
 
 	errs := map[string]error{}
