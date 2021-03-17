@@ -23,11 +23,11 @@ func TestUnMarshal(t *testing.T) {
 		wantErr error
 	}{
 
-		"struct data notification": {
+		"struct Data notification": {
 			body: mustJsonMarshal(t, map[string]interface{}{
 				"data": map[string]interface{}{
 					"resource": resource,
-					"values":   []interface{}{map[string]interface{}{"dataType": "notification", "value": "FREERUN", "valueType": "enumeration"}},
+					"values":   []interface{}{map[string]interface{}{"resource": resource, "dataType": "notification", "value": "FREERUN", "valueType": "enumeration"}},
 					"version":  version,
 				},
 				"id":         id,
@@ -40,11 +40,11 @@ func TestUnMarshal(t *testing.T) {
 				Type:       _type,
 				Time:       &now,
 				DataSchema: nil,
-				Data: event.Data{
-					Resource: resource,
-					Version:  version,
+				Data: &event.Data{
+					Version: version,
 					Values: []event.DataValue{
 						{
+							Resource:  resource,
 							DataType:  event.NOTIFICATION,
 							ValueType: event.ENUMERATION,
 							Value:     event.PTP_FREERUN,
@@ -54,12 +54,11 @@ func TestUnMarshal(t *testing.T) {
 			},
 			wantErr: nil,
 		},
-		"struct data metric": {
+		"struct Data metric": {
 			body: mustJsonMarshal(t, map[string]interface{}{
 				"data": map[string]interface{}{
-					"resource": resource,
-					"values":   []interface{}{map[string]interface{}{"dataType": "metric", "value": "10.64", "valueType": "decimal64.3"}},
-					"version":  version,
+					"values":  []interface{}{map[string]interface{}{"resource": resource, "dataType": "metric", "value": "10.64", "valueType": "decimal64.3"}},
+					"version": version,
 				},
 				"id":         id,
 				"time":       now.Format(time.RFC3339Nano),
@@ -71,11 +70,12 @@ func TestUnMarshal(t *testing.T) {
 				Type:       _type,
 				Time:       &now,
 				DataSchema: nil,
-				Data: event.Data{
-					Resource: resource,
-					Version:  version,
+				Data: &event.Data{
+
+					Version: version,
 					Values: []event.DataValue{
 						{
+							Resource:  resource,
 							DataType:  event.METRIC,
 							ValueType: event.DECIMAL,
 							Value:     10.64,

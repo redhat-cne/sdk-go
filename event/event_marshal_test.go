@@ -19,13 +19,13 @@ func TestMarshal(t *testing.T) {
 	version := "v1"
 	data := event.Data{}
 	value := event.DataValue{
+		Resource:  resource,
 		DataType:  event.NOTIFICATION,
 		ValueType: event.ENUMERATION,
 		Value:     event.GNSS_ACQUIRING_SYNC,
 	}
-	data.SetResource(resource) //nolint:errcheck
-	data.SetVersion(version)   //nolint:errcheck
-	data.AppendValues(value)   //nolint:errcheck
+	data.SetVersion(version) //nolint:errcheck
+	data.AppendValues(value) //nolint:errcheck
 
 	testCases := map[string]struct {
 		event   event.Event
@@ -39,7 +39,7 @@ func TestMarshal(t *testing.T) {
 				return &s
 			}(),
 		},
-		"struct data v1": {
+		"struct Data v1": {
 			event: func() event.Event {
 				e := event.New()
 				_ = e.SetDataContentType(event.ApplicationJSON)
@@ -47,14 +47,14 @@ func TestMarshal(t *testing.T) {
 				e.Time = &now
 				_ = e.SetType(_type)
 				_ = e.SetData(data)
+
 				return e
 			}(),
 			want: map[string]interface{}{
 				"dataContentType": "application/json",
 				"data": map[string]interface{}{
-					"resource": "/cluster/node/ptp",
-					"values":   []interface{}{map[string]interface{}{"dataType": "notification", "value": "ACQUIRING-SYNC", "valueType": "enumeration"}},
-					"version":  "v1",
+					"values":  []interface{}{map[string]interface{}{"resource": resource, "dataType": "notification", "value": "ACQUIRING-SYNC", "valueType": "enumeration"}},
+					"version": "v1",
 				},
 				"id":         "",
 				"time":       now.Format(time.RFC3339Nano),

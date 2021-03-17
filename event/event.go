@@ -1,6 +1,7 @@
 package event
 
 import (
+	"fmt"
 	"github.com/redhat-cne/sdk-go/types"
 	"strings"
 )
@@ -13,16 +14,16 @@ type Event struct {
 	// Type - The type of the occurrence which has happened.
 	// +required
 	Type string `json:"type"`
-	// DataContentType - the data content type
+	// DataContentType - the Data content type
 	DataContentType *string `json:"dataContentType"`
 	// Time - A Timestamp when the event happened.
 	// +optional
 	Time *types.Timestamp `json:"time,omitempty"`
-	// DataSchema - A link to the schema that the `data` attribute adheres to.
+	// DataSchema - A link to the schema that the `Data` attribute adheres to.
 	// +optional
-	DataSchema *types.URI `json:"dataschema,omitempty"`
+	DataSchema *types.URI `json:"dataSchema,omitempty"`
 
-	Data Data
+	Data *Data `json:"data,omitempty"`
 
 	FieldErrors map[string]error
 }
@@ -47,16 +48,38 @@ func New() Event {
 	if len(version) >= 1 {
 		specVersion = version[0]
 	}*/
+	e := Event{}
+
+	return e
+}
+
+// NewCloudNativeEvent returns a new Event, an optional version can be passed to change the
+// default spec version from 1.0 to the provided version.
+func NewCloudNativeEvent() *Event {
+
 	e := &Event{}
 
-	return *e
+	return e
 }
 
 // String returns a pretty-printed representation of the Event.
 func (e Event) String() string {
 	b := strings.Builder{}
+	b.WriteString("  id: " + e.ID + "\n")
+	b.WriteString("  type: " + e.Type + "\n")
+	if e.Time != nil {
+		b.WriteString("  time: " + e.Time.String() + "\n")
+	}
 
-	b.WriteString("TODO")
+	b.WriteString("  data: \n")
+	b.WriteString("  version: " + e.Data.Version + "\n")
+	b.WriteString("  values: \n")
+	for _, v := range e.Data.Values {
+		b.WriteString("  value type : " + string(v.ValueType) + "\n")
+		b.WriteString("  data type : " + string(v.DataType) + "\n")
+		b.WriteString("  value : " + fmt.Sprintf("%v", v.Value) + "\n")
+		b.WriteString("  resource: " + v.GetResource() + "\n")
+	}
 
 	return b.String()
 }
@@ -64,7 +87,7 @@ func (e Event) String() string {
 //Clone ...
 func (e Event) Clone() Event {
 	out := Event{}
-	out.SetData(e.Data) //nolint:errcheck
+	out.SetData(*e.Data) //nolint:errcheck
 	out.FieldErrors = e.cloneFieldErrors()
 	return out
 }

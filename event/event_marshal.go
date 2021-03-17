@@ -15,39 +15,36 @@ func WriteJSON(in *Event, writer io.Writer) error {
 	defer jsoniter.ConfigFastest.ReturnStream(stream)
 	stream.WriteObjectStart()
 
-	if in.DataContentType == nil {
-		return fmt.Errorf("missing event content type")
-	}
-
-	switch in.GetDataContentType() {
-	case ApplicationJSON:
-
-		stream.WriteObjectField("id")
-		stream.WriteString(in.ID)
-		stream.WriteMore()
-
-		stream.WriteObjectField("type")
-		stream.WriteString(in.GetType())
-
-		if in.GetDataContentType() != "" {
+	if in.DataContentType != nil {
+		switch in.GetDataContentType() {
+		case ApplicationJSON:
+			stream.WriteObjectField("id")
+			stream.WriteString(in.ID)
 			stream.WriteMore()
-			stream.WriteObjectField("dataContentType")
-			stream.WriteString(in.GetDataContentType())
-		}
 
-		if in.Time != nil {
-			stream.WriteMore()
-			stream.WriteObjectField("time")
-			stream.WriteString(in.Time.String())
-		}
+			stream.WriteObjectField("type")
+			stream.WriteString(in.GetType())
 
-		if in.GetDataSchema() != "" {
-			stream.WriteMore()
-			stream.WriteObjectField("dataSchema")
-			stream.WriteString(in.GetDataSchema())
+			if in.GetDataContentType() != "" {
+				stream.WriteMore()
+				stream.WriteObjectField("dataContentType")
+				stream.WriteString(in.GetDataContentType())
+			}
+
+			if in.Time != nil {
+				stream.WriteMore()
+				stream.WriteObjectField("time")
+				stream.WriteString(in.Time.String())
+			}
+
+			if in.GetDataSchema() != "" {
+				stream.WriteMore()
+				stream.WriteObjectField("dataSchema")
+				stream.WriteString(in.GetDataSchema())
+			}
+		default:
+			return fmt.Errorf("missing event content type")
 		}
-	default:
-		return fmt.Errorf("missing event content type")
 	}
 
 	// Let's do a check on the error
@@ -57,13 +54,12 @@ func WriteJSON(in *Event, writer io.Writer) error {
 
 	// Let's write the body
 	data := in.GetData()
-	if data.GetResource() != "" && data.GetVersion() != "" {
+
+	if data != nil {
 		stream.WriteMore()
 		stream.WriteObjectField("data")
 		stream.WriteObjectStart()
-		stream.WriteObjectField("resource")
-		stream.WriteString(data.GetResource())
-		stream.WriteMore()
+
 		data := in.GetData()
 		stream.WriteObjectField("version")
 		stream.WriteString(data.GetVersion())
@@ -72,6 +68,9 @@ func WriteJSON(in *Event, writer io.Writer) error {
 		stream.WriteArrayStart()
 		for _, v := range data.Values {
 			stream.WriteObjectStart()
+			stream.WriteObjectField("resource")
+			stream.WriteString(v.GetResource())
+			stream.WriteMore()
 			stream.WriteObjectField("dataType")
 			stream.WriteString(string(v.DataType))
 			stream.WriteMore()
@@ -97,12 +96,12 @@ func WriteJSON(in *Event, writer io.Writer) error {
 		stream.WriteObjectEnd()
 
 	} else {
-		return fmt.Errorf("data resource is not set")
+		return fmt.Errorf("data version is not set")
 	}
 	stream.WriteObjectEnd()
 	// Let's do a check on the error
 	if stream.Error != nil {
-		return fmt.Errorf("error while writing the event data: %w", stream.Error)
+		return fmt.Errorf("error while writing the event Data: %w", stream.Error)
 	}
 
 	// Let's do a check on the error
@@ -117,6 +116,6 @@ func WriteJSON(in *Event, writer io.Writer) error {
 func (e Event) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	err := WriteJSON(&e, &buf)
-	log.Printf("json data is %s", buf.String())
+	log.Printf("json Data is %s", buf.String())
 	return buf.Bytes(), err
 }

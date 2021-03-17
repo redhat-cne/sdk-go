@@ -30,7 +30,7 @@ func (e *Event) SetTime(t time.Time) error {
 	} else {
 		e.Time = &types.Timestamp{Time: t}
 	}
-	e.fieldOK("time")
+	e.fieldOK("Time")
 	return nil
 
 }
@@ -43,11 +43,11 @@ func (e *Event) SetDataSchema(s string) error {
 	}
 	pu, err := url.Parse(s)
 	if err != nil {
-		e.fieldError("dataSchema", err)
+		e.fieldError("DataSchema", err)
 		return err
 	}
 	e.DataSchema = &types.URI{URL: *pu}
-	e.fieldOK("dataSchema")
+	e.fieldOK("DataSchema")
 	return nil
 }
 
@@ -59,13 +59,29 @@ func (e *Event) SetDataContentType(ct string) error {
 	} else {
 		e.DataContentType = &ct
 	}
-	e.fieldOK("dataContentType")
+	e.fieldOK("DataContentType")
 	return nil
 }
 
 //SetData ...
 func (e *Event) SetData(data Data) error {
-	e.Data = data
-	e.fieldOK("data")
+	nData := Data{
+		Version: data.Version,
+	}
+
+	var nValues []DataValue
+
+	for _, v := range data.Values {
+		nValue := DataValue{
+			Resource:  v.Resource,
+			DataType:  v.DataType,
+			ValueType: v.ValueType,
+			Value:     v.Value,
+		}
+		nValues = append(nValues, nValue)
+	}
+	nData.Values = nValues
+	e.Data = &nData
+	e.fieldOK("Data")
 	return nil
 }

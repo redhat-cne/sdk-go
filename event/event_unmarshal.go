@@ -32,23 +32,57 @@ func returnIterator(iter *jsoniter.Iterator) {
 func ReadJSON(out *Event, reader io.Reader) error {
 	iterator := borrowIterator(reader)
 	defer returnIterator(iterator)
-
 	return readJSONFromIterator(out, iterator)
+}
+
+//ReadDataJSON ...
+func ReadDataJSON(out *Data, reader io.Reader) error {
+	iterator := borrowIterator(reader)
+	defer returnIterator(iterator)
+	return readDataJSONFromIterator(out, iterator)
+}
+
+// readJSONFromIterator allows you to read the bytes reader as an event
+func readDataJSONFromIterator(out *Data, iterator *jsoniter.Iterator) error {
+
+	var (
+		// Universally parseable fields.
+		version string
+		data    []DataValue
+
+		// These fields require knowledge about the specversion to be parsed.
+		//schemaurl jsoniter.Any
+	)
+
+	for key := iterator.ReadObject(); key != ""; key = iterator.ReadObject() {
+		// Check if we have some error in our error cache
+		if iterator.Error != nil {
+			return iterator.Error
+		}
+
+		// If no specversion ...
+		switch key {
+		case "version":
+			version = iterator.ReadString()
+		case "values":
+			data, _ = readDataValue(iterator)
+
+		default:
+			iterator.Skip()
+		}
+
+	}
+
+	if iterator.Error != nil {
+		return iterator.Error
+	}
+	out.Version = version
+	out.Values = data
+	return nil
 }
 
 // readJSONFromIterator allows you to read the bytes reader as an event
 func readJSONFromIterator(out *Event, iterator *jsoniter.Iterator) error {
-	// Parsing dependency graph:
-	//         SpecVersion
-	//          ^     ^
-	//          |     +--------------+
-	//          +                    +
-	//  All Attributes           datacontenttype (and datacontentencoding for v0.3)
-	//  (except datacontenttype)     ^
-	//                               |
-	//                               |
-	//                               +
-	//                              Data
 
 	var (
 		// Universally parseable fields.
@@ -77,7 +111,10 @@ func readJSONFromIterator(out *Event, iterator *jsoniter.Iterator) error {
 			time = readTimestamp(iterator)
 		case "data":
 			data, _ = readData(iterator)
-		//case "dataSchema":
+		case "version":
+
+		case "values":
+		//case "DataSchema":
 		//schemaurl = iterator.ReadAny()
 		default:
 			iterator.Skip()
@@ -91,7 +128,9 @@ func readJSONFromIterator(out *Event, iterator *jsoniter.Iterator) error {
 	out.Time = time
 	out.ID = id
 	out.Type = typ
-	out.Data = *data
+	if data != nil {
+		_ = out.SetData(*data)
+	}
 	return nil
 }
 
@@ -103,54 +142,59 @@ func readTimestamp(iter *jsoniter.Iterator) *types.Timestamp {
 	return t
 }
 
-func readData(iter *jsoniter.Iterator) (*Data, error) {
-	data := &Data{
-		Resource: "",
-		Version:  "",
-		Values:   []DataValue{},
+func readDataValue(iter *jsoniter.Iterator) ([]DataValue, error) {
+	var values []DataValue
+	for iter.ReadArray() {
+		var cacheValue string
+		dv := DataValue{}
+		for dvField := iter.ReadObject(); dvField != ""; dvField = iter.ReadObject() {
+			switch dvField {
+			case "resource":
+				dv.Resource = iter.ReadString()
+			case "dataType":
+				dv.DataType = DataType(iter.ReadString())
+			case "valueType":
+				dv.ValueType = ValueType(iter.ReadString())
+			case "value":
+				if dv.ValueType == DECIMAL {
+					dv.Value = iter.ReadFloat64()
+				} else {
+					cacheValue = iter.ReadString()
+				}
+			default:
+				iter.Skip()
+			}
+		}
+		if dv.ValueType == DECIMAL {
+			dv.Value, _ = strconv.ParseFloat(cacheValue, 3)
+		} else {
+			dv.Value = SyncState(cacheValue)
+		}
+		values = append(values, dv)
 	}
 
-	var values []DataValue
+	return values, nil
+}
+
+func readData(iter *jsoniter.Iterator) (*Data, error) {
+	data := &Data{
+		Version: "",
+		Values:  []DataValue{},
+	}
+
 	for key := iter.ReadObject(); key != ""; key = iter.ReadObject() {
 		// Check if we have some error in our error cache
 		if iter.Error != nil {
 			return data, iter.Error
 		}
-
 		switch key {
-		case "resource":
-			data.Resource = iter.ReadString()
 		case "version":
 			data.Version = iter.ReadString()
 		case "values":
-
-			for iter.ReadArray() {
-				var cacheValue string
-				dv := DataValue{}
-				for dvField := iter.ReadObject(); dvField != ""; dvField = iter.ReadObject() {
-					switch dvField {
-					case "dataType":
-						dv.DataType = DataType(iter.ReadString())
-					case "valueType":
-						dv.ValueType = ValueType(iter.ReadString())
-					case "value":
-						if dv.ValueType == DECIMAL {
-							dv.Value = iter.ReadFloat64()
-						} else {
-							cacheValue = iter.ReadString()
-						}
-					default:
-						iter.Skip()
-					}
-				}
-				if dv.ValueType == DECIMAL {
-					dv.Value, _ = strconv.ParseFloat(cacheValue, 3)
-				} else {
-					dv.Value = SyncState(cacheValue)
-				}
-				values = append(values, dv)
+			values, err := readDataValue(iter)
+			if err != nil {
+				return data, err
 			}
-
 			data.Values = values
 		default:
 			iter.Skip()
@@ -166,4 +210,12 @@ func (e *Event) UnmarshalJSON(b []byte) error {
 	iterator := jsoniter.ConfigFastest.BorrowIterator(b)
 	defer jsoniter.ConfigFastest.ReturnIterator(iterator)
 	return readJSONFromIterator(e, iterator)
+}
+
+// UnmarshalJSON implements the json unmarshal method used when this type is
+// unmarshaled using json.Unmarshal.
+func (d *Data) UnmarshalJSON(b []byte) error {
+	iterator := jsoniter.ConfigFastest.BorrowIterator(b)
+	defer jsoniter.ConfigFastest.ReturnIterator(iterator)
+	return readDataJSONFromIterator(d, iterator)
 }

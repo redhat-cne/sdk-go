@@ -24,7 +24,7 @@ func (e *Event) SetDataValue(dataType DataType, obj interface{}) (err error) {
 
 		}
 	default:
-		err = fmt.Errorf("error setting data %s - %v", dataType, obj)
+		err = fmt.Errorf("error setting Data %s - %v", dataType, obj)
 	}
 
 	e.Data.Values = append(e.Data.Values, data)

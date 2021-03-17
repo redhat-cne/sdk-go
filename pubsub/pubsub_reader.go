@@ -9,7 +9,7 @@ func (ps *PubSub) GetResource() string {
 	return ps.Resource
 }
 
-// GetID implements EventReader.ID
+// GetID implements EventReader.id
 func (ps *PubSub) GetID() string {
 	return ps.ID
 }

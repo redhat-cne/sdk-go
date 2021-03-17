@@ -17,7 +17,7 @@ type Reader interface {
 	// GetDataContentType returns event.GetDataContentType().
 	GetDataContentType() string
 	// GetData returns event.GetData()
-	GetData() Data
+	GetData() *Data
 	// Clone clones the event .
 	Clone() Event
 	// String returns a pretty-printed representation of the EventContext.
