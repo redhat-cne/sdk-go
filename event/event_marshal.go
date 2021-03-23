@@ -58,7 +58,7 @@ func WriteJSON(in *Event, writer io.Writer) error {
 	if data != nil {
 		stream.WriteMore()
 		stream.WriteObjectField("data")
-		if err:=writeJSONData(data,writer,stream);err!=nil{
+		if err := writeJSONData(data, writer, stream); err != nil {
 			return err
 		}
 	} else {
@@ -79,15 +79,15 @@ func WriteJSON(in *Event, writer io.Writer) error {
 
 // WriteDataJSON writes the in data in the provided writer.
 // Note: this function assumes the input event is valid.
-func WriteDataJSON(in *Data, writer io.Writer ) error {
+func WriteDataJSON(in *Data, writer io.Writer) error {
 	stream := jsoniter.ConfigFastest.BorrowStream(writer)
 	defer jsoniter.ConfigFastest.ReturnStream(stream)
-	if err:=writeJSONData(in,writer,stream);err!=nil{
+	if err := writeJSONData(in, writer, stream); err != nil {
 		return err
 	}
 	return stream.Flush()
 }
-func writeJSONData(in *Data, writer io.Writer, stream *jsoniter.Stream ) error{
+func writeJSONData(in *Data, writer io.Writer, stream *jsoniter.Stream) error {
 	stream.WriteObjectStart()
 
 	// Let's write the body

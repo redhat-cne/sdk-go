@@ -2,6 +2,8 @@ package pubsub
 
 import (
 	"github.com/redhat-cne/sdk-go/types"
+	"io/ioutil"
+	"os"
 	"strings"
 )
 
@@ -45,4 +47,20 @@ func (ps PubSub) String() string {
 	b.WriteString("  id: " + ps.GetID() + "\n")
 	b.WriteString("  Resource: " + ps.GetResource() + "\n")
 	return b.String()
+}
+
+// ReadFromFile is used to read subscription from the file system
+func (ps *PubSub) ReadFromFile(filePath string) (b []byte, err error) {
+	//open file
+	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_RDWR, 0644)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+	//read file and unmarshall json file to slice of users
+	b, err = ioutil.ReadAll(file)
+	if err != nil {
+		return nil, err
+	}
+	return b, nil
 }

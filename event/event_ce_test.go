@@ -81,7 +81,7 @@ func TestEvent_NewCloudEvent(t *testing.T) {
 			assert.Nil(t, err)
 			tc.want.SetID(ce.ID())
 			gotBytes, err := json.Marshal(ce)
-			log.Printf("cloud events %s\n",string(gotBytes))
+			log.Printf("cloud events %s\n", string(gotBytes))
 			if tc.wantErr != nil {
 				require.Error(t, err, *tc.wantErr)
 				return
