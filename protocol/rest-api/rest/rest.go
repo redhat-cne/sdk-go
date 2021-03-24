@@ -6,7 +6,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/redhat-cne/sdk-go/channel"
 	"github.com/redhat-cne/sdk-go/pkg/store"
-	"github.com/redhat-cne/sdk-go/protocol"
 	"github.com/redhat-cne/sdk-go/pubsub"
 	"io"
 	"io/ioutil"
@@ -39,8 +38,8 @@ type Server struct {
 	// PublisherStore stores publishers in a map
 	publisher *store.PubStore
 	// SubscriptionStore stores subscription in a map
-	subscription        *store.SubStore
-	StatusSenders       map[string]*protocol.Protocol
+	subscription *store.SubStore
+	// StatusListenerQueue listens to any request coming for status check
 	StatusListenerQueue *channel.ListenerChannel
 }
 

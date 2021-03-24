@@ -27,16 +27,16 @@ const (
 	NEW EventStatus = 0
 )
 
-//EventStatus specifies status of the event
+//EventType ... specifies type of the event
 type EventType int
 
 const (
-	// CONSUMER  the data is consumer type
-	CONSUMER EventType = 1
+	// LISTENER  the data is consumer type
+	LISTENER EventType = 1
 	//STATUS  the data is status type
 	STATUS EventType = 2
-	//PRODUCER  the data is producer type
-	PRODUCER EventType = 0
+	//SENDER  the data is producer type
+	SENDER EventType = 0
 	//EVENT  the data is event type
 	EVENT EventType = 3
 )

@@ -62,7 +62,7 @@ func (s *Server) createSubscription(w http.ResponseWriter, r *http.Request) {
 	}
 	if exists, err := s.GetFromPubStore(sub.GetResource()); err == nil {
 		log.Printf("There was already subscription,skipping creation %v", exists)
-		s.sendOut(channel.CONSUMER, &sub)
+		s.sendOut(channel.LISTENER, &sub)
 		s.respondWithJSON(w, http.StatusCreated, exists)
 		return
 	}
@@ -98,7 +98,7 @@ func (s *Server) createSubscription(w http.ResponseWriter, r *http.Request) {
 	//store the publisher
 	s.publisher.Set(sub.ID, &sub)
 	// go ahead and create QDR to this address
-	s.sendOut(channel.CONSUMER, &sub)
+	s.sendOut(channel.LISTENER, &sub)
 	s.respondWithJSON(w, http.StatusCreated, sub)
 }
 
@@ -117,7 +117,7 @@ func (s *Server) createPublisher(w http.ResponseWriter, r *http.Request) {
 	}
 	if exists, err := s.GetFromPubStore(pub.GetResource()); err == nil {
 		log.Printf("There was already publication,skipping creation %v", exists)
-		s.sendOut(channel.PRODUCER, &pub)
+		s.sendOut(channel.SENDER, &pub)
 		s.respondWithJSON(w, http.StatusCreated, exists)
 		return
 	}
@@ -153,7 +153,7 @@ func (s *Server) createPublisher(w http.ResponseWriter, r *http.Request) {
 	//store the publisher
 	s.publisher.Set(pub.ID, &pub)
 	// go ahead and create QDR to this address
-	s.sendOut(channel.PRODUCER, &pub)
+	s.sendOut(channel.SENDER, &pub)
 	s.respondWithJSON(w, http.StatusCreated, pub)
 }
 

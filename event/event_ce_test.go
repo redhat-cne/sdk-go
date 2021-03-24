@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"log"
+
 	"testing"
 	"time"
 )
@@ -43,6 +44,7 @@ func setup() {
 	_ = pubsub.SetID(id)
 
 }
+
 func TestEvent_NewCloudEvent(t *testing.T) {
 	setup()
 	testCases := map[string]struct {
