@@ -62,6 +62,7 @@ func (s *Server) createSubscription(w http.ResponseWriter, r *http.Request) {
 	}
 	if exists, err := s.GetFromPubStore(sub.GetResource()); err == nil {
 		log.Printf("There was already subscription,skipping creation %v", exists)
+		// send out to create listener
 		s.sendOut(channel.LISTENER, &sub)
 		s.respondWithJSON(w, http.StatusCreated, exists)
 		return
@@ -76,7 +77,7 @@ func (s *Server) createSubscription(w http.ResponseWriter, r *http.Request) {
 		}
 		defer response.Body.Close()
 		if response.StatusCode != http.StatusNoContent {
-			log.Printf("There was error validating endpointurl returned status code %d", response.StatusCode)
+			log.Printf("There was error validating endpointurl %s returned status code %d", sub.GetEndpointURI(), response.StatusCode)
 			s.respondWithError(w, http.StatusBadRequest, "Return url validation check failed for create subscription.check endpointURI")
 			return
 		}
@@ -94,9 +95,9 @@ func (s *Server) createSubscription(w http.ResponseWriter, r *http.Request) {
 		s.respondWithError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	log.Println("Stored in a file")
+	log.Printf("Stored in a file %s", fmt.Sprintf("%s/%s", s.storePath, subFile))
 	//store the publisher
-	s.publisher.Set(sub.ID, &sub)
+	s.subscription.Set(sub.ID, &sub)
 	// go ahead and create QDR to this address
 	s.sendOut(channel.LISTENER, &sub)
 	s.respondWithJSON(w, http.StatusCreated, sub)
@@ -117,6 +118,7 @@ func (s *Server) createPublisher(w http.ResponseWriter, r *http.Request) {
 	}
 	if exists, err := s.GetFromPubStore(pub.GetResource()); err == nil {
 		log.Printf("There was already publication,skipping creation %v", exists)
+		// send out to create subscription bus sender
 		s.sendOut(channel.SENDER, &pub)
 		s.respondWithJSON(w, http.StatusCreated, exists)
 		return
@@ -131,7 +133,7 @@ func (s *Server) createPublisher(w http.ResponseWriter, r *http.Request) {
 		}
 		defer response.Body.Close()
 		if response.StatusCode != http.StatusNoContent {
-			log.Printf("There was error validating endpointurl returned status code %d", response.StatusCode)
+			log.Printf("There was error validating endpointurl %s returned status code %d", pub.GetEndpointURI(), response.StatusCode)
 			s.respondWithError(w, http.StatusBadRequest, "Return url validation check failed for create subscription.check endpointURI")
 			return
 		}
@@ -149,7 +151,7 @@ func (s *Server) createPublisher(w http.ResponseWriter, r *http.Request) {
 		s.respondWithError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	log.Println("Stored in a file")
+	log.Printf("Stored in a file %s", fmt.Sprintf("%s/%s", s.storePath, pubFile))
 	//store the publisher
 	s.publisher.Set(pub.ID, &pub)
 	// go ahead and create QDR to this address
@@ -302,6 +304,10 @@ func (s *Server) publishEvent(w http.ResponseWriter, r *http.Request) {
 			EndPointURI: pub.GetEndpointURI()}
 		s.respondWithMessage(w, http.StatusAccepted, "Event published")
 	}
+}
+
+func (s *Server) dummy(w http.ResponseWriter, r *http.Request) {
+	s.respondWithMessage(w, http.StatusNoContent, "dummy test")
 }
 
 func (s *Server) respondWithError(w http.ResponseWriter, code int, message string) {

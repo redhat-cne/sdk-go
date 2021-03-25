@@ -44,11 +44,13 @@ type Server struct {
 }
 
 // InitServer is used to supply configurations for rest api server
-func InitServer(port int, dataOut chan<- channel.DataEvent) *Server {
+func InitServer(port int, apiPath, storePath string, dataOut chan<- channel.DataEvent) *Server {
 
 	server := Server{
-		port:    port,
-		dataOut: dataOut,
+		storePath: storePath,
+		port:      port,
+		apiPath:   apiPath,
+		dataOut:   dataOut,
 		HTTPClient: &http.Client{
 			Transport: &http.Transport{
 				MaxIdleConnsPerHost: 20,
@@ -63,6 +65,7 @@ func InitServer(port int, dataOut chan<- channel.DataEvent) *Server {
 			RWMutex: sync.RWMutex{},
 			Store:   map[string]*pubsub.PubSub{},
 		},
+		StatusListenerQueue: nil,
 	}
 
 	return &server
@@ -270,6 +273,8 @@ func (s *Server) Start() {
 	api.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		io.WriteString(w, "OK") //nolint:errcheck
 	}).Methods(http.MethodGet)
+
+	api.HandleFunc("/dummy", s.dummy).Methods(http.MethodPost)
 
 	api.HandleFunc("/create/event", s.publishEvent).Methods(http.MethodPost)
 

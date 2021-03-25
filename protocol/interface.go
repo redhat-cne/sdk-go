@@ -20,5 +20,6 @@ type Binder struct {
 	//DataOut data coming out of this protocol
 	DataOut chan<- channel.DataEvent
 	//close on true
-	Close <-chan bool
+	Close    <-chan bool
+	Protocol interface{}
 }

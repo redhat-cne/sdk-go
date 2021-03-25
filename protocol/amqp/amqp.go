@@ -27,7 +27,7 @@ type Protocol struct {
 type Router struct {
 	Listeners map[string]*Protocol
 	Senders   map[string]*Protocol
-	AMQPHost  string
+	Host      string
 	DataIn    <-chan channel.DataEvent
 	DataOut   chan<- channel.DataEvent
 	Client    *amqp.Client
@@ -41,7 +41,7 @@ func InitServer(amqpHost string, DataIn <-chan channel.DataEvent, DataOut chan<-
 		Listeners: map[string]*Protocol{},
 		Senders:   map[string]*Protocol{},
 		DataIn:    DataIn,
-		AMQPHost:  amqpHost,
+		Host:      amqpHost,
 		DataOut:   DataOut,
 		Close:     close,
 	}
@@ -74,7 +74,7 @@ func (q *Router) NewSession(sessionOption []amqp.SessionOption) (*amqp.Session, 
 //NewSender creates new QDR ptp
 func (q *Router) NewSender(address string) error {
 	var opts []amqp1.Option
-	//p, err := amqp1.NewSenderProtocol(q.AMQPHost, address, []amqp.ConnOption{}, []amqp.SessionOption{}, opts...)
+	//p, err := amqp1.NewSenderProtocol(q.Host, address, []amqp.ConnOption{}, []amqp.SessionOption{}, opts...)
 	session, err := q.NewSession([]amqp.SessionOption{})
 	if err != nil {
 		log.Printf("failed to create an amqp session for a sender : %v", err)
