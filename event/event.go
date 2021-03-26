@@ -24,21 +24,6 @@ type Event struct {
 	DataSchema *types.URI `json:"dataSchema,omitempty"`
 
 	Data *Data `json:"data,omitempty"`
-
-	FieldErrors map[string]error
-}
-
-func (e *Event) fieldError(field string, err error) {
-	if e.FieldErrors == nil {
-		e.FieldErrors = make(map[string]error)
-	}
-	e.FieldErrors[field] = err
-}
-
-func (e *Event) fieldOK(field string) {
-	if e.FieldErrors != nil {
-		delete(e.FieldErrors, field)
-	}
 }
 
 // New returns a new Event, an optional version can be passed to change the
@@ -88,17 +73,5 @@ func (e Event) String() string {
 func (e Event) Clone() Event {
 	out := Event{}
 	out.SetData(*e.Data) //nolint:errcheck
-	out.FieldErrors = e.cloneFieldErrors()
 	return out
-}
-
-func (e Event) cloneFieldErrors() map[string]error {
-	if e.FieldErrors == nil {
-		return nil
-	}
-	newFE := make(map[string]error, len(e.FieldErrors))
-	for k, v := range e.FieldErrors {
-		newFE[k] = v
-	}
-	return newFE
 }

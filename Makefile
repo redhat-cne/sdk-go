@@ -11,12 +11,14 @@ else
   GOBIN=$(shell go env GOBIN)
 endif
 
-build:
+build:test
 	go fmt ./...
 	make lint
 
 lint:
 	golint `go list ./... | grep -v vendor`
 	golangci-lint run
+test:
+	go test ./...  -coverprofile=cover.out
 
 

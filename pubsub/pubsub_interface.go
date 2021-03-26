@@ -24,5 +24,5 @@ type Writer interface {
 	// URILocation performs event.SetURILocation()
 	SetURILocation(string) error
 	// SetID performs event.SetID.
-	SetID(string) error
+	SetID(string)
 }

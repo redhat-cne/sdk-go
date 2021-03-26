@@ -1,4 +1,4 @@
-package event
+package api
 
 import (
 	"encoding/json"
@@ -6,10 +6,19 @@ import (
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/google/uuid"
 	"github.com/redhat-cne/sdk-go/pubsub"
+	"log"
+
+	"github.com/redhat-cne/sdk-go/event"
 )
 
-//NewCloudEvent create new cloud event from cloud native events and pubsub
-func (e *Event) NewCloudEvent(ps *pubsub.PubSub) (*cloudevents.Event, error) {
+//PublishEventToLog .. publish event data to a log
+func PublishEventToLog(event event.Event) {
+	log.Printf("Publishing event to log %#v", event)
+
+}
+
+//NewCloudEvents create new cloud event from cloud native events and pubsub
+func NewCloudEvents(e event.Event, ps *pubsub.PubSub) (*cloudevents.Event, error) {
 	ce := cloudevents.NewEvent(cloudevents.VersionV03)
 	ce.SetTime(e.GetTime())
 	ce.SetType(e.Type)
@@ -24,15 +33,16 @@ func (e *Event) NewCloudEvent(ps *pubsub.PubSub) (*cloudevents.Event, error) {
 }
 
 // GetCloudNativeEvents  get event data from cloud events object if its valid else return error
-func (e *Event) GetCloudNativeEvents(ce *cloudevents.Event) (err error) {
+func GetCloudNativeEvents(ce *cloudevents.Event) (err error) {
+	e := event.Event{}
 	if ce.Data() == nil {
 		return fmt.Errorf("event data is empty")
 	}
-	data := Data{}
+	data := event.Data{}
 	if err = json.Unmarshal(ce.Data(), &data); err != nil {
 		return
 	}
-	e.SetDataContentType(ApplicationJSON)
+	e.SetDataContentType(event.ApplicationJSON)
 	e.SetTime(ce.Time())
 	e.SetType(ce.Type())
 	e.SetData(data)

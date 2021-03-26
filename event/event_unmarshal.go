@@ -128,7 +128,7 @@ func readJSONFromIterator(out *Event, iterator *jsoniter.Iterator) error {
 	out.ID = id
 	out.Type = typ
 	if data != nil {
-		_ = out.SetData(*data)
+		out.SetData(*data)
 	}
 	return nil
 }

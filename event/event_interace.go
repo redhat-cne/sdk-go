@@ -29,15 +29,15 @@ type Reader interface {
 // internally and exposes errors with a call to event.Validate().
 type Writer interface {
 	// SetType performs event.SetType.
-	SetType(string) error
+	SetType(string)
 	// SetID performs event.SetID.
-	SetID(string) error
+	SetID(string)
 	// SetTime performs event.SetTime.
-	SetTime(time.Time) error
+	SetTime(time.Time)
 	// SetDataSchema performs event.SetDataSchema.
 	SetDataSchema(string) error
 	// SetDataContentType performs event.SetDataContentType.
-	SetDataContentType(string) error
+	SetDataContentType(string)
 	// SetData
-	SetData(Data) error
+	SetData(Data)
 }

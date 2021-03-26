@@ -1,0 +1,333 @@
+package api
+
+import (
+	"encoding/json"
+	"fmt"
+	"github.com/google/uuid"
+	"github.com/redhat-cne/sdk-go/pkg/store"
+	"github.com/redhat-cne/sdk-go/pubsub"
+	"io/ioutil"
+	"log"
+	"os"
+	"sync"
+)
+
+type PubSubAPI struct {
+	pubStore      *store.PubSubStore
+	subStore      *store.PubSubStore
+	subFile       string
+	pubFile       string
+	storeFilePath string
+}
+
+var instance *PubSubAPI
+var once sync.Once
+
+//GetPubSubAPIInstance ... get api instance
+func GetPubSubAPIInstance(storeFilePath string) *PubSubAPI {
+	once.Do(func() {
+		instance = &PubSubAPI{
+			pubStore: &store.PubSubStore{
+				RWMutex: sync.RWMutex{},
+				Store:   map[string]*pubsub.PubSub{},
+			},
+			subStore: &store.PubSubStore{
+				RWMutex: sync.RWMutex{},
+				Store:   map[string]*pubsub.PubSub{},
+			},
+			subFile:       "sub.json",
+			pubFile:       "pub.json",
+			storeFilePath: storeFilePath,
+		}
+		instance.ReloadStore()
+	})
+
+	return instance
+}
+
+func (p *PubSubAPI) ReloadStore() {
+	// load for file
+	if b, err := loadFromFile(fmt.Sprintf("%s/%s", p.storeFilePath, p.subFile)); err == nil {
+		if len(b) > 0 {
+			var subs []pubsub.PubSub
+			if err := json.Unmarshal(b, &subs); err == nil {
+				for _, sub := range subs {
+					p.subStore.Set(sub.ID, &sub)
+				}
+			}
+
+		}
+	}
+	// load for file
+	if b, err := loadFromFile(fmt.Sprintf("%s/%s", p.storeFilePath, p.pubFile)); err == nil {
+		if len(b) > 0 {
+			var pubs []pubsub.PubSub
+			if err := json.Unmarshal(b, &pubs); err == nil {
+				for _, pub := range pubs {
+					p.pubStore.Set(pub.ID, &pub)
+				}
+			}
+
+		}
+	}
+}
+
+//GetFromPubStore get data from pub store
+func (p *PubSubAPI) GetFromPubStore(address string) (pubsub.PubSub, error) {
+	for _, pub := range p.pubStore.Store {
+		if pub.GetResource() == address {
+			return pubsub.PubSub{
+				ID:          pub.ID,
+				EndPointURI: pub.EndPointURI,
+				URILocation: pub.URILocation,
+				Resource:    pub.Resource,
+			}, nil
+		}
+	}
+	return pubsub.PubSub{}, fmt.Errorf("publisher not found for address %s", address)
+}
+
+//GetFromSubStore get data from sub store
+func (p *PubSubAPI) GetFromSubStore(address string) (pubsub.PubSub, error) {
+	for _, sub := range p.subStore.Store {
+		if sub.GetResource() == address {
+			return pubsub.PubSub{
+				ID:          sub.ID,
+				EndPointURI: sub.EndPointURI,
+				URILocation: sub.URILocation,
+				Resource:    sub.Resource,
+			}, nil
+		}
+	}
+	return pubsub.PubSub{}, fmt.Errorf("subscription not found for address %s ", address)
+}
+
+//HasSubscription ...
+func (p *PubSubAPI) HasSubscription(address string) (pubsub.PubSub, bool) {
+	if sub, err := p.GetFromSubStore(address); err == nil {
+		return sub, true
+	}
+	return pubsub.PubSub{}, false
+}
+
+//HasPublisher ...
+func (p *PubSubAPI) HasPublisher(address string) (pubsub.PubSub, bool) {
+	if pub, err := p.GetFromPubStore(address); err == nil {
+		return pub, true
+	}
+	return pubsub.PubSub{}, false
+}
+
+//CreateSubscription ...
+func (p *PubSubAPI) CreateSubscription(sub pubsub.PubSub) (pubsub.PubSub, error) {
+	if subExists, ok := p.HasSubscription(sub.GetResource()); ok {
+		log.Printf("There was already subscription,skipping creation %v", subExists)
+		return subExists, nil
+	}
+	sub.SetID(uuid.New().String())
+
+	// persist the subscription -
+	//TODO:might want to use PVC to live beyond pod crash
+	err := writeToFile(sub, fmt.Sprintf("%s/%s", p.storeFilePath, p.subFile))
+	if err != nil {
+		log.Printf("Error writing to store %v\n", err)
+		return pubsub.PubSub{}, err
+	}
+	log.Printf("Stored in a file %s", fmt.Sprintf("%s/%s", p.storeFilePath, p.subFile))
+	//store the publisher
+	p.subStore.Set(sub.ID, &sub)
+	return sub, nil
+}
+
+//CreatePublisher ...
+func (p *PubSubAPI) CreatePublisher(pub pubsub.PubSub) (pubsub.PubSub, error) {
+	if subExists, ok := p.HasPublisher(pub.GetResource()); ok {
+		log.Printf("There was already subscription,skipping creation %v", subExists)
+		return subExists, nil
+	}
+	pub.SetID(uuid.New().String())
+
+	// persist the subscription -
+	//TODO:might want to use PVC to live beyond pod crash
+	err := writeToFile(pub, fmt.Sprintf("%s/%s", p.storeFilePath, p.pubFile))
+	if err != nil {
+		log.Printf("Error writing to store %v\n", err)
+		return pubsub.PubSub{}, err
+	}
+	log.Printf("Stored in a file %s", fmt.Sprintf("%s/%s", p.storeFilePath, p.subFile))
+	//store the publisher
+	p.pubStore.Set(pub.ID, &pub)
+	return pub, nil
+}
+
+//GetSubscriptionByID ...
+func (p *PubSubAPI) GetSubscriptionByID(subscriptionID string) (pubsub.PubSub, error) {
+	if sub, ok := p.subStore.Store[subscriptionID]; ok {
+		return *sub, nil
+	}
+
+	return pubsub.PubSub{}, fmt.Errorf("subscription data not found for id %s", subscriptionID)
+}
+
+// GetPublisherByID ...
+func (p *PubSubAPI) GetPublisherByID(publisherID string) (pubsub.PubSub, error) {
+	if sub, ok := p.pubStore.Store[publisherID]; ok {
+		return *sub, nil
+	}
+
+	return pubsub.PubSub{}, fmt.Errorf("publisher data not found for id %s", publisherID)
+}
+
+// GetSubscriptions ...
+func (p *PubSubAPI) GetSubscriptions() map[string]*pubsub.PubSub {
+	return p.subStore.Store
+}
+
+// GetPublishers ...
+func (p *PubSubAPI) GetPublishers() map[string]*pubsub.PubSub {
+	return p.pubStore.Store
+}
+
+func (p *PubSubAPI) DeletePublisher(publisherID string) error {
+	if pub, ok := p.pubStore.Store[publisherID]; ok {
+		err := deleteFromFile(*pub, fmt.Sprintf("%s/%s", p.storeFilePath, p.pubFile))
+		p.pubStore.Delete(publisherID)
+		return err
+	}
+	return nil
+}
+
+func (p *PubSubAPI) DeleteSubscription(subscriptionID string) error {
+	if pub, ok := p.subStore.Store[subscriptionID]; ok {
+		err := deleteFromFile(*pub, fmt.Sprintf("%s/%s", p.storeFilePath, p.subFile))
+		p.subStore.Delete(subscriptionID)
+		return err
+	}
+	return nil
+}
+func (p *PubSubAPI) DeleteAllSubscriptions() error {
+	if err := deleteAllFromFile(fmt.Sprintf("%s/%s", p.storeFilePath, p.subFile)); err != nil {
+		return err
+	}
+	//empty the store
+	p.subStore.Store = make(map[string]*pubsub.PubSub)
+	return nil
+}
+
+func (p *PubSubAPI) DeleteAllPublishers() error {
+	if err := deleteAllFromFile(fmt.Sprintf("%s/%s", p.storeFilePath, p.pubFile)); err != nil {
+		return err
+	}
+	//empty the store
+	p.pubStore.Store = make(map[string]*pubsub.PubSub)
+	return nil
+}
+
+//deleteAllFromFile deletes  publisher and subscription information from the file system
+func deleteAllFromFile(filePath string) error {
+	//open file
+	if err := ioutil.WriteFile(filePath, []byte{}, 0666); err != nil {
+		return err
+	}
+	return nil
+}
+
+//DeleteFromFile is used to delete subscription from the file system
+func deleteFromFile(sub pubsub.PubSub, filePath string) error {
+	//open file
+	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_RDWR, 0644)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	//read file and unmarshall json file to slice of users
+	b, err := ioutil.ReadAll(file)
+	if err != nil {
+		return err
+	}
+	var allSubs []pubsub.PubSub
+	if len(b) > 0 {
+		err = json.Unmarshal(b, &allSubs)
+		if err != nil {
+			return err
+		}
+	}
+	for k := range allSubs {
+		// Remove the element at index i from a.
+		if allSubs[k].ID == sub.ID {
+			allSubs[k] = allSubs[len(allSubs)-1]      // Copy last element to index i.
+			allSubs[len(allSubs)-1] = pubsub.PubSub{} // Erase last element (write zero value).
+			allSubs = allSubs[:len(allSubs)-1]        // Truncate slice.
+			break
+		}
+	}
+	newBytes, err := json.MarshalIndent(&allSubs, "", " ")
+	if err != nil {
+		log.Printf("error deleting sub %v", err)
+		return err
+	}
+	if err := ioutil.WriteFile(filePath, newBytes, 0666); err != nil {
+		return err
+	}
+	return nil
+
+}
+
+func (p *PubSubAPI) GetPublishersFromFile() ([]byte, error) {
+	b, err := loadFromFile(fmt.Sprintf("%s/%s", p.storeFilePath, p.pubFile))
+	return b, err
+}
+
+func (p *PubSubAPI) GetSubscriptionsFromFile() ([]byte, error) {
+	b, err := loadFromFile(fmt.Sprintf("%s/%s", p.storeFilePath, p.subFile))
+	return b, err
+}
+
+// loadFromFile is used to read subscription/publisher from the file system
+func loadFromFile(filePath string) (b []byte, err error) {
+	//open file
+	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_RDWR, 0644)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+	//read file and unmarshall json file to slice of users
+	b, err = ioutil.ReadAll(file)
+	if err != nil {
+		return nil, err
+	}
+	return b, nil
+}
+
+//writeToFile writes subscription data to a file
+func writeToFile(sub pubsub.PubSub, filePath string) error {
+	//open file
+	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_RDWR, 0644)
+
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	//read file and unmarshall json file to slice of users
+	b, err := ioutil.ReadAll(file)
+	if err != nil {
+		return err
+	}
+	var allSubs []pubsub.PubSub
+	if len(b) > 0 {
+		err = json.Unmarshal(b, &allSubs)
+		if err != nil {
+			return err
+		}
+	}
+	allSubs = append(allSubs, sub)
+	newBytes, err := json.MarshalIndent(&allSubs, "", " ")
+	if err != nil {
+		return err
+	}
+	if err := ioutil.WriteFile(filePath, newBytes, 0666); err != nil {
+		return err
+	}
+	return nil
+
+}

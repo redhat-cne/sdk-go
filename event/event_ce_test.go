@@ -41,7 +41,7 @@ func setup() {
 	_ = pubsub.SetResource(resource)
 	_ = pubsub.SetURILocation(uriLocation)
 	_ = pubsub.SetEndpointURI(endPointUri)
-	_ = pubsub.SetID(id)
+	pubsub.SetID(id)
 
 }
 
@@ -56,10 +56,10 @@ func TestEvent_NewCloudEvent(t *testing.T) {
 		"struct Data v1": {
 			cne_event: func() *cne_event.Event {
 				e := cne_event.NewCloudNativeEvent()
-				_ = e.SetDataContentType(cne_event.ApplicationJSON)
-				_ = e.SetTime(now.Time)
-				_ = e.SetType(_type)
-				_ = e.SetData(data)
+				e.SetDataContentType(cne_event.ApplicationJSON)
+				e.SetTime(now.Time)
+				e.SetType(_type)
+				e.SetData(data)
 				return e
 			}(),
 			cne_pubsub: &pubsub,
@@ -111,10 +111,10 @@ func TestEvent_GetCloudNativeEvents(t *testing.T) {
 			}(),
 			want: func() *cne_event.Event {
 				e := cne_event.NewCloudNativeEvent()
-				_ = e.SetDataContentType(cne_event.ApplicationJSON)
-				_ = e.SetTime(now.Time)
-				_ = e.SetType(_type)
-				_ = e.SetData(data)
+				e.SetDataContentType(cne_event.ApplicationJSON)
+				e.SetTime(now.Time)
+				e.SetType(_type)
+				e.SetData(data)
 				return e
 			}(),
 		},

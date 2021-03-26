@@ -35,8 +35,8 @@ func TestTimestampParseString(t *testing.T) {
 		_, err := types.ParseTime(s)
 		assert.EqualError(t, err, wanterr)
 	}
-	bad("", "cannot convert \"\" to time.time: not in RFC3339 format")
-	bad("2019-02-28", "cannot convert \"2019-02-28\" to time.time: not in RFC3339 format")
+	bad("", "cannot convert \"\" to time.Time: not in RFC3339 format")
+	bad("2019-02-28", "cannot convert \"2019-02-28\" to time.Time: not in RFC3339 format")
 }
 
 func TestJsonMarshalUnmarshalTimestamp(t *testing.T) {
@@ -95,14 +95,14 @@ func TestJsonMarshalUnmarshalTimestamp_direct(t *testing.T) {
 	{
 		ts := &types.Timestamp{}
 		err := ts.UnmarshalJSON([]byte(`"not a time"`))
-		assert.EqualError(t, err, "cannot convert \"not a time\" to time.time: not in RFC3339 format")
+		assert.EqualError(t, err, "cannot convert \"not a time\" to time.Time: not in RFC3339 format")
 	}
 
 	// incorrect iso
 	{
 		ts := &types.Timestamp{}
 		err := ts.UnmarshalJSON([]byte(`"Mon Jan _2 15:04:05 2006"`))
-		assert.EqualError(t, err, "cannot convert \"Mon Jan _2 15:04:05 2006\" to time.time: not in RFC3339 format")
+		assert.EqualError(t, err, "cannot convert \"Mon Jan _2 15:04:05 2006\" to time.Time: not in RFC3339 format")
 	}
 }
 
@@ -130,6 +130,6 @@ func TestXMLMarshalUnmarshalTimestamp(t *testing.T) {
 	}
 	bad("", "EOF")
 	bad("2019-02-28", "EOF")
-	bad("<Timestamp>2019-02-28</Timestamp>", "cannot convert \"2019-02-28\" to time.time: not in RFC3339 format")
-	bad("<Timestamp></Timestamp>", "cannot convert \"\" to time.time: not in RFC3339 format")
+	bad("<Timestamp>2019-02-28</Timestamp>", "cannot convert \"2019-02-28\" to time.Time: not in RFC3339 format")
+	bad("<Timestamp></Timestamp>", "cannot convert \"\" to time.Time: not in RFC3339 format")
 }

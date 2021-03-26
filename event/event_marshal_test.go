@@ -42,11 +42,11 @@ func TestMarshal(t *testing.T) {
 		"struct Data v1": {
 			event: func() event.Event {
 				e := event.New()
-				_ = e.SetDataContentType(event.ApplicationJSON)
+				e.SetDataContentType(event.ApplicationJSON)
 				_ = e.SetDataSchema(schemaUrl)
 				e.Time = &now
-				_ = e.SetType(_type)
-				_ = e.SetData(data)
+				e.SetType(_type)
+				e.SetData(data)
 
 				return e
 			}(),

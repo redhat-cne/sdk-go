@@ -10,28 +10,24 @@ import (
 var _ Writer = (*Event)(nil)
 
 // SetType implements Writer.SetType
-func (e *Event) SetType(t string) error {
+func (e *Event) SetType(t string) {
 	e.Type = t
-	e.fieldOK("type")
-	return nil
+
 }
 
 // SetID implements Writer.SetID
-func (e *Event) SetID(id string) error {
+func (e *Event) SetID(id string) {
 	e.ID = id
-	e.fieldOK("ID")
-	return nil
+
 }
 
 // SetTime implements Writer.SetTime
-func (e *Event) SetTime(t time.Time) error {
+func (e *Event) SetTime(t time.Time) {
 	if t.IsZero() {
 		e.Time = nil
 	} else {
 		e.Time = &types.Timestamp{Time: t}
 	}
-	e.fieldOK("Time")
-	return nil
 
 }
 
@@ -43,28 +39,24 @@ func (e *Event) SetDataSchema(s string) error {
 	}
 	pu, err := url.Parse(s)
 	if err != nil {
-		e.fieldError("DataSchema", err)
 		return err
 	}
 	e.DataSchema = &types.URI{URL: *pu}
-	e.fieldOK("DataSchema")
 	return nil
 }
 
 // SetDataContentType implements Writer.SetDataContentType
-func (e *Event) SetDataContentType(ct string) error {
+func (e *Event) SetDataContentType(ct string) {
 	ct = strings.TrimSpace(ct)
 	if ct == "" {
 		e.DataContentType = nil
 	} else {
 		e.DataContentType = &ct
 	}
-	e.fieldOK("DataContentType")
-	return nil
 }
 
 //SetData ...
-func (e *Event) SetData(data Data) error {
+func (e *Event) SetData(data Data) {
 	nData := Data{
 		Version: data.Version,
 	}
@@ -82,6 +74,4 @@ func (e *Event) SetData(data Data) error {
 	}
 	nData.Values = nValues
 	e.Data = &nData
-	e.fieldOK("Data")
-	return nil
 }
