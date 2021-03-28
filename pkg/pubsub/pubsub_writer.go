@@ -2,7 +2,7 @@ package pubsub
 
 import (
 	"fmt"
-	"github.com/redhat-cne/sdk-go/types"
+	"github.com/redhat-cne/sdk-go/pkg/types"
 	"net/url"
 	"regexp"
 	"strings"

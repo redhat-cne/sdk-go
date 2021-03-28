@@ -2,7 +2,7 @@ package event
 
 import (
 	"fmt"
-	"github.com/redhat-cne/sdk-go/types"
+	"github.com/redhat-cne/sdk-go/pkg/types"
 	"strings"
 )
 
@@ -24,27 +24,6 @@ type Event struct {
 	DataSchema *types.URI `json:"dataSchema,omitempty"`
 
 	Data *Data `json:"data,omitempty"`
-}
-
-// New returns a new Event, an optional version can be passed to change the
-// default spec version from 1.0 to the provided version.
-func New() Event {
-	/*specVersion := defaultEventVersion
-	if len(version) >= 1 {
-		specVersion = version[0]
-	}*/
-	e := Event{}
-
-	return e
-}
-
-// NewCloudNativeEvent returns a new Event, an optional version can be passed to change the
-// default spec version from 1.0 to the provided version.
-func NewCloudNativeEvent() *Event {
-
-	e := &Event{}
-
-	return e
 }
 
 // String returns a pretty-printed representation of the Event.

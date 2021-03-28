@@ -1,7 +1,7 @@
 package store
 
 import (
-	"github.com/redhat-cne/sdk-go/pubsub"
+	"github.com/redhat-cne/sdk-go/pkg/pubsub"
 	"sync"
 )
 

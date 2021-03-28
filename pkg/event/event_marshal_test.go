@@ -7,8 +7,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/redhat-cne/sdk-go/event"
-	"github.com/redhat-cne/sdk-go/types"
+	"github.com/redhat-cne/sdk-go/pkg/event"
+	"github.com/redhat-cne/sdk-go/pkg/types"
+	v1 "github.com/redhat-cne/sdk-go/v1/event"
 )
 
 func TestMarshal(t *testing.T) {
@@ -41,7 +42,7 @@ func TestMarshal(t *testing.T) {
 		},
 		"struct Data v1": {
 			event: func() event.Event {
-				e := event.New()
+				e := v1.CloudNativeEvent()
 				e.SetDataContentType(event.ApplicationJSON)
 				_ = e.SetDataSchema(schemaUrl)
 				e.Time = &now

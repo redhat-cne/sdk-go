@@ -1,7 +1,5 @@
 package pubsub
 
-import ()
-
 var _ Reader = (*PubSub)(nil)
 
 // GetResource implements EventReader.Resource

@@ -27,31 +27,16 @@ const (
 
 // Data ...
 type Data struct {
-	Version     string      `json:"version"`
-	Values      []DataValue `json:"values"`
-	FieldErrors map[string]error
+	Version string      `json:"version"`
+	Values  []DataValue `json:"values"`
 }
 
 // DataValue ...
 type DataValue struct {
-	Resource    string      `json:"resource"`
-	DataType    DataType    `json:"dataType"`
-	ValueType   ValueType   `json:"valueType"`
-	Value       interface{} `json:"value"`
-	FieldErrors map[string]error
-}
-
-func (d *Data) fieldError(field string, err error) {
-	if d.FieldErrors == nil {
-		d.FieldErrors = make(map[string]error)
-	}
-	d.FieldErrors[field] = err
-}
-
-func (d *Data) fieldOK(field string) {
-	if d.FieldErrors != nil {
-		delete(d.FieldErrors, field)
-	}
+	Resource  string      `json:"resource"`
+	DataType  DataType    `json:"dataType"`
+	ValueType ValueType   `json:"valueType"`
+	Value     interface{} `json:"value"`
 }
 
 // SetVersion  ...
@@ -59,25 +44,20 @@ func (d *Data) SetVersion(s string) error {
 	d.Version = s
 	if s == "" {
 		err := fmt.Errorf("version cannot be empty")
-		d.fieldError("version", err)
 		return err
 	}
-	d.fieldOK("version")
 	return nil
 }
 
 // SetValues ...
-func (d *Data) SetValues(v []DataValue) error {
+func (d *Data) SetValues(v []DataValue) {
 	d.Values = v
-	d.fieldOK("value")
-	return nil
 }
 
 // AppendValues ...
-func (d *Data) AppendValues(v DataValue) error {
+func (d *Data) AppendValues(v DataValue) {
 	d.Values = append(d.Values, v)
-	d.fieldOK("value")
-	return nil
+
 }
 
 // GetVersion ...
@@ -90,19 +70,6 @@ func (d *Data) GetValues() []DataValue {
 	return d.Values
 }
 
-func (v *DataValue) fieldError(field string, err error) {
-	if v.FieldErrors == nil {
-		v.FieldErrors = make(map[string]error)
-	}
-	v.FieldErrors[field] = err
-}
-
-func (v *DataValue) fieldOK(field string) {
-	if v.FieldErrors != nil {
-		delete(v.FieldErrors, field)
-	}
-}
-
 // GetResource ...
 func (v *DataValue) GetResource() string {
 	return v.Resource
@@ -113,9 +80,7 @@ func (v *DataValue) SetResource(r string) error {
 	matched, err := regexp.MatchString(`([^/]+(/{2,}[^/]+)?)`, r)
 	if matched {
 		v.Resource = r
-		v.fieldOK("resource")
 	} else {
-		v.fieldError("resource", err)
 		return err
 	}
 	return nil

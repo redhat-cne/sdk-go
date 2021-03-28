@@ -1,7 +1,7 @@
 package pubsub
 
 import (
-	"github.com/redhat-cne/sdk-go/types"
+	"github.com/redhat-cne/sdk-go/pkg/types"
 	"strings"
 )
 
