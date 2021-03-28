@@ -5,19 +5,18 @@ import (
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/cloudevents/sdk-go/v2/event"
 	ce_types "github.com/cloudevents/sdk-go/v2/types"
-	"github.com/redhat-cne/sdk-go/types"
+	amqp1 "github.com/redhat-cne/sdk-go/pkg/protocol/amqp"
+	"github.com/redhat-cne/sdk-go/pkg/types"
 	"log"
 	"net/url"
 	"time"
 
-	cne_event "github.com/redhat-cne/sdk-go/event"
+	cne_event "github.com/redhat-cne/sdk-go/pkg/event"
 
-	"github.com/redhat-cne/sdk-go/channel"
+	"github.com/redhat-cne/sdk-go/pkg/channel"
 
 	"github.com/stretchr/testify/assert"
 	"sync"
-
-	amqp1 "github.com/redhat-cne/sdk-go/protocol/amqp"
 
 	"testing"
 )
@@ -86,15 +85,14 @@ func CloudEvents() cloudevents.Event {
 }
 
 func TestSendEvent(t *testing.T) {
-
 	addr := "test/test2"
 	s := "amqp://localhost:5672"
 
 	event := CloudEvents()
-	in := make(chan channel.DataEvent)
-	out := make(chan channel.DataEvent)
-	close := make(chan bool)
-	server, err := amqp1.InitServer(s, in, out, close)
+	in := make(chan channel.DataChan)
+	out := make(chan channel.DataChan)
+	closeCh := make(chan bool)
+	server, err := amqp1.InitServer(s, in, out, closeCh)
 	if err != nil {
 		t.Skipf("ampq.Dial(%#v): %v", server, err)
 	}
@@ -102,35 +100,106 @@ func TestSendEvent(t *testing.T) {
 	go server.QDRRouter(&wg)
 
 	// create a sender
-	in <- channel.DataEvent{
-		Address:   addr,
-		EventType: channel.SENDER,
+	in <- channel.DataChan{
+		Address: addr,
+		Type:    channel.SENDER,
 	}
 
 	// create a listener
-	in <- channel.DataEvent{
-		Address:   addr,
-		EventType: channel.LISTENER,
+	in <- channel.DataChan{
+		Address: addr,
+		Type:    channel.LISTENER,
 	}
 
 	// send data
-	in <- channel.DataEvent{
-		Address:     addr,
-		Data:        &event,
-		EventStatus: channel.NEW,
-		EndPointURI: "http://localhost",
-		EventType:   channel.EVENT,
+	in <- channel.DataChan{
+		Address: addr,
+		Data:    &event,
+		Status:  channel.NEW,
+		Type:    channel.EVENT,
 	}
 
 	// read data
 	d := <-out
 	log.Printf("Processing out channel")
-	assert.Equal(t, d.EventType, channel.EVENT)
+	assert.Equal(t, d.Type, channel.EVENT)
 	assert.Equal(t, d.Address, addr)
 	dd := cne_event.Data{}
 	err = json.Unmarshal(event.Data(), &dd)
 	assert.Nil(t, err)
 	assert.Equal(t, dd.Version, "1.0")
-	close <- true
+	log.Printf("sending close")
+	closeCh <- true
+	wg.Wait()
+
+}
+
+func TestDeleteListener(t *testing.T) {
+	addr := "test/test2"
+	s := "amqp://localhost:5672"
+
+	in := make(chan channel.DataChan)
+	out := make(chan channel.DataChan)
+	closeCh := make(chan bool)
+	server, err := amqp1.InitServer(s, in, out, closeCh)
+	if err != nil {
+		t.Skipf("ampq.Dial(%#v): %v", server, err)
+	}
+	assert.Equal(t, len(server.Listeners), 0)
+	wg := sync.WaitGroup{}
+	go server.QDRRouter(&wg)
+
+	// create a listener
+	in <- channel.DataChan{
+		Address: addr,
+		Type:    channel.LISTENER,
+	}
+	time.Sleep(2 * time.Second)
+	assert.Equal(t, 1, len(server.Listeners))
+
+	// send data
+	in <- channel.DataChan{
+		Address: addr,
+		Status:  channel.DELETE,
+		Type:    channel.LISTENER,
+	}
+	time.Sleep(2 * time.Second)
+	// read data
+	assert.Equal(t, 0, len(server.Listeners))
+
+}
+
+func TestDeleteSender(t *testing.T) {
+	addr := "test/test2"
+	s := "amqp://localhost:5672"
+
+	in := make(chan channel.DataChan)
+	out := make(chan channel.DataChan)
+	closeCh := make(chan bool)
+	server, err := amqp1.InitServer(s, in, out, closeCh)
+	if err != nil {
+		t.Skipf("ampq.Dial(%#v): %v", server, err)
+	}
+	assert.Equal(t, len(server.Listeners), 0)
+	wg := sync.WaitGroup{}
+	go server.QDRRouter(&wg)
+
+	// create a listener
+	in <- channel.DataChan{
+		Address: addr,
+		Type:    channel.SENDER,
+	}
+	time.Sleep(2 * time.Second)
+	assert.Equal(t, 1, len(server.Senders))
+
+	// send data
+	in <- channel.DataChan{
+		Address: addr,
+		Status:  channel.DELETE,
+		Type:    channel.SENDER,
+	}
+	time.Sleep(2 * time.Second)
+	// read data
+	assert.Equal(t, 0, len(server.Senders))
 
 }

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/google/uuid"
-	"github.com/redhat-cne/sdk-go/pubsub"
+	"github.com/redhat-cne/sdk-go/pkg/pubsub"
 )
 
 //NewCloudEvent create new cloud event from cloud native events and pubsub

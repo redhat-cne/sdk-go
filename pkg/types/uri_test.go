@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/redhat-cne/sdk-go/types"
+	"github.com/redhat-cne/sdk-go/pkg/types"
 )
 
 func TestParseURL(t *testing.T) {

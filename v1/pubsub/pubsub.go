@@ -1,18 +1,18 @@
-package api
+package pubsub
 
 import (
 	"encoding/json"
 	"fmt"
 	"github.com/google/uuid"
+	"github.com/redhat-cne/sdk-go/pkg/pubsub"
 	"github.com/redhat-cne/sdk-go/pkg/store"
-	"github.com/redhat-cne/sdk-go/pubsub"
 	"io/ioutil"
 	"log"
 	"os"
 	"sync"
 )
 
-type PubSubAPI struct {
+type API struct {
 	pubStore      *store.PubSubStore
 	subStore      *store.PubSubStore
 	subFile       string
@@ -20,13 +20,13 @@ type PubSubAPI struct {
 	storeFilePath string
 }
 
-var instance *PubSubAPI
+var instance *API
 var once sync.Once
 
-//GetPubSubAPIInstance ... get api instance
-func GetPubSubAPIInstance(storeFilePath string) *PubSubAPI {
+//GetAPIInstance get event instance
+func GetAPIInstance(storeFilePath string) *API {
 	once.Do(func() {
-		instance = &PubSubAPI{
+		instance = &API{
 			pubStore: &store.PubSubStore{
 				RWMutex: sync.RWMutex{},
 				Store:   map[string]*pubsub.PubSub{},
@@ -45,7 +45,8 @@ func GetPubSubAPIInstance(storeFilePath string) *PubSubAPI {
 	return instance
 }
 
-func (p *PubSubAPI) ReloadStore() {
+//ReloadStore reload store if there is any change or refresh is required
+func (p *API) ReloadStore() {
 	// load for file
 	if b, err := loadFromFile(fmt.Sprintf("%s/%s", p.storeFilePath, p.subFile)); err == nil {
 		if len(b) > 0 {
@@ -72,8 +73,8 @@ func (p *PubSubAPI) ReloadStore() {
 	}
 }
 
-//GetFromPubStore get data from pub store
-func (p *PubSubAPI) GetFromPubStore(address string) (pubsub.PubSub, error) {
+//GetFromPubStore get data from publisher store
+func (p *API) GetFromPubStore(address string) (pubsub.PubSub, error) {
 	for _, pub := range p.pubStore.Store {
 		if pub.GetResource() == address {
 			return pubsub.PubSub{
@@ -87,8 +88,8 @@ func (p *PubSubAPI) GetFromPubStore(address string) (pubsub.PubSub, error) {
 	return pubsub.PubSub{}, fmt.Errorf("publisher not found for address %s", address)
 }
 
-//GetFromSubStore get data from sub store
-func (p *PubSubAPI) GetFromSubStore(address string) (pubsub.PubSub, error) {
+//GetFromSubStore get data from subscription store
+func (p *API) GetFromSubStore(address string) (pubsub.PubSub, error) {
 	for _, sub := range p.subStore.Store {
 		if sub.GetResource() == address {
 			return pubsub.PubSub{
@@ -102,26 +103,27 @@ func (p *PubSubAPI) GetFromSubStore(address string) (pubsub.PubSub, error) {
 	return pubsub.PubSub{}, fmt.Errorf("subscription not found for address %s ", address)
 }
 
-//HasSubscription ...
-func (p *PubSubAPI) HasSubscription(address string) (pubsub.PubSub, bool) {
+//HasSubscription check if the subscription is already exists in the store/cache
+func (p *API) HasSubscription(address string) (pubsub.PubSub, bool) {
 	if sub, err := p.GetFromSubStore(address); err == nil {
 		return sub, true
 	}
 	return pubsub.PubSub{}, false
 }
 
-//HasPublisher ...
-func (p *PubSubAPI) HasPublisher(address string) (pubsub.PubSub, bool) {
+//HasPublisher check if the publisher is already exists in the store/cache
+func (p *API) HasPublisher(address string) (pubsub.PubSub, bool) {
 	if pub, err := p.GetFromPubStore(address); err == nil {
 		return pub, true
 	}
 	return pubsub.PubSub{}, false
 }
 
-//CreateSubscription ...
-func (p *PubSubAPI) CreateSubscription(sub pubsub.PubSub) (pubsub.PubSub, error) {
+//CreateSubscription create a subscription and store it in a file and cache
+func (p *API) CreateSubscription(sub pubsub.PubSub) (pubsub.PubSub, error) {
 	if subExists, ok := p.HasSubscription(sub.GetResource()); ok {
 		log.Printf("There was already subscription,skipping creation %v", subExists)
+
 		return subExists, nil
 	}
 	sub.SetID(uuid.New().String())
@@ -139,8 +141,8 @@ func (p *PubSubAPI) CreateSubscription(sub pubsub.PubSub) (pubsub.PubSub, error)
 	return sub, nil
 }
 
-//CreatePublisher ...
-func (p *PubSubAPI) CreatePublisher(pub pubsub.PubSub) (pubsub.PubSub, error) {
+//CreatePublisher  create a publisher data and store it a file and cache
+func (p *API) CreatePublisher(pub pubsub.PubSub) (pubsub.PubSub, error) {
 	if subExists, ok := p.HasPublisher(pub.GetResource()); ok {
 		log.Printf("There was already subscription,skipping creation %v", subExists)
 		return subExists, nil
@@ -160,8 +162,8 @@ func (p *PubSubAPI) CreatePublisher(pub pubsub.PubSub) (pubsub.PubSub, error) {
 	return pub, nil
 }
 
-//GetSubscriptionByID ...
-func (p *PubSubAPI) GetSubscriptionByID(subscriptionID string) (pubsub.PubSub, error) {
+//GetSubscription  get a subscription by it's id
+func (p *API) GetSubscription(subscriptionID string) (pubsub.PubSub, error) {
 	if sub, ok := p.subStore.Store[subscriptionID]; ok {
 		return *sub, nil
 	}
@@ -169,8 +171,8 @@ func (p *PubSubAPI) GetSubscriptionByID(subscriptionID string) (pubsub.PubSub, e
 	return pubsub.PubSub{}, fmt.Errorf("subscription data not found for id %s", subscriptionID)
 }
 
-// GetPublisherByID ...
-func (p *PubSubAPI) GetPublisherByID(publisherID string) (pubsub.PubSub, error) {
+// GetPublisher get a publisher by it's id
+func (p *API) GetPublisher(publisherID string) (pubsub.PubSub, error) {
 	if sub, ok := p.pubStore.Store[publisherID]; ok {
 		return *sub, nil
 	}
@@ -178,17 +180,18 @@ func (p *PubSubAPI) GetPublisherByID(publisherID string) (pubsub.PubSub, error) 
 	return pubsub.PubSub{}, fmt.Errorf("publisher data not found for id %s", publisherID)
 }
 
-// GetSubscriptions ...
-func (p *PubSubAPI) GetSubscriptions() map[string]*pubsub.PubSub {
+// GetSubscriptions  get all subscription inforamtions
+func (p *API) GetSubscriptions() map[string]*pubsub.PubSub {
 	return p.subStore.Store
 }
 
-// GetPublishers ...
-func (p *PubSubAPI) GetPublishers() map[string]*pubsub.PubSub {
+// GetPublishers  get all publishers information
+func (p *API) GetPublishers() map[string]*pubsub.PubSub {
 	return p.pubStore.Store
 }
 
-func (p *PubSubAPI) DeletePublisher(publisherID string) error {
+//DeletePublisher delete a publisher by id
+func (p *API) DeletePublisher(publisherID string) error {
 	if pub, ok := p.pubStore.Store[publisherID]; ok {
 		err := deleteFromFile(*pub, fmt.Sprintf("%s/%s", p.storeFilePath, p.pubFile))
 		p.pubStore.Delete(publisherID)
@@ -197,7 +200,8 @@ func (p *PubSubAPI) DeletePublisher(publisherID string) error {
 	return nil
 }
 
-func (p *PubSubAPI) DeleteSubscription(subscriptionID string) error {
+//DeleteSubscription delete a subscription by id
+func (p *API) DeleteSubscription(subscriptionID string) error {
 	if pub, ok := p.subStore.Store[subscriptionID]; ok {
 		err := deleteFromFile(*pub, fmt.Sprintf("%s/%s", p.storeFilePath, p.subFile))
 		p.subStore.Delete(subscriptionID)
@@ -205,7 +209,9 @@ func (p *PubSubAPI) DeleteSubscription(subscriptionID string) error {
 	}
 	return nil
 }
-func (p *PubSubAPI) DeleteAllSubscriptions() error {
+
+//DeleteAllSubscriptions  delete all subscription information
+func (p *API) DeleteAllSubscriptions() error {
 	if err := deleteAllFromFile(fmt.Sprintf("%s/%s", p.storeFilePath, p.subFile)); err != nil {
 		return err
 	}
@@ -214,13 +220,26 @@ func (p *PubSubAPI) DeleteAllSubscriptions() error {
 	return nil
 }
 
-func (p *PubSubAPI) DeleteAllPublishers() error {
+//DeleteAllPublishers delete all teh publisher information the store and cache.
+func (p *API) DeleteAllPublishers() error {
 	if err := deleteAllFromFile(fmt.Sprintf("%s/%s", p.storeFilePath, p.pubFile)); err != nil {
 		return err
 	}
 	//empty the store
 	p.pubStore.Store = make(map[string]*pubsub.PubSub)
 	return nil
+}
+
+//GetPublishersFromFile  get publisher data from teh file store
+func (p *API) GetPublishersFromFile() ([]byte, error) {
+	b, err := loadFromFile(fmt.Sprintf("%s/%s", p.storeFilePath, p.pubFile))
+	return b, err
+}
+
+//GetSubscriptionsFromFile  get subscriptions data from the file store
+func (p *API) GetSubscriptionsFromFile() ([]byte, error) {
+	b, err := loadFromFile(fmt.Sprintf("%s/%s", p.storeFilePath, p.subFile))
+	return b, err
 }
 
 //deleteAllFromFile deletes  publisher and subscription information from the file system
@@ -271,16 +290,6 @@ func deleteFromFile(sub pubsub.PubSub, filePath string) error {
 	}
 	return nil
 
-}
-
-func (p *PubSubAPI) GetPublishersFromFile() ([]byte, error) {
-	b, err := loadFromFile(fmt.Sprintf("%s/%s", p.storeFilePath, p.pubFile))
-	return b, err
-}
-
-func (p *PubSubAPI) GetSubscriptionsFromFile() ([]byte, error) {
-	b, err := loadFromFile(fmt.Sprintf("%s/%s", p.storeFilePath, p.subFile))
-	return b, err
 }
 
 // loadFromFile is used to read subscription/publisher from the file system

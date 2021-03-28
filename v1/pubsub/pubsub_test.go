@@ -1,9 +1,9 @@
-package api_test
+package pubsub_test
 
 import (
-	"github.com/redhat-cne/sdk-go/api"
-	"github.com/redhat-cne/sdk-go/pubsub"
-	"github.com/redhat-cne/sdk-go/types"
+	"github.com/redhat-cne/sdk-go/pkg/pubsub"
+	"github.com/redhat-cne/sdk-go/pkg/types"
+	api "github.com/redhat-cne/sdk-go/v1/pubsub"
 	"github.com/stretchr/testify/assert"
 	"net/url"
 	"os"
@@ -12,6 +12,7 @@ import (
 
 var (
 	storePath = "."
+
 	publisher = pubsub.PubSub{
 		EndPointURI: &types.URI{URL: url.URL{Scheme: "http", Host: "localhost:8080", Path: "/post/event"}},
 		Resource:    "test/test",
@@ -20,17 +21,17 @@ var (
 		EndPointURI: &types.URI{URL: url.URL{Scheme: "http", Host: "localhost:8080", Path: "/get/event"}},
 		Resource:    "test/test",
 	}
-	globalInstance = api.GetPubSubAPIInstance(storePath)
+	globalInstance = api.GetAPIInstance(storePath)
 )
 
-func TestPubSubAPI_GetPubSubAPIInstance(t *testing.T) {
+func TestAPI_GetAPIInstance(t *testing.T) {
 
-	localInstance := api.GetPubSubAPIInstance(storePath)
+	localInstance := api.GetAPIInstance(storePath)
 
 	assert.Equal(t, &globalInstance, &localInstance)
 }
 
-func TestPubSubAPI_CreatePublisher(t *testing.T) {
+func TestAPI_CreatePublisher(t *testing.T) {
 	p, e := globalInstance.CreatePublisher(publisher)
 	assert.Nil(t, e)
 	assert.NotEmpty(t, p.ID)
@@ -38,7 +39,7 @@ func TestPubSubAPI_CreatePublisher(t *testing.T) {
 	assert.Equal(t, p.Resource, publisher.Resource)
 	assert.Equal(t, p.EndPointURI, publisher.EndPointURI)
 }
-func TestPubSubAPI_CreateSubscription(t *testing.T) {
+func TestAPI_CreateSubscription(t *testing.T) {
 	s, e := globalInstance.CreateSubscription(subscription)
 	assert.Nil(t, e)
 	assert.NotEmpty(t, s.ID)
@@ -47,7 +48,7 @@ func TestPubSubAPI_CreateSubscription(t *testing.T) {
 	assert.Equal(t, s.EndPointURI, subscription.EndPointURI)
 }
 
-func TestPubSubAPI_DeleteAllPublishers(t *testing.T) {
+func TestAPI_DeleteAllPublishers(t *testing.T) {
 	p, e := globalInstance.CreatePublisher(publisher)
 	assert.Nil(t, e)
 	assert.NotEmpty(t, p.ID)
@@ -59,7 +60,7 @@ func TestPubSubAPI_DeleteAllPublishers(t *testing.T) {
 	assert.Len(t, globalInstance.GetPublishers(), 0)
 }
 
-func TestPubSubAPI_DeleteAllSubscriptions(t *testing.T) {
+func TestAPI_DeleteAllSubscriptions(t *testing.T) {
 	p, e := globalInstance.CreateSubscription(subscription)
 	assert.Nil(t, e)
 	assert.NotEmpty(t, p.ID)
@@ -71,28 +72,28 @@ func TestPubSubAPI_DeleteAllSubscriptions(t *testing.T) {
 	assert.Len(t, globalInstance.GetSubscriptions(), 0)
 }
 
-func TestPubSubAPI_DeletePublisher(t *testing.T) {
+func TestAPI_DeletePublisher(t *testing.T) {
 	p, e := globalInstance.CreatePublisher(publisher)
 	assert.Nil(t, e)
 	assert.NotEmpty(t, p.ID)
 	e = globalInstance.DeletePublisher(p.ID)
 	assert.Nil(t, e)
-	delPub, e := globalInstance.GetPublisherByID(p.ID)
+	delPub, e := globalInstance.GetPublisher(p.ID)
 	assert.NotNil(t, e)
 	assert.Equal(t, delPub, pubsub.PubSub{})
 
 }
-func TestPubSubAPI_DeleteSubscription(t *testing.T) {
+func TestAPI_DeleteSubscription(t *testing.T) {
 	s, e := globalInstance.CreateSubscription(subscription)
 	assert.Nil(t, e)
 	assert.NotEmpty(t, s.ID)
 	e = globalInstance.DeleteSubscription(s.ID)
 	assert.Nil(t, e)
-	delSub, e := globalInstance.GetSubscriptionByID(s.ID)
+	delSub, e := globalInstance.GetSubscription(s.ID)
 	assert.NotNil(t, e)
 	assert.Equal(t, delSub, pubsub.PubSub{})
 }
-func TestPubSubAPI_GetFromPubStore(t *testing.T) {
+func TestAPI_GetFromPubStore(t *testing.T) {
 	p, e := globalInstance.CreatePublisher(publisher)
 	assert.Nil(t, e)
 	storePub, e := globalInstance.GetFromPubStore(p.Resource)
@@ -100,45 +101,45 @@ func TestPubSubAPI_GetFromPubStore(t *testing.T) {
 	assert.Equal(t, p, storePub)
 
 }
-func TestPubSubAPI_GetFromSubStore(t *testing.T) {
-	p, e := globalInstance.CreateSubscription(subscription)
+func TestAPI_GetFromSubStore(t *testing.T) {
+	s, e := globalInstance.CreateSubscription(subscription)
 	assert.Nil(t, e)
-	storeSub, e := globalInstance.GetFromSubStore(p.Resource)
+	storeSub, e := globalInstance.GetFromSubStore(s.Resource)
 	assert.Nil(t, e)
-	assert.Equal(t, p, storeSub)
+	assert.Equal(t, s, storeSub)
 
 }
-func TestPubSubAPI_GetPublisherByID(t *testing.T) {
+func TestAPI_GetPublisher(t *testing.T) {
 	p, e := globalInstance.CreatePublisher(publisher)
 	assert.Nil(t, e)
-	storeP, e := globalInstance.GetPublisherByID(p.ID)
+	storeP, e := globalInstance.GetPublisher(p.ID)
 	assert.Nil(t, e)
 	assert.Equal(t, p, storeP)
 }
 
-func TestPubSubAPI_GetPublishers(t *testing.T) {
+func TestAPI_GetPublishers(t *testing.T) {
 	_, e := globalInstance.CreatePublisher(publisher)
 	assert.Nil(t, e)
 	pubs := globalInstance.GetPublishers()
 	assert.Greater(t, len(pubs), 0)
 }
 
-func TestPubSubAPI_GetSubscriptionByID(t *testing.T) {
+func TestAPI_GetSubscription(t *testing.T) {
 	s, e := globalInstance.CreateSubscription(subscription)
 	assert.Nil(t, e)
-	storeS, e := globalInstance.GetSubscriptionByID(s.ID)
+	storeS, e := globalInstance.GetSubscription(s.ID)
 	assert.Nil(t, e)
 	assert.Equal(t, s, storeS)
 }
 
-func TestPubSubAPI_GetSubscriptions(t *testing.T) {
+func TestAPI_GetSubscriptions(t *testing.T) {
 	_, e := globalInstance.CreateSubscription(subscription)
 	assert.Nil(t, e)
 	subs := globalInstance.GetSubscriptions()
 	assert.Greater(t, len(subs), 0)
 }
 
-func TestPubSubAPI_HasPublisher(t *testing.T) {
+func TestAPI_HasPublisher(t *testing.T) {
 	p, e := globalInstance.CreatePublisher(publisher)
 	assert.Nil(t, e)
 	fp, found := globalInstance.HasPublisher(p.Resource)
@@ -147,7 +148,7 @@ func TestPubSubAPI_HasPublisher(t *testing.T) {
 
 }
 
-func TestPubSubAPI_HasSubscription(t *testing.T) {
+func TestAPI_HasSubscription(t *testing.T) {
 	s, e := globalInstance.CreateSubscription(subscription)
 	assert.Nil(t, e)
 	fs, found := globalInstance.HasSubscription(s.Resource)

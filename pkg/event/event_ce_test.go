@@ -4,9 +4,10 @@ import (
 	"encoding/json"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/google/uuid"
-	cne_event "github.com/redhat-cne/sdk-go/event"
-	cne_pubsub "github.com/redhat-cne/sdk-go/pubsub"
-	"github.com/redhat-cne/sdk-go/types"
+	cne_event "github.com/redhat-cne/sdk-go/pkg/event"
+	cne_pubsub "github.com/redhat-cne/sdk-go/pkg/pubsub"
+	"github.com/redhat-cne/sdk-go/pkg/types"
+	cne_event_v1 "github.com/redhat-cne/sdk-go/v1/event"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"log"
@@ -17,8 +18,8 @@ import (
 
 var (
 	now         = types.Timestamp{Time: time.Now().UTC()}
-	uriLocation = "http://localhost:9090/api/subscription/1234"
-	endPointUri = "http://localhost:8080/api/ack/event"
+	uriLocation = "http://localhost:9090/event/subscription/1234"
+	endPointUri = "http://localhost:8080/event/ack/event"
 	resource    = "/cluster/node/ptp"
 	_type       = "ptp_status_type"
 	version     = "v1"
@@ -55,12 +56,13 @@ func TestEvent_NewCloudEvent(t *testing.T) {
 	}{
 		"struct Data v1": {
 			cne_event: func() *cne_event.Event {
-				e := cne_event.NewCloudNativeEvent()
+				e := cne_event_v1.CloudNativeEvent()
+
 				e.SetDataContentType(cne_event.ApplicationJSON)
 				e.SetTime(now.Time)
 				e.SetType(_type)
 				e.SetData(data)
-				return e
+				return &e
 			}(),
 			cne_pubsub: &pubsub,
 			want: func() *cloudevents.Event {
@@ -110,19 +112,19 @@ func TestEvent_GetCloudNativeEvents(t *testing.T) {
 				return &e
 			}(),
 			want: func() *cne_event.Event {
-				e := cne_event.NewCloudNativeEvent()
+				e := cne_event_v1.CloudNativeEvent()
 				e.SetDataContentType(cne_event.ApplicationJSON)
 				e.SetTime(now.Time)
 				e.SetType(_type)
 				e.SetData(data)
-				return e
+				return &e
 			}(),
 		},
 	}
 
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
-			event := cne_event.NewCloudNativeEvent()
+			event := cne_event_v1.CloudNativeEvent()
 			err := event.GetCloudNativeEvents(tc.ce_event)
 			assert.Nil(t, err)
 			gotBytes, err := json.Marshal(event)

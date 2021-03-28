@@ -1,7 +1,7 @@
 package event
 
 import (
-	"github.com/redhat-cne/sdk-go/types"
+	"github.com/redhat-cne/sdk-go/pkg/types"
 	"net/url"
 	"strings"
 	"time"
