@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/redhat-cne/sdk-go/pkg/pubsub"
 	"github.com/redhat-cne/sdk-go/pkg/store"
+	"github.com/redhat-cne/sdk-go/pkg/types"
 	"io/ioutil"
 	"log"
 	"os"
@@ -23,6 +24,18 @@ type API struct {
 
 var instance *API
 var once sync.Once
+
+//NewPubSub create new publisher or subscriber
+func NewPubSub(endPointURI *types.URI, resource string) pubsub.PubSub{
+	return pubsub.PubSub{
+		EndPointURI: endPointURI,
+		Resource:    resource,
+	}
+}
+//New creates empty publisher or subscriber
+func New() pubsub.PubSub{
+	return pubsub.PubSub{}
+}
 
 //GetAPIInstance get event instance
 func GetAPIInstance(storeFilePath string) *API {
@@ -242,6 +255,7 @@ func (p *API) GetSubscriptionsFromFile() ([]byte, error) {
 	b, err := loadFromFile(fmt.Sprintf("%s/%s", p.storeFilePath, p.subFile))
 	return b, err
 }
+
 
 //deleteAllFromFile deletes  publisher and subscription information from the file system
 func deleteAllFromFile(filePath string) error {
