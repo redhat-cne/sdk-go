@@ -14,6 +14,7 @@ var (
 	once     sync.Once
 )
 
+//AMQP exposes amqp api methods
 type AMQP struct {
 	Router *amqp1.Router
 }
@@ -45,16 +46,18 @@ func GetAMQPInstance(amqpHost string, DataIn <-chan channel.DataChan, DataOut ch
 	return instance, nil
 }
 
+//Start start amqp processors
 func (a *AMQP) Start() {
 	wg := sync.WaitGroup{}
 	go instance.Router.QDRRouter(&wg)
 }
 
+//NewSender - create new sender independent of the framework
 func NewSender(hostName string, port int, address string) (*amqp1.Protocol, error) {
 	return amqp1.NewSender(hostName, port, address)
 }
 
-// NewReceiver create new receiverindependent of the framework
+// NewReceiver create new receiver independent of the framework
 func NewReceiver(hostName string, port int, address string) (*amqp1.Protocol, error) {
 	return amqp1.NewReceiver(hostName, port, address)
 }

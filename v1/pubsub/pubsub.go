@@ -12,6 +12,7 @@ import (
 	"sync"
 )
 
+//API ... api methods  for publisher subscriber
 type API struct {
 	pubStore      *store.PubSubStore
 	subStore      *store.PubSubStore

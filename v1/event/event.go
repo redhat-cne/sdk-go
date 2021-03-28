@@ -18,17 +18,17 @@ func PublishCloudEventToLog(e cloudevents.Event) {
 
 }
 
-//CloudNativeEvent
+//CloudNativeEvent gets Cloud Native Event object
 func CloudNativeEvent() event.Event {
 	return event.Event{}
 }
 
-//CloudNativeEventData
+//CloudNativeData gets Cloud Native Event object
 func CloudNativeData() event.Data {
 	return event.Data{}
 }
 
-//CloudNativeEventDataValues
+//CloudNativeDataValues gets CNE data values object
 func CloudNativeDataValues() event.DataValue {
 	return event.DataValue{}
 }
