@@ -26,14 +26,15 @@ var instance *API
 var once sync.Once
 
 //NewPubSub create new publisher or subscriber
-func NewPubSub(endPointURI *types.URI, resource string) pubsub.PubSub{
+func NewPubSub(endPointURI *types.URI, resource string) pubsub.PubSub {
 	return pubsub.PubSub{
 		EndPointURI: endPointURI,
 		Resource:    resource,
 	}
 }
+
 //New creates empty publisher or subscriber
-func New() pubsub.PubSub{
+func New() pubsub.PubSub {
 	return pubsub.PubSub{}
 }
 
@@ -170,7 +171,7 @@ func (p *API) CreatePublisher(pub pubsub.PubSub) (pubsub.PubSub, error) {
 		log.Printf("Error writing to store %v\n", err)
 		return pubsub.PubSub{}, err
 	}
-	log.Printf("Stored in a file %s", fmt.Sprintf("%s/%s", p.storeFilePath, p.subFile))
+	log.Printf("Stored in a file %s", fmt.Sprintf("%s/%s", p.storeFilePath, p.pubFile))
 	//store the publisher
 	p.pubStore.Set(pub.ID, &pub)
 	return pub, nil
@@ -255,7 +256,6 @@ func (p *API) GetSubscriptionsFromFile() ([]byte, error) {
 	b, err := loadFromFile(fmt.Sprintf("%s/%s", p.storeFilePath, p.subFile))
 	return b, err
 }
-
 
 //deleteAllFromFile deletes  publisher and subscription information from the file system
 func deleteAllFromFile(filePath string) error {

@@ -47,9 +47,8 @@ func GetAMQPInstance(amqpHost string, DataIn <-chan channel.DataChan, DataOut ch
 }
 
 //Start start amqp processors
-func (a *AMQP) Start() {
-	wg := sync.WaitGroup{}
-	go instance.Router.QDRRouter(&wg)
+func (a *AMQP) Start(wg *sync.WaitGroup) {
+	go instance.Router.QDRRouter(wg)
 }
 
 //NewSender - create new sender independent of the framework
