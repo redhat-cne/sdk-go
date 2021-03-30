@@ -39,9 +39,9 @@ func SendEventToLog(e event.Event) {
 }
 
 //SendNewEventToDataChannel send created publisher information for QDR to process
-func SendNewEventToDataChannel(outChan chan<- channel.DataChan, address string, e *cloudevents.Event) {
+func SendNewEventToDataChannel(inChan chan<- channel.DataChan, address string, e *cloudevents.Event) {
 	// go ahead and create QDR to this address
-	outChan <- channel.DataChan{
+	inChan <- channel.DataChan{
 		Address: address,
 		Data:    e,
 		Status:  channel.NEW,
@@ -50,9 +50,9 @@ func SendNewEventToDataChannel(outChan chan<- channel.DataChan, address string, 
 }
 
 //SendStatusToDataChannel send created publisher information for QDR to process
-func SendStatusToDataChannel(outChan chan<- channel.DataChan, status channel.Status, address string) {
+func SendStatusToDataChannel(inChan chan<- channel.DataChan, status channel.Status, address string) {
 	// go ahead and create QDR to this address
-	outChan <- channel.DataChan{
+	inChan <- channel.DataChan{
 		Address: address,
 		Type:    channel.STATUS,
 		Status:  status,
@@ -60,8 +60,8 @@ func SendStatusToDataChannel(outChan chan<- channel.DataChan, status channel.Sta
 }
 
 // SendCloudEventsToDataChannel sends data event in cloudevents format to data channel
-func SendCloudEventsToDataChannel(outChan chan<- channel.DataChan, status channel.Status, address string, e cloudevents.Event) {
-	outChan <- channel.DataChan{
+func SendCloudEventsToDataChannel(inChan chan<- channel.DataChan, status channel.Status, address string, e cloudevents.Event) {
+	inChan <- channel.DataChan{
 		Address: address,
 		Data:    &e,
 		Status:  status,
