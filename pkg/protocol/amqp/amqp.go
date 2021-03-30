@@ -3,14 +3,15 @@ package amqp
 import (
 	"context"
 	"fmt"
+	"log"
+	"sync"
+	"time"
+
 	"github.com/Azure/go-amqp"
 	amqp1 "github.com/cloudevents/sdk-go/protocol/amqp/v2"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	channel "github.com/redhat-cne/sdk-go/pkg/channel"
 	"github.com/redhat-cne/sdk-go/pkg/protocol"
-	"log"
-	"sync"
-	"time"
 )
 
 /*var (
@@ -28,15 +29,15 @@ type Router struct {
 	Listeners map[string]*Protocol
 	Senders   map[string]*Protocol
 	Host      string
-	DataIn    <-chan channel.DataChan
-	DataOut   chan<- channel.DataChan
+	DataIn    <-chan *channel.DataChan
+	DataOut   chan<- *channel.DataChan
 	Client    *amqp.Client
 	//close on true
 	Close <-chan bool
 }
 
 //InitServer initialize QDR configurations
-func InitServer(amqpHost string, DataIn <-chan channel.DataChan, DataOut chan<- channel.DataChan, close <-chan bool) (*Router, error) {
+func InitServer(amqpHost string, DataIn <-chan *channel.DataChan, DataOut chan<- *channel.DataChan, close <-chan bool) (*Router, error) {
 	server := Router{
 		Listeners: map[string]*Protocol{},
 		Senders:   map[string]*Protocol{},
@@ -173,6 +174,7 @@ func (q *Router) QDRRouter(wg *sync.WaitGroup) {
 		for { //nolint:gosimple
 			select {
 			case d := <-q.DataIn:
+				log.Printf("go data %#v", d)
 				if d.Type == channel.STATUS {
 					switch d.Status {
 					case channel.DELETE:
@@ -191,7 +193,7 @@ func (q *Router) QDRRouter(wg *sync.WaitGroup) {
 								} else {
 									wg.Add(1)
 									go q.Receive(wg, d.Address, func(e cloudevents.Event) { // just spawn and forget
-										q.DataOut <- channel.DataChan{
+										q.DataOut <- &channel.DataChan{
 											Address:  d.Address,
 											Data:     &e,
 											Status:   d.Status,
@@ -222,7 +224,7 @@ func (q *Router) QDRRouter(wg *sync.WaitGroup) {
 								wg.Add(1)
 								go q.Receive(wg, d.Address, func(e cloudevents.Event) {
 									log.Printf("Got data ... processing")
-									q.DataOut <- channel.DataChan{
+									q.DataOut <- &channel.DataChan{
 										Address: d.Address,
 										Data:    &e,
 										Status:  channel.NEW,
@@ -255,9 +257,12 @@ func (q *Router) QDRRouter(wg *sync.WaitGroup) {
 							log.Printf("(1)Sender already found so not creating again %s\n", d.Address)
 						}
 					}
-				} else if d.Type == channel.EVENT {
+				} else if d.Type == channel.EVENT && d.Status == channel.NEW {
 					if _, ok := q.Senders[d.Address]; ok {
 						q.SendTo(wg, d.Address, d.Data)
+					} else {
+						log.Printf("did not find pubslisher for address %s", d.Address)
+						log.Printf("store %#v", q.Senders)
 					}
 				}
 			case <-q.Close:
@@ -286,19 +291,19 @@ func (q *Router) SendTo(wg *sync.WaitGroup, address string, event *cloudevents.E
 			defer cancel()
 			if result := sender.Client.Send(ctx, *event); cloudevents.IsUndelivered(result) {
 				log.Printf("Failed to send(TO): %s result %v, reason: no listeners", address, result)
-				q.DataOut <- channel.DataChan{
+				q.DataOut <- &channel.DataChan{
 					Address: address,
 					Data:    e,
 					Status:  channel.FAILED,
-					Type:    channel.SENDER,
+					Type:    channel.EVENT,
 				}
 			} else if cloudevents.IsNACK(result) {
 				log.Printf("Event not accepted: %v", result)
-				q.DataOut <- channel.DataChan{
+				q.DataOut <- &channel.DataChan{
 					Address: address,
 					Data:    e,
 					Status:  channel.SUCCEED,
-					Type:    channel.SENDER,
+					Type:    channel.EVENT,
 				}
 			}
 		}(sender, event, wg)
@@ -315,19 +320,19 @@ func (q *Router) SendToAll(wg *sync.WaitGroup, event cloudevents.Event) {
 			defer cancel()
 			if result := s.Client.Send(ctx, event); cloudevents.IsUndelivered(result) {
 				log.Printf("Failed to send(TOALL): %v", result)
-				q.DataOut <- channel.DataChan{
+				q.DataOut <- &channel.DataChan{
 					Address: address,
 					Data:    &e,
 					Status:  channel.FAILED,
-					Type:    channel.SENDER,
+					Type:    channel.EVENT,
 				} // Not the clean way of doing , revisit
 			} else if cloudevents.IsNACK(result) {
 				log.Printf("Event not accepted: %v", result)
-				q.DataOut <- channel.DataChan{
+				q.DataOut <- &channel.DataChan{
 					Address: address,
 					Data:    &e,
 					Status:  channel.SUCCEED,
-					Type:    channel.SENDER,
+					Type:    channel.EVENT,
 				} // Not the clean way of doing , revisit
 			}
 		}(s, k, event, wg)

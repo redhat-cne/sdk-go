@@ -3,28 +3,29 @@ package event
 import (
 	"encoding/json"
 	"fmt"
-	cloudevents "github.com/cloudevents/sdk-go/v2"
+
+	cloudevent "github.com/cloudevents/sdk-go/v2"
 	"github.com/google/uuid"
 	"github.com/redhat-cne/sdk-go/pkg/pubsub"
 )
 
 //NewCloudEvent create new cloud event from cloud native events and pubsub
-func (e *Event) NewCloudEvent(ps *pubsub.PubSub) (*cloudevents.Event, error) {
-	ce := cloudevents.NewEvent(cloudevents.VersionV03)
+func (e *Event) NewCloudEvent(ps *pubsub.PubSub) (*cloudevent.Event, error) {
+	ce := cloudevent.NewEvent(cloudevent.VersionV03)
 	ce.SetTime(e.GetTime())
 	ce.SetType(e.Type)
-	ce.SetDataContentType(cloudevents.ApplicationJSON)
+	ce.SetDataContentType(cloudevent.ApplicationJSON)
 	ce.SetSource(ps.Resource) // bus address
-	ce.SetSpecVersion(cloudevents.VersionV03)
+	ce.SetSpecVersion(cloudevent.VersionV03)
 	ce.SetID(uuid.New().String())
-	if err := ce.SetData(cloudevents.ApplicationJSON, e.GetData()); err != nil {
+	if err := ce.SetData(cloudevent.ApplicationJSON, e.GetData()); err != nil {
 		return nil, err
 	}
 	return &ce, nil
 }
 
 // GetCloudNativeEvents  get event data from cloud events object if its valid else return error
-func (e *Event) GetCloudNativeEvents(ce *cloudevents.Event) (err error) {
+func (e *Event) GetCloudNativeEvents(ce *cloudevent.Event) (err error) {
 	if ce.Data() == nil {
 		return fmt.Errorf("event data is empty")
 	}

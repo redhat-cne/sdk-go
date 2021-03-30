@@ -1,13 +1,14 @@
 package pubsub_test
 
 import (
+	"net/url"
+	"os"
+	"testing"
+
 	"github.com/redhat-cne/sdk-go/pkg/pubsub"
 	"github.com/redhat-cne/sdk-go/pkg/types"
 	api "github.com/redhat-cne/sdk-go/v1/pubsub"
 	"github.com/stretchr/testify/assert"
-	"net/url"
-	"os"
-	"testing"
 )
 
 var (

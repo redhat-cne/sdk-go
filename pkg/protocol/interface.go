@@ -16,9 +16,9 @@ type Binder struct {
 	// Address of the protocol
 	Address string
 	//DataIn data coming in to this protocol
-	DataIn <-chan channel.DataChan
+	DataIn <-chan *channel.DataChan
 	//DataOut data coming out of this protocol
-	DataOut chan<- channel.DataChan
+	DataOut chan<- *channel.DataChan
 	//close on true
 	Close    <-chan bool
 	Protocol interface{}

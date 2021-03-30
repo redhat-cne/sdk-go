@@ -3,11 +3,12 @@ package event
 import (
 	"encoding/json"
 	"fmt"
+	"log"
+
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/google/uuid"
 	"github.com/redhat-cne/sdk-go/pkg/channel"
 	"github.com/redhat-cne/sdk-go/pkg/pubsub"
-	"log"
 
 	"github.com/redhat-cne/sdk-go/pkg/event"
 )
@@ -39,9 +40,9 @@ func SendEventToLog(e event.Event) {
 }
 
 //SendNewEventToDataChannel send created publisher information for QDR to process
-func SendNewEventToDataChannel(inChan chan<- channel.DataChan, address string, e *cloudevents.Event) {
+func SendNewEventToDataChannel(inChan chan<- *channel.DataChan, address string, e *cloudevents.Event) {
 	// go ahead and create QDR to this address
-	inChan <- channel.DataChan{
+	inChan <- &channel.DataChan{
 		Address: address,
 		Data:    e,
 		Status:  channel.NEW,
@@ -50,9 +51,9 @@ func SendNewEventToDataChannel(inChan chan<- channel.DataChan, address string, e
 }
 
 //SendStatusToDataChannel send created publisher information for QDR to process
-func SendStatusToDataChannel(inChan chan<- channel.DataChan, status channel.Status, address string) {
+func SendStatusToDataChannel(inChan chan<- *channel.DataChan, status channel.Status, address string) {
 	// go ahead and create QDR to this address
-	inChan <- channel.DataChan{
+	inChan <- &channel.DataChan{
 		Address: address,
 		Type:    channel.STATUS,
 		Status:  status,
@@ -60,8 +61,8 @@ func SendStatusToDataChannel(inChan chan<- channel.DataChan, status channel.Stat
 }
 
 // SendCloudEventsToDataChannel sends data event in cloudevents format to data channel
-func SendCloudEventsToDataChannel(inChan chan<- channel.DataChan, status channel.Status, address string, e cloudevents.Event) {
-	inChan <- channel.DataChan{
+func SendCloudEventsToDataChannel(inChan chan<- *channel.DataChan, status channel.Status, address string, e cloudevents.Event) {
+	inChan <- &channel.DataChan{
 		Address: address,
 		Data:    &e,
 		Status:  status,
@@ -85,10 +86,9 @@ func CreateCloudEvents(e event.Event, ps pubsub.PubSub) (*cloudevents.Event, err
 }
 
 // GetCloudNativeEvents  get event data from cloud events object if its valid else return error
-func GetCloudNativeEvents(ce cloudevents.Event) (err error) {
-	e := event.Event{}
+func GetCloudNativeEvents(ce cloudevents.Event) (e event.Event, err error) {
 	if ce.Data() == nil {
-		return fmt.Errorf("event data is empty")
+		return e, fmt.Errorf("event data is empty")
 	}
 	data := event.Data{}
 	if err = json.Unmarshal(ce.Data(), &data); err != nil {

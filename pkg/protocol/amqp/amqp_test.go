@@ -2,21 +2,23 @@ package amqp_test
 
 import (
 	"encoding/json"
-	cloudevents "github.com/cloudevents/sdk-go/v2"
-	"github.com/cloudevents/sdk-go/v2/event"
-	ce_types "github.com/cloudevents/sdk-go/v2/types"
-	amqp1 "github.com/redhat-cne/sdk-go/pkg/protocol/amqp"
-	"github.com/redhat-cne/sdk-go/pkg/types"
 	"log"
 	"net/url"
 	"time"
 
-	cne_event "github.com/redhat-cne/sdk-go/pkg/event"
+	cloudevents "github.com/cloudevents/sdk-go/v2"
+	"github.com/cloudevents/sdk-go/v2/event"
+	cetypes "github.com/cloudevents/sdk-go/v2/types"
+	amqp1 "github.com/redhat-cne/sdk-go/pkg/protocol/amqp"
+	"github.com/redhat-cne/sdk-go/pkg/types"
+
+	cneevent "github.com/redhat-cne/sdk-go/pkg/event"
 
 	"github.com/redhat-cne/sdk-go/pkg/channel"
 
-	"github.com/stretchr/testify/assert"
 	"sync"
+
+	"github.com/stretchr/testify/assert"
 
 	"testing"
 )
@@ -24,27 +26,27 @@ import (
 func strptr(s string) *string { return &s }
 
 var (
-	ceSource        = ce_types.URIRef{URL: url.URL{Scheme: "http", Host: "example.com", Path: "/source"}}
-	ceTimestamp     = ce_types.Timestamp{Time: time.Date(2020, 03, 21, 12, 34, 56, 780000000, time.UTC)}
+	ceSource        = cetypes.URIRef{URL: url.URL{Scheme: "http", Host: "example.com", Path: "/source"}}
+	ceTimestamp     = cetypes.Timestamp{Time: time.Date(2020, 03, 21, 12, 34, 56, 780000000, time.UTC)}
 	cneTimestamp    = types.Timestamp{Time: time.Date(2020, 03, 21, 12, 34, 56, 780000000, time.UTC)}
-	ceSchema        = ce_types.URI{URL: url.URL{Scheme: "http", Host: "example.com", Path: "/schema"}}
+	ceSchema        = cetypes.URI{URL: url.URL{Scheme: "http", Host: "example.com", Path: "/schema"}}
 	_type           = "ptp_status_type"
 	resourceAddress = "/test1/test1"
 )
 
 // CloudNativeEvents generates cloud events for testing
-func CloudNativeEvents() cne_event.Event {
-	data := cne_event.Data{}
-	value := cne_event.DataValue{
+func CloudNativeEvents() cneevent.Event {
+	data := cneevent.Data{}
+	value := cneevent.DataValue{
 		Resource:  resourceAddress,
-		DataType:  cne_event.NOTIFICATION,
-		ValueType: cne_event.ENUMERATION,
-		Value:     cne_event.GNSS_ACQUIRING_SYNC,
+		DataType:  cneevent.NOTIFICATION,
+		ValueType: cneevent.ENUMERATION,
+		Value:     cneevent.GNSS_ACQUIRING_SYNC,
 	}
 	data.SetVersion("1.0")   //nolint:errcheck
 	data.AppendValues(value) //nolint:errcheck
 
-	cne := cne_event.Event{
+	cne := cneevent.Event{
 		ID:              "123",
 		Type:            _type,
 		DataContentType: strptr(event.ApplicationJSON),
@@ -57,12 +59,12 @@ func CloudNativeEvents() cne_event.Event {
 
 //CloudEvents return cloud events objects
 func CloudEvents() cloudevents.Event {
-	data := cne_event.Data{}
-	value := cne_event.DataValue{
+	data := cneevent.Data{}
+	value := cneevent.DataValue{
 		Resource:  resourceAddress,
-		DataType:  cne_event.NOTIFICATION,
-		ValueType: cne_event.ENUMERATION,
-		Value:     cne_event.GNSS_ACQUIRING_SYNC,
+		DataType:  cneevent.NOTIFICATION,
+		ValueType: cneevent.ENUMERATION,
+		Value:     cneevent.GNSS_ACQUIRING_SYNC,
 	}
 	data.SetVersion("1.0")   //nolint:errcheck
 	data.AppendValues(value) //nolint:errcheck
@@ -89,8 +91,8 @@ func TestSendEvent(t *testing.T) {
 	s := "amqp://localhost:5672"
 
 	event := CloudEvents()
-	in := make(chan channel.DataChan)
-	out := make(chan channel.DataChan)
+	in := make(chan *channel.DataChan)
+	out := make(chan *channel.DataChan)
 	closeCh := make(chan bool)
 	server, err := amqp1.InitServer(s, in, out, closeCh)
 	if err != nil {
@@ -100,19 +102,19 @@ func TestSendEvent(t *testing.T) {
 	go server.QDRRouter(&wg)
 
 	// create a sender
-	in <- channel.DataChan{
+	in <- &channel.DataChan{
 		Address: addr,
 		Type:    channel.SENDER,
 	}
 
 	// create a listener
-	in <- channel.DataChan{
+	in <- &channel.DataChan{
 		Address: addr,
 		Type:    channel.LISTENER,
 	}
 
 	// send data
-	in <- channel.DataChan{
+	in <- &channel.DataChan{
 		Address: addr,
 		Data:    &event,
 		Status:  channel.NEW,
@@ -124,7 +126,7 @@ func TestSendEvent(t *testing.T) {
 	log.Printf("Processing out channel")
 	assert.Equal(t, d.Type, channel.EVENT)
 	assert.Equal(t, d.Address, addr)
-	dd := cne_event.Data{}
+	dd := cneevent.Data{}
 	err = json.Unmarshal(event.Data(), &dd)
 	assert.Nil(t, err)
 	assert.Equal(t, dd.Version, "1.0")
@@ -138,8 +140,8 @@ func TestDeleteListener(t *testing.T) {
 	addr := "test/test2"
 	s := "amqp://localhost:5672"
 
-	in := make(chan channel.DataChan)
-	out := make(chan channel.DataChan)
+	in := make(chan *channel.DataChan)
+	out := make(chan *channel.DataChan)
 	closeCh := make(chan bool)
 	server, err := amqp1.InitServer(s, in, out, closeCh)
 	if err != nil {
@@ -150,7 +152,7 @@ func TestDeleteListener(t *testing.T) {
 	go server.QDRRouter(&wg)
 
 	// create a listener
-	in <- channel.DataChan{
+	in <- &channel.DataChan{
 		Address: addr,
 		Type:    channel.LISTENER,
 	}
@@ -158,7 +160,7 @@ func TestDeleteListener(t *testing.T) {
 	assert.Equal(t, 1, len(server.Listeners))
 
 	// send data
-	in <- channel.DataChan{
+	in <- &channel.DataChan{
 		Address: addr,
 		Status:  channel.DELETE,
 		Type:    channel.LISTENER,
@@ -173,8 +175,8 @@ func TestDeleteSender(t *testing.T) {
 	addr := "test/test2"
 	s := "amqp://localhost:5672"
 
-	in := make(chan channel.DataChan)
-	out := make(chan channel.DataChan)
+	in := make(chan *channel.DataChan)
+	out := make(chan *channel.DataChan)
 	closeCh := make(chan bool)
 	server, err := amqp1.InitServer(s, in, out, closeCh)
 	if err != nil {
@@ -185,7 +187,7 @@ func TestDeleteSender(t *testing.T) {
 	go server.QDRRouter(&wg)
 
 	// create a listener
-	in <- channel.DataChan{
+	in <- &channel.DataChan{
 		Address: addr,
 		Type:    channel.SENDER,
 	}
@@ -193,7 +195,7 @@ func TestDeleteSender(t *testing.T) {
 	assert.Equal(t, 1, len(server.Senders))
 
 	// send data
-	in <- channel.DataChan{
+	in <- &channel.DataChan{
 		Address: addr,
 		Status:  channel.DELETE,
 		Type:    channel.SENDER,

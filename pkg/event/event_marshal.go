@@ -5,7 +5,6 @@ import (
 	"fmt"
 	jsoniter "github.com/json-iterator/go"
 	"io"
-	"log"
 )
 
 // WriteJSON writes the in event in the provided writer.
@@ -148,7 +147,6 @@ func writeJSONData(in *Data, writer io.Writer, stream *jsoniter.Stream) error {
 func (e Event) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	err := WriteJSON(&e, &buf)
-	log.Printf("json Event is %s", buf.String())
 	return buf.Bytes(), err
 }
 
@@ -157,6 +155,5 @@ func (e Event) MarshalJSON() ([]byte, error) {
 func (d Data) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	err := WriteDataJSON(&d, &buf)
-	log.Printf("json Data is %s", buf.String())
 	return buf.Bytes(), err
 }

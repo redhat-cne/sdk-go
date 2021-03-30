@@ -1,18 +1,19 @@
 package amqp_test
 
 import (
+	"testing"
+
 	"github.com/redhat-cne/sdk-go/pkg/channel"
 	api "github.com/redhat-cne/sdk-go/v1/amqp"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 var (
-	outChan           = make(chan channel.DataChan, 1)
+	outChan           = make(chan *channel.DataChan, 1)
 	address           = "test/test"
 	s                 = "amqp://localhost:5672"
-	in                = make(chan channel.DataChan)
-	out               = make(chan channel.DataChan)
+	in                = make(chan *channel.DataChan)
+	out               = make(chan *channel.DataChan)
 	close             = make(chan bool)
 	globalInstance, _ = api.GetAMQPInstance(s, in, out, close)
 )
@@ -28,7 +29,7 @@ func TestAPI_GetAPIInstance(t *testing.T) {
 }
 
 func TestCreateSender(t *testing.T) {
-	sender := channel.DataChan{
+	sender := &channel.DataChan{
 		Address: address,
 		Status:  channel.NEW,
 		Type:    channel.SENDER,
@@ -39,7 +40,7 @@ func TestCreateSender(t *testing.T) {
 }
 
 func TestDeleteSender(t *testing.T) {
-	sender := channel.DataChan{
+	sender := &channel.DataChan{
 		Address: address,
 		Status:  channel.DELETE,
 		Type:    channel.SENDER,
@@ -50,7 +51,7 @@ func TestDeleteSender(t *testing.T) {
 }
 
 func TestDeleteListener(t *testing.T) {
-	sender := channel.DataChan{
+	sender := &channel.DataChan{
 		Address: address,
 		Status:  channel.DELETE,
 		Type:    channel.LISTENER,

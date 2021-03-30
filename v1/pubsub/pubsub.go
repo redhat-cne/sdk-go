@@ -3,14 +3,15 @@ package pubsub
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/google/uuid"
-	"github.com/redhat-cne/sdk-go/pkg/pubsub"
-	"github.com/redhat-cne/sdk-go/pkg/store"
-	"github.com/redhat-cne/sdk-go/pkg/types"
 	"io/ioutil"
 	"log"
 	"os"
 	"sync"
+
+	"github.com/google/uuid"
+	"github.com/redhat-cne/sdk-go/pkg/pubsub"
+	"github.com/redhat-cne/sdk-go/pkg/store"
+	"github.com/redhat-cne/sdk-go/pkg/types"
 )
 
 //API ... api methods  for publisher subscriber
@@ -137,8 +138,8 @@ func (p *API) HasPublisher(address string) (pubsub.PubSub, bool) {
 //CreateSubscription create a subscription and store it in a file and cache
 func (p *API) CreateSubscription(sub pubsub.PubSub) (pubsub.PubSub, error) {
 	if subExists, ok := p.HasSubscription(sub.GetResource()); ok {
-		log.Printf("There was already subscription,skipping creation %v", subExists)
-
+		log.Printf("There was already a subscription,skipping creation %v", subExists)
+		p.subStore.Set(sub.ID, &subExists)
 		return subExists, nil
 	}
 	sub.SetID(uuid.New().String())
@@ -158,9 +159,10 @@ func (p *API) CreateSubscription(sub pubsub.PubSub) (pubsub.PubSub, error) {
 
 //CreatePublisher  create a publisher data and store it a file and cache
 func (p *API) CreatePublisher(pub pubsub.PubSub) (pubsub.PubSub, error) {
-	if subExists, ok := p.HasPublisher(pub.GetResource()); ok {
-		log.Printf("There was already subscription,skipping creation %v", subExists)
-		return subExists, nil
+	if pubExists, ok := p.HasPublisher(pub.GetResource()); ok {
+		log.Printf("There was already a publisher,skipping creation %v", pubExists)
+		p.pubStore.Set(pub.ID, &pubExists)
+		return pubExists, nil
 	}
 	pub.SetID(uuid.New().String())
 

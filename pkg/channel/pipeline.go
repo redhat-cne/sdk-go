@@ -1,9 +1,10 @@
 package channel
 
 import (
-	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"log"
 	"sync"
+
+	cloudevents "github.com/cloudevents/sdk-go/v2"
 )
 
 //NewStatusListenerChannel ...

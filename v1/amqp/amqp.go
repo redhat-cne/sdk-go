@@ -20,7 +20,7 @@ type AMQP struct {
 }
 
 //GetAMQPInstance get event instance
-func GetAMQPInstance(amqpHost string, DataIn <-chan channel.DataChan, DataOut chan<- channel.DataChan, close <-chan bool) (*AMQP, error) {
+func GetAMQPInstance(amqpHost string, DataIn <-chan *channel.DataChan, DataOut chan<- *channel.DataChan, close <-chan bool) (*AMQP, error) {
 	once.Do(func() {
 		router, err := amqp1.InitServer(amqpHost, DataIn, DataOut, close)
 		if err == nil {
@@ -62,9 +62,9 @@ func NewReceiver(hostName string, port int, address string) (*amqp1.Protocol, er
 }
 
 //DeleteSender send publisher address information  on a channel to delete its sender object
-func DeleteSender(inChan chan<- channel.DataChan, address string) {
+func DeleteSender(inChan chan<- *channel.DataChan, address string) {
 	// go ahead and create QDR to this address
-	inChan <- channel.DataChan{
+	inChan <- &channel.DataChan{
 		Address: address,
 		Type:    channel.SENDER,
 		Status:  channel.DELETE,
@@ -72,9 +72,9 @@ func DeleteSender(inChan chan<- channel.DataChan, address string) {
 }
 
 //CreateSender send publisher address information  on a channel to create it's sender object
-func CreateSender(inChan chan<- channel.DataChan, address string) {
+func CreateSender(inChan chan<- *channel.DataChan, address string) {
 	// go ahead and create QDR to this address
-	inChan <- channel.DataChan{
+	inChan <- &channel.DataChan{
 		Address: address,
 		Type:    channel.SENDER,
 		Status:  channel.NEW,
@@ -82,9 +82,9 @@ func CreateSender(inChan chan<- channel.DataChan, address string) {
 }
 
 //DeleteListener send subscription address information  on a channel to delete its listener object
-func DeleteListener(inChan chan<- channel.DataChan, address string) {
+func DeleteListener(inChan chan<- *channel.DataChan, address string) {
 	// go ahead and create QDR listener to this address
-	inChan <- channel.DataChan{
+	inChan <- &channel.DataChan{
 		Address: address,
 		Type:    channel.LISTENER,
 		Status:  channel.DELETE,
@@ -92,9 +92,9 @@ func DeleteListener(inChan chan<- channel.DataChan, address string) {
 }
 
 //CreateListener send subscription address information  on a channel to create its listener object
-func CreateListener(inChan chan<- channel.DataChan, address string) {
+func CreateListener(inChan chan<- *channel.DataChan, address string) {
 	// go ahead and create QDR listener to this address
-	inChan <- channel.DataChan{
+	inChan <- &channel.DataChan{
 		Address: address,
 		Type:    channel.LISTENER,
 		Status:  channel.NEW,

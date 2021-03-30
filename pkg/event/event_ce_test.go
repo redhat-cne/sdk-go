@@ -2,12 +2,12 @@ package event_test
 
 import (
 	"encoding/json"
-	cloudevents "github.com/cloudevents/sdk-go/v2"
+	ce "github.com/cloudevents/sdk-go/v2"
 	"github.com/google/uuid"
-	cne_event "github.com/redhat-cne/sdk-go/pkg/event"
-	cne_pubsub "github.com/redhat-cne/sdk-go/pkg/pubsub"
+	cneevent "github.com/redhat-cne/sdk-go/pkg/event"
+	cnepubsub "github.com/redhat-cne/sdk-go/pkg/pubsub"
 	"github.com/redhat-cne/sdk-go/pkg/types"
-	cne_event_v1 "github.com/redhat-cne/sdk-go/v1/event"
+	cneeventv1 "github.com/redhat-cne/sdk-go/v1/event"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"log"
@@ -24,21 +24,21 @@ var (
 	_type       = "ptp_status_type"
 	version     = "v1"
 	id          = uuid.New().String()
-	data        cne_event.Data
-	pubsub      cne_pubsub.PubSub
+	data        cneevent.Data
+	pubsub      cnepubsub.PubSub
 )
 
 func setup() {
-	data = cne_event.Data{}
-	value := cne_event.DataValue{
+	data = cneevent.Data{}
+	value := cneevent.DataValue{
 		Resource:  resource,
-		DataType:  cne_event.NOTIFICATION,
-		ValueType: cne_event.ENUMERATION,
-		Value:     cne_event.GNSS_ACQUIRING_SYNC,
+		DataType:  cneevent.NOTIFICATION,
+		ValueType: cneevent.ENUMERATION,
+		Value:     cneevent.GNSS_ACQUIRING_SYNC,
 	}
 	data.SetVersion(version) //nolint:errcheck
 	data.AppendValues(value) //nolint:errcheck
-	pubsub = cne_pubsub.PubSub{}
+	pubsub = cnepubsub.PubSub{}
 	_ = pubsub.SetResource(resource)
 	_ = pubsub.SetURILocation(uriLocation)
 	_ = pubsub.SetEndpointURI(endPointUri)
@@ -49,27 +49,27 @@ func setup() {
 func TestEvent_NewCloudEvent(t *testing.T) {
 	setup()
 	testCases := map[string]struct {
-		cne_event  *cne_event.Event
-		cne_pubsub *cne_pubsub.PubSub
-		want       *cloudevents.Event
+		cne_event  *cneevent.Event
+		cne_pubsub *cnepubsub.PubSub
+		want       *ce.Event
 		wantErr    *string
 	}{
 		"struct Data v1": {
-			cne_event: func() *cne_event.Event {
-				e := cne_event_v1.CloudNativeEvent()
+			cne_event: func() *cneevent.Event {
+				e := cneeventv1.CloudNativeEvent()
 
-				e.SetDataContentType(cne_event.ApplicationJSON)
+				e.SetDataContentType(cneevent.ApplicationJSON)
 				e.SetTime(now.Time)
 				e.SetType(_type)
 				e.SetData(data)
 				return &e
 			}(),
 			cne_pubsub: &pubsub,
-			want: func() *cloudevents.Event {
-				e := cloudevents.NewEvent()
-				e.SetSpecVersion(cloudevents.VersionV03)
+			want: func() *ce.Event {
+				e := ce.NewEvent()
+				e.SetSpecVersion(ce.VersionV03)
 				e.SetType(_type)
-				_ = e.SetData(cloudevents.ApplicationJSON, data)
+				_ = e.SetData(ce.ApplicationJSON, data)
 				e.SetTime(now.Time)
 				e.SetSource(pubsub.GetResource())
 				e.SetID(id)
@@ -81,10 +81,10 @@ func TestEvent_NewCloudEvent(t *testing.T) {
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
 			event := tc.cne_event
-			ce, err := event.NewCloudEvent(tc.cne_pubsub)
+			cEvent, err := event.NewCloudEvent(tc.cne_pubsub)
 			assert.Nil(t, err)
-			tc.want.SetID(ce.ID())
-			gotBytes, err := json.Marshal(ce)
+			tc.want.SetID(cEvent.ID())
+			gotBytes, err := json.Marshal(cEvent)
 			log.Printf("cloud events %s\n", string(gotBytes))
 			if tc.wantErr != nil {
 				require.Error(t, err, *tc.wantErr)
@@ -97,23 +97,23 @@ func TestEvent_NewCloudEvent(t *testing.T) {
 func TestEvent_GetCloudNativeEvents(t *testing.T) {
 	setup()
 	testCases := map[string]struct {
-		ce_event *cloudevents.Event
-		want     *cne_event.Event
+		ce_event *ce.Event
+		want     *cneevent.Event
 		wantErr  *string
 	}{
 		"struct Data v1": {
-			ce_event: func() *cloudevents.Event {
-				e := cloudevents.NewEvent()
+			ce_event: func() *ce.Event {
+				e := ce.NewEvent()
 				e.SetType(_type)
-				_ = e.SetData(cloudevents.ApplicationJSON, data)
+				_ = e.SetData(ce.ApplicationJSON, data)
 				e.SetTime(now.Time)
 				e.SetSource(pubsub.GetResource())
 				e.SetID(id)
 				return &e
 			}(),
-			want: func() *cne_event.Event {
-				e := cne_event_v1.CloudNativeEvent()
-				e.SetDataContentType(cne_event.ApplicationJSON)
+			want: func() *cneevent.Event {
+				e := cneeventv1.CloudNativeEvent()
+				e.SetDataContentType(cneevent.ApplicationJSON)
 				e.SetTime(now.Time)
 				e.SetType(_type)
 				e.SetData(data)
@@ -124,7 +124,7 @@ func TestEvent_GetCloudNativeEvents(t *testing.T) {
 
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
-			event := cne_event_v1.CloudNativeEvent()
+			event := cneeventv1.CloudNativeEvent()
 			err := event.GetCloudNativeEvents(tc.ce_event)
 			assert.Nil(t, err)
 			gotBytes, err := json.Marshal(event)
@@ -138,7 +138,7 @@ func TestEvent_GetCloudNativeEvents(t *testing.T) {
 	}
 }
 
-func assertCEJsonEquals(t *testing.T, want *cloudevents.Event, got []byte) {
+func assertCEJsonEquals(t *testing.T, want *ce.Event, got []byte) {
 	var gotToCompare map[string]interface{}
 	require.NoError(t, json.Unmarshal(got, &gotToCompare))
 
@@ -151,7 +151,7 @@ func assertCEJsonEquals(t *testing.T, want *cloudevents.Event, got []byte) {
 	require.Equal(t, wantToCompare, gotToCompare)
 }
 
-func assertCNEJsonEquals(t *testing.T, want *cne_event.Event, got []byte) {
+func assertCNEJsonEquals(t *testing.T, want *cneevent.Event, got []byte) {
 	var gotToCompare map[string]interface{}
 	require.NoError(t, json.Unmarshal(got, &gotToCompare))
 
