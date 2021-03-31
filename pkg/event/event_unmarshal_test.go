@@ -46,7 +46,7 @@ func TestUnMarshal(t *testing.T) {
 							Resource:  resource,
 							DataType:  event.NOTIFICATION,
 							ValueType: event.ENUMERATION,
-							Value:     event.PTP_FREERUN,
+							Value:     event.FREERUN,
 						},
 					},
 				},

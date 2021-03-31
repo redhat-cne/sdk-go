@@ -41,7 +41,7 @@ func CloudNativeEvents() cneevent.Event {
 		Resource:  resourceAddress,
 		DataType:  cneevent.NOTIFICATION,
 		ValueType: cneevent.ENUMERATION,
-		Value:     cneevent.GNSS_ACQUIRING_SYNC,
+		Value:     cneevent.ACQUIRING_SYNC,
 	}
 	data.SetVersion("1.0")   //nolint:errcheck
 	data.AppendValues(value) //nolint:errcheck
@@ -64,7 +64,7 @@ func CloudEvents() cloudevents.Event {
 		Resource:  resourceAddress,
 		DataType:  cneevent.NOTIFICATION,
 		ValueType: cneevent.ENUMERATION,
-		Value:     cneevent.GNSS_ACQUIRING_SYNC,
+		Value:     cneevent.ACQUIRING_SYNC,
 	}
 	data.SetVersion("1.0")   //nolint:errcheck
 	data.AppendValues(value) //nolint:errcheck

@@ -23,7 +23,7 @@ func TestMarshal(t *testing.T) {
 		Resource:  resource,
 		DataType:  event.NOTIFICATION,
 		ValueType: event.ENUMERATION,
-		Value:     event.GNSS_ACQUIRING_SYNC,
+		Value:     event.ACQUIRING_SYNC,
 	}
 	data.SetVersion(version) //nolint:errcheck
 	data.AppendValues(value) //nolint:errcheck

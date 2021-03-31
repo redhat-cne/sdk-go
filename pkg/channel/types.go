@@ -4,14 +4,14 @@ package channel
 type Status int
 
 const (
-	// SUCCEED if the event is posted successfully
-	SUCCEED Status = 1
-	//FAILED if the event  failed to post
-	FAILED Status = 2
 	//NEW if the event is new for the consumer
-	NEW Status = 0
+	NEW Status = iota
+	// SUCCEED if the event is posted successfully
+	SUCCEED
 	//DELETE if the event is to delete
-	DELETE Status = -1
+	DELETE
+	//FAILED if the event  failed to post
+	FAILED
 )
 
 //Type ... specifies type of the event
@@ -19,11 +19,11 @@ type Type int
 
 const (
 	// LISTENER  the type to create listener
-	LISTENER Type = 1
-	//STATUS  the  types is check status
-	STATUS Type = 2
+	LISTENER Type = iota
 	//SENDER  the  type is to create sender
-	SENDER Type = 0
+	SENDER
+	//STATUS  the  types is check status
+	STATUS
 	//EVENT  the type is an event
-	EVENT Type = 3
+	EVENT
 )

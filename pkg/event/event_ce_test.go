@@ -34,7 +34,7 @@ func setup() {
 		Resource:  resource,
 		DataType:  cneevent.NOTIFICATION,
 		ValueType: cneevent.ENUMERATION,
-		Value:     cneevent.GNSS_ACQUIRING_SYNC,
+		Value:     cneevent.ACQUIRING_SYNC,
 	}
 	data.SetVersion(version) //nolint:errcheck
 	data.AppendValues(value) //nolint:errcheck
