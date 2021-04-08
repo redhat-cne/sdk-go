@@ -6,7 +6,7 @@ GO SDK for Cloud Native Events API
 [![LICENSE](https://img.shields.io/github/license/redhat-cne/sdk-go.svg)](https://github.com/redhat-cne/sdk-go/blob/main/LICENSE)
 
 
-###This SDK is used to develop Cloud Event Proxy
+### This SDK is used to develop Cloud Event Proxy
 https://github.com/redhat-cne/cloud-event-proxy
 
 
