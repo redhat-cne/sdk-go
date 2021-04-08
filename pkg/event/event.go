@@ -7,23 +7,46 @@ import (
 )
 
 // Event represents the canonical representation of a Cloud Native Event.
+// Event Json  payload is as follows,
+//{
+//	"id": "5ce55d17-9234-4fee-a589-d0f10cb32b8e",
+//	"type": "event.synchronization-state-chang",
+//	"time": "2021-02-05T17:31:00Z",
+//	"data": {
+//		"version": "v1.0",
+//		"values": [{
+//			"resource": "/cluster/node/ptp",
+//			"data_type": "notification",
+//			"value_type": "enumeration",
+//			"value": "ACQUIRING-SYNC"
+//			}, {
+//			"resource": "/cluster/node/clock",
+//			"data_type": "metric",
+// 			"value_type": "decimal64.3",
+//			"value": 100.3
+//			}]
+//		}
+//}
+//Event request model
 type Event struct {
 	// ID of the event; must be non-empty and unique within the scope of the producer.
 	// +required
-	ID string `json:""`
+	ID string `json:"id" example:"789be75d-7ac3-472e-bbbc-6d62878aad4a"`
 	// Type - The type of the occurrence which has happened.
 	// +required
-	Type string `json:"type"`
+	Type string `json:"type" example:"event.synchronization-state-chang"`
 	// DataContentType - the Data content type
-	DataContentType *string `json:"dataContentType"`
+	// +required
+	DataContentType *string `json:"dataContentType" example:"application/json"`
 	// Time - A Timestamp when the event happened.
-	// +optional
-	Time *types.Timestamp `json:"time,omitempty"`
+	// +required
+	Time *types.Timestamp `json:"time,omitempty" example:"2021-02-05T17:31:00Z"`
 	// DataSchema - A link to the schema that the `Data` attribute adheres to.
 	// +optional
 	DataSchema *types.URI `json:"dataSchema,omitempty"`
 
-	Data *Data `json:"data,omitempty"`
+	Data *Data `json:"data,omitempty" `
+	// +required
 }
 
 // String returns a pretty-printed representation of the Event.

@@ -25,18 +25,40 @@ const (
 	DECIMAL ValueType = "decimal64.3"
 )
 
-// Data ...
+// Data ... cloud native events data
+// Data Json payload is as follows,
+//{
+//	"version": "v1.0",
+//	"values": [{
+//		"resource": "/cluster/node/ptp",
+//		"data_type": "notification",
+//		"value_type": "enumeration",
+//		"value": "ACQUIRING-SYNC"
+//		}, {
+//		"resource": "/cluster/node/clock",
+//		"data_type": "metric",
+// 		"value_type": "decimal64.3",
+//		"value": 100.3
+//		}]
+//}
 type Data struct {
-	Version string      `json:"version"`
+	Version string      `json:"version" example:"v1"`
 	Values  []DataValue `json:"values"`
 }
 
 // DataValue ...
+// DataValue Json payload is as follows,
+//{
+//	"resource": "/cluster/node/ptp",
+//	"data_type": "notification",
+//	"value_type": "enumeration",
+//	"value": "ACQUIRING-SYNC"
+//}
 type DataValue struct {
-	Resource  string      `json:"resource"`
-	DataType  DataType    `json:"dataType"`
-	ValueType ValueType   `json:"valueType"`
-	Value     interface{} `json:"value"`
+	Resource  string      `json:"resource" example:"/cluster/node/clock"`
+	DataType  DataType    `json:"dataType" example:"metric"`
+	ValueType ValueType   `json:"valueType" example:"decimal64.3"`
+	Value     interface{} `json:"value" example:"100.3"`
 }
 
 // SetVersion  ...
