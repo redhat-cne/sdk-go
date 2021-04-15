@@ -68,7 +68,7 @@ func (u *URI) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 	return nil
 }
 
-// Validate ...
+// Validate url value
 func (u URI) Validate() bool {
 	return u.IsAbs()
 }

@@ -79,7 +79,6 @@ func (d *Data) SetValues(v []DataValue) {
 // AppendValues ...
 func (d *Data) AppendValues(v DataValue) {
 	d.Values = append(d.Values, v)
-
 }
 
 // GetVersion ...

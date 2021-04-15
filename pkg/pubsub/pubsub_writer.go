@@ -2,10 +2,11 @@ package pubsub
 
 import (
 	"fmt"
-	"github.com/redhat-cne/sdk-go/pkg/types"
 	"net/url"
 	"regexp"
 	"strings"
+
+	"github.com/redhat-cne/sdk-go/pkg/types"
 )
 
 var _ Writer = (*PubSub)(nil)
@@ -42,7 +43,7 @@ func (ps *PubSub) SetEndpointURI(s string) error {
 	return nil
 }
 
-// SetURILocation ...
+// SetURILocation  sets uri location attribute
 func (ps *PubSub) SetURILocation(s string) error {
 	s = strings.TrimSpace(s)
 	if s == "" {

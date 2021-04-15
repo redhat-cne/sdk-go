@@ -2,8 +2,9 @@ package event
 
 import (
 	"fmt"
-	"github.com/redhat-cne/sdk-go/pkg/types"
 	"strings"
+
+	"github.com/redhat-cne/sdk-go/pkg/types"
 )
 
 // Event represents the canonical representation of a Cloud Native Event.
@@ -71,7 +72,7 @@ func (e Event) String() string {
 	return b.String()
 }
 
-//Clone ...
+// Clone clones data
 func (e Event) Clone() Event {
 	out := Event{}
 	out.SetData(*e.Data) //nolint:errcheck

@@ -14,19 +14,21 @@ import (
 	"github.com/redhat-cne/sdk-go/pkg/types"
 )
 
-//API ... api methods  for publisher subscriber
+// API ... api methods  for publisher subscriber
 type API struct {
-	pubStore      *store.PubSubStore
-	subStore      *store.PubSubStore
-	subFile       string
-	pubFile       string
-	storeFilePath string
+	pubStore         *store.PubSubStore
+	subStore         *store.PubSubStore
+	subFile          string
+	pubFile          string
+	storeFilePath    string
+	transportEnabled bool
+	baseURI          *types.URI
 }
 
 var instance *API
 var once sync.Once
 
-//NewPubSub create new publisher or subscriber
+// NewPubSub create new publisher or subscriber
 func NewPubSub(endPointURI *types.URI, resource string) pubsub.PubSub {
 	return pubsub.PubSub{
 		EndPointURI: endPointURI,
@@ -34,15 +36,17 @@ func NewPubSub(endPointURI *types.URI, resource string) pubsub.PubSub {
 	}
 }
 
-//New creates empty publisher or subscriber
+// New creates empty publisher or subscriber
 func New() pubsub.PubSub {
 	return pubsub.PubSub{}
 }
 
-//GetAPIInstance get event instance
-func GetAPIInstance(storeFilePath string) *API {
+// GetAPIInstance get event instance
+func GetAPIInstance(storeFilePath string, baseURI *types.URI) *API {
 	once.Do(func() {
 		instance = &API{
+			baseURI:          baseURI,
+			transportEnabled: true,
 			pubStore: &store.PubSubStore{
 				RWMutex: sync.RWMutex{},
 				Store:   map[string]*pubsub.PubSub{},
@@ -57,11 +61,10 @@ func GetAPIInstance(storeFilePath string) *API {
 		}
 		instance.ReloadStore()
 	})
-
 	return instance
 }
 
-//ReloadStore reload store if there is any change or refresh is required
+// ReloadStore reload store if there is any change or refresh is required
 func (p *API) ReloadStore() {
 	// load for file
 	if b, err := loadFromFile(fmt.Sprintf("%s/%s", p.storeFilePath, p.subFile)); err == nil {
@@ -69,10 +72,9 @@ func (p *API) ReloadStore() {
 			var subs []pubsub.PubSub
 			if err := json.Unmarshal(b, &subs); err == nil {
 				for _, sub := range subs {
-					p.subStore.Set(sub.ID, &sub)
+					p.subStore.Set(sub.ID, sub)
 				}
 			}
-
 		}
 	}
 	// load for file
@@ -81,15 +83,39 @@ func (p *API) ReloadStore() {
 			var pubs []pubsub.PubSub
 			if err := json.Unmarshal(b, &pubs); err == nil {
 				for _, pub := range pubs {
-					p.pubStore.Set(pub.ID, &pub)
+					p.pubStore.Set(pub.ID, pub)
 				}
 			}
-
 		}
 	}
 }
 
-//GetFromPubStore get data from publisher store
+// GetBaseURI get base url for rest api, if not enabled then set it to nil
+func (p *API) GetBaseURI() *types.URI {
+	return p.baseURI
+}
+
+// SetBaseURI set base url for rest api, if not enabled then set it to nil
+func (p *API) SetBaseURI(uri *types.URI) {
+	p.baseURI = uri
+}
+
+// HasTransportEnabled flag to idicate if amqp is enabled
+func (p *API) HasTransportEnabled() bool {
+	return p.transportEnabled
+}
+
+// DisableTransport disables usage of amqp
+func (p *API) DisableTransport() {
+	p.transportEnabled = false
+}
+
+// EnableTransport enable usage of amqp
+func (p *API) EnableTransport() {
+	p.transportEnabled = true
+}
+
+// GetFromPubStore get data from publisher store
 func (p *API) GetFromPubStore(address string) (pubsub.PubSub, error) {
 	for _, pub := range p.pubStore.Store {
 		if pub.GetResource() == address {
@@ -104,7 +130,7 @@ func (p *API) GetFromPubStore(address string) (pubsub.PubSub, error) {
 	return pubsub.PubSub{}, fmt.Errorf("publisher not found for address %s", address)
 }
 
-//GetFromSubStore get data from subscription store
+// GetFromSubStore get data from subscription store
 func (p *API) GetFromSubStore(address string) (pubsub.PubSub, error) {
 	for _, sub := range p.subStore.Store {
 		if sub.GetResource() == address {
@@ -119,7 +145,7 @@ func (p *API) GetFromSubStore(address string) (pubsub.PubSub, error) {
 	return pubsub.PubSub{}, fmt.Errorf("subscription not found for address %s ", address)
 }
 
-//HasSubscription check if the subscription is already exists in the store/cache
+// HasSubscription check if the subscription is already exists in the store/cache
 func (p *API) HasSubscription(address string) (pubsub.PubSub, bool) {
 	if sub, err := p.GetFromSubStore(address); err == nil {
 		return sub, true
@@ -127,7 +153,7 @@ func (p *API) HasSubscription(address string) (pubsub.PubSub, bool) {
 	return pubsub.PubSub{}, false
 }
 
-//HasPublisher check if the publisher is already exists in the store/cache
+// HasPublisher check if the publisher is already exists in the store/cache
 func (p *API) HasPublisher(address string) (pubsub.PubSub, bool) {
 	if pub, err := p.GetFromPubStore(address); err == nil {
 		return pub, true
@@ -135,11 +161,11 @@ func (p *API) HasPublisher(address string) (pubsub.PubSub, bool) {
 	return pubsub.PubSub{}, false
 }
 
-//CreateSubscription create a subscription and store it in a file and cache
+// CreateSubscription create a subscription and store it in a file and cache
 func (p *API) CreateSubscription(sub pubsub.PubSub) (pubsub.PubSub, error) {
 	if subExists, ok := p.HasSubscription(sub.GetResource()); ok {
 		log.Printf("There was already a subscription,skipping creation %v", subExists)
-		p.subStore.Set(sub.ID, &subExists)
+		p.subStore.Set(sub.ID, subExists)
 		return subExists, nil
 	}
 	sub.SetID(uuid.New().String())
@@ -153,15 +179,15 @@ func (p *API) CreateSubscription(sub pubsub.PubSub) (pubsub.PubSub, error) {
 	}
 	log.Printf("Stored in a file %s", fmt.Sprintf("%s/%s", p.storeFilePath, p.subFile))
 	//store the publisher
-	p.subStore.Set(sub.ID, &sub)
+	p.subStore.Set(sub.ID, sub)
 	return sub, nil
 }
 
-//CreatePublisher  create a publisher data and store it a file and cache
+// CreatePublisher  create a publisher data and store it a file and cache
 func (p *API) CreatePublisher(pub pubsub.PubSub) (pubsub.PubSub, error) {
 	if pubExists, ok := p.HasPublisher(pub.GetResource()); ok {
 		log.Printf("There was already a publisher,skipping creation %v", pubExists)
-		p.pubStore.Set(pub.ID, &pubExists)
+		p.pubStore.Set(pub.ID, pubExists)
 		return pubExists, nil
 	}
 	pub.SetID(uuid.New().String())
@@ -175,11 +201,11 @@ func (p *API) CreatePublisher(pub pubsub.PubSub) (pubsub.PubSub, error) {
 	}
 	log.Printf("Stored in a file %s", fmt.Sprintf("%s/%s", p.storeFilePath, p.pubFile))
 	//store the publisher
-	p.pubStore.Set(pub.ID, &pub)
+	p.pubStore.Set(pub.ID, pub)
 	return pub, nil
 }
 
-//GetSubscription  get a subscription by it's id
+// GetSubscription  get a subscription by it's id
 func (p *API) GetSubscription(subscriptionID string) (pubsub.PubSub, error) {
 	if sub, ok := p.subStore.Store[subscriptionID]; ok {
 		return *sub, nil
@@ -207,7 +233,7 @@ func (p *API) GetPublishers() map[string]*pubsub.PubSub {
 	return p.pubStore.Store
 }
 
-//DeletePublisher delete a publisher by id
+// DeletePublisher delete a publisher by id
 func (p *API) DeletePublisher(publisherID string) error {
 	if pub, ok := p.pubStore.Store[publisherID]; ok {
 		err := deleteFromFile(*pub, fmt.Sprintf("%s/%s", p.storeFilePath, p.pubFile))
@@ -217,7 +243,7 @@ func (p *API) DeletePublisher(publisherID string) error {
 	return nil
 }
 
-//DeleteSubscription delete a subscription by id
+// DeleteSubscription delete a subscription by id
 func (p *API) DeleteSubscription(subscriptionID string) error {
 	if pub, ok := p.subStore.Store[subscriptionID]; ok {
 		err := deleteFromFile(*pub, fmt.Sprintf("%s/%s", p.storeFilePath, p.subFile))
@@ -227,7 +253,7 @@ func (p *API) DeleteSubscription(subscriptionID string) error {
 	return nil
 }
 
-//DeleteAllSubscriptions  delete all subscription information
+// DeleteAllSubscriptions  delete all subscription information
 func (p *API) DeleteAllSubscriptions() error {
 	if err := deleteAllFromFile(fmt.Sprintf("%s/%s", p.storeFilePath, p.subFile)); err != nil {
 		return err
@@ -237,7 +263,7 @@ func (p *API) DeleteAllSubscriptions() error {
 	return nil
 }
 
-//DeleteAllPublishers delete all teh publisher information the store and cache.
+// DeleteAllPublishers delete all teh publisher information the store and cache.
 func (p *API) DeleteAllPublishers() error {
 	if err := deleteAllFromFile(fmt.Sprintf("%s/%s", p.storeFilePath, p.pubFile)); err != nil {
 		return err
@@ -247,19 +273,19 @@ func (p *API) DeleteAllPublishers() error {
 	return nil
 }
 
-//GetPublishersFromFile  get publisher data from teh file store
+// GetPublishersFromFile  get publisher data from teh file store
 func (p *API) GetPublishersFromFile() ([]byte, error) {
 	b, err := loadFromFile(fmt.Sprintf("%s/%s", p.storeFilePath, p.pubFile))
 	return b, err
 }
 
-//GetSubscriptionsFromFile  get subscriptions data from the file store
+// GetSubscriptionsFromFile  get subscriptions data from the file store
 func (p *API) GetSubscriptionsFromFile() ([]byte, error) {
 	b, err := loadFromFile(fmt.Sprintf("%s/%s", p.storeFilePath, p.subFile))
 	return b, err
 }
 
-//deleteAllFromFile deletes  publisher and subscription information from the file system
+// deleteAllFromFile deletes  publisher and subscription information from the file system
 func deleteAllFromFile(filePath string) error {
 	//open file
 	if err := ioutil.WriteFile(filePath, []byte{}, 0666); err != nil {
@@ -268,7 +294,7 @@ func deleteAllFromFile(filePath string) error {
 	return nil
 }
 
-//DeleteFromFile is used to delete subscription from the file system
+// DeleteFromFile is used to delete subscription from the file system
 func deleteFromFile(sub pubsub.PubSub, filePath string) error {
 	//open file
 	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_RDWR, 0644)
@@ -306,7 +332,6 @@ func deleteFromFile(sub pubsub.PubSub, filePath string) error {
 		return err
 	}
 	return nil
-
 }
 
 // loadFromFile is used to read subscription/publisher from the file system
@@ -325,7 +350,7 @@ func loadFromFile(filePath string) (b []byte, err error) {
 	return b, nil
 }
 
-//writeToFile writes subscription data to a file
+// writeToFile writes subscription data to a file
 func writeToFile(sub pubsub.PubSub, filePath string) error {
 	//open file
 	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_RDWR, 0644)
@@ -355,5 +380,4 @@ func writeToFile(sub pubsub.PubSub, filePath string) error {
 		return err
 	}
 	return nil
-
 }

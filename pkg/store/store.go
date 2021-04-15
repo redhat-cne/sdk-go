@@ -1,11 +1,12 @@
 package store
 
 import (
-	"github.com/redhat-cne/sdk-go/pkg/pubsub"
 	"sync"
+
+	"github.com/redhat-cne/sdk-go/pkg/pubsub"
 )
 
-//PubSubStore ...
+// PubSubStore  defines pub/sub store struct
 type PubSubStore struct {
 	sync.RWMutex
 	// PublisherStore stores publishers in a map
@@ -13,13 +14,13 @@ type PubSubStore struct {
 }
 
 // Set is a wrapper for setting the value of a key in the underlying map
-func (ps *PubSubStore) Set(key string, val *pubsub.PubSub) {
+func (ps *PubSubStore) Set(key string, val pubsub.PubSub) {
 	ps.Lock()
 	defer ps.Unlock()
-	ps.Store[key] = val
+	ps.Store[key] = &val
 }
 
-//Delete ... delete from store
+// Delete ... delete from store
 func (ps *PubSubStore) Delete(key string) {
 	ps.Lock()
 	defer ps.Unlock()

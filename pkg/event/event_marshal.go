@@ -3,8 +3,9 @@ package event
 import (
 	"bytes"
 	"fmt"
-	jsoniter "github.com/json-iterator/go"
 	"io"
+
+	jsoniter "github.com/json-iterator/go"
 )
 
 // WriteJSON writes the in event in the provided writer.
@@ -125,7 +126,6 @@ func writeJSONData(in *Data, writer io.Writer, stream *jsoniter.Stream) error {
 		}
 		stream.WriteArrayEnd()
 		stream.WriteObjectEnd()
-
 	} else {
 		return fmt.Errorf("data version is not set")
 	}

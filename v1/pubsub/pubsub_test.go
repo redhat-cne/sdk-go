@@ -22,12 +22,12 @@ var (
 		EndPointURI: &types.URI{URL: url.URL{Scheme: "http", Host: "localhost:8080", Path: "/get/event"}},
 		Resource:    "test/test",
 	}
-	globalInstance = api.GetAPIInstance(storePath)
+	globalInstance = api.GetAPIInstance(storePath, nil)
 )
 
 func TestAPI_GetAPIInstance(t *testing.T) {
 
-	localInstance := api.GetAPIInstance(storePath)
+	localInstance := api.GetAPIInstance(storePath, nil)
 
 	assert.Equal(t, &globalInstance, &localInstance)
 }
@@ -82,7 +82,6 @@ func TestAPI_DeletePublisher(t *testing.T) {
 	delPub, e := globalInstance.GetPublisher(p.ID)
 	assert.NotNil(t, e)
 	assert.Equal(t, delPub, pubsub.PubSub{})
-
 }
 func TestAPI_DeleteSubscription(t *testing.T) {
 	s, e := globalInstance.CreateSubscription(subscription)
@@ -100,7 +99,6 @@ func TestAPI_GetFromPubStore(t *testing.T) {
 	storePub, e := globalInstance.GetFromPubStore(p.Resource)
 	assert.Nil(t, e)
 	assert.Equal(t, p, storePub)
-
 }
 func TestAPI_GetFromSubStore(t *testing.T) {
 	s, e := globalInstance.CreateSubscription(subscription)

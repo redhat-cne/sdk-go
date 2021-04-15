@@ -23,7 +23,7 @@ func TestUnMarshal(t *testing.T) {
 	}{
 
 		"struct Data notification": {
-			body: mustJsonMarshal(t, map[string]interface{}{
+			body: mustJSONMarshal(t, map[string]interface{}{
 				"data": map[string]interface{}{
 					"resource": resource,
 					"values":   []interface{}{map[string]interface{}{"resource": resource, "dataType": "notification", "value": "FREERUN", "valueType": "enumeration"}},
@@ -54,7 +54,7 @@ func TestUnMarshal(t *testing.T) {
 			wantErr: nil,
 		},
 		"struct Data metric": {
-			body: mustJsonMarshal(t, map[string]interface{}{
+			body: mustJSONMarshal(t, map[string]interface{}{
 				"data": map[string]interface{}{
 					"values":  []interface{}{map[string]interface{}{"resource": resource, "dataType": "metric", "value": "10.64", "valueType": "decimal64.3"}},
 					"version": version,

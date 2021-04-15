@@ -3,7 +3,9 @@ package amqp
 import (
 	"fmt"
 	"github.com/Azure/go-amqp"
+	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/redhat-cne/sdk-go/pkg/channel"
+	"github.com/redhat-cne/sdk-go/pkg/event"
 	amqp1 "github.com/redhat-cne/sdk-go/pkg/protocol/amqp"
 	"log"
 	"sync"
@@ -20,9 +22,9 @@ type AMQP struct {
 }
 
 //GetAMQPInstance get event instance
-func GetAMQPInstance(amqpHost string, DataIn <-chan *channel.DataChan, DataOut chan<- *channel.DataChan, close <-chan bool) (*AMQP, error) {
+func GetAMQPInstance(amqpHost string, dataIn <-chan *channel.DataChan, dataOut chan<- *channel.DataChan, closeCh <-chan bool) (*AMQP, error) {
 	once.Do(func() {
-		router, err := amqp1.InitServer(amqpHost, DataIn, DataOut, close)
+		router, err := amqp1.InitServer(amqpHost, dataIn, dataOut, closeCh)
 		if err == nil {
 			instance = &AMQP{
 				Router: router,
@@ -98,5 +100,20 @@ func CreateListener(inChan chan<- *channel.DataChan, address string) {
 		Address: address,
 		Type:    channel.LISTENER,
 		Status:  channel.NEW,
+	}
+}
+
+//CreateNewStatusListener send status address information  on a channel to create it's listener object
+func CreateNewStatusListener(inChan chan<- *channel.DataChan, address string,
+	onReceiveOverrideFn func(e cloudevents.Event) error,
+	processEventFn func(e event.Event) error) {
+	// go ahead and create QDR listener to this address
+	inChan <- &channel.DataChan{
+		Address:             address,
+		Data:                nil,
+		Status:              channel.NEW,
+		Type:                channel.LISTENER,
+		OnReceiveOverrideFn: onReceiveOverrideFn,
+		ProcessEventFn:      processEventFn,
 	}
 }

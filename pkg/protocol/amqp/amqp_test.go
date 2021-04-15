@@ -2,6 +2,7 @@ package amqp_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/url"
 	"time"
@@ -86,11 +87,115 @@ func CloudEvents() cloudevents.Event {
 	return e
 }
 
+func TestSendSuccessStatus(t *testing.T) {
+	addr := "test/test2"
+	s := "amqp://localhost:5672"
+
+	e := CloudEvents()
+	in := make(chan *channel.DataChan)
+	out := make(chan *channel.DataChan)
+	closeCh := make(chan bool)
+	server, err := amqp1.InitServer(s, in, out, closeCh)
+	if err != nil {
+		t.Skipf("ampq.Dial(%#v): %v", server, err)
+	}
+	wg := sync.WaitGroup{}
+	go server.QDRRouter(&wg)
+
+	// send status, this will create status listener
+	// always you need to define how you handle status  when it is received
+	// do not override for events
+	in <- &channel.DataChan{
+		Address:             fmt.Sprintf("%s/%s", addr, "status"),
+		Status:              channel.NEW,
+		Type:                channel.LISTENER,
+		ProcessEventFn:      func(e cneevent.Event) error { return nil },
+		OnReceiveOverrideFn: func(e cloudevents.Event) error { return nil },
+	}
+
+	// create a sender
+	in <- &channel.DataChan{
+		Address: fmt.Sprintf("%s/%s", addr, "status"),
+		Type:    channel.SENDER,
+	}
+
+	// ping for status, this will  send the  status check ping to the address
+	in <- &channel.DataChan{
+		Address: fmt.Sprintf("%s/%s", addr, "status"),
+		Data:    &e,
+		Status:  channel.NEW,
+		Type:    channel.EVENT,
+	}
+
+	log.Printf("Reading out channel")
+	// read data
+	d := <-out
+	log.Printf("Processing out channel")
+	assert.Equal(t, channel.EVENT, d.Type)
+	assert.Equal(t, channel.SUCCEED, d.Status)
+	log.Printf("sending close")
+	closeCh <- true
+	wg.Wait()
+
+}
+
+func TestSendFailureStatus(t *testing.T) {
+	addr := "test/test2"
+	s := "amqp://localhost:5672"
+
+	e := CloudEvents()
+	in := make(chan *channel.DataChan)
+	out := make(chan *channel.DataChan)
+	closeCh := make(chan bool)
+	server, err := amqp1.InitServer(s, in, out, closeCh)
+	if err != nil {
+		t.Skipf("ampq.Dial(%#v): %v", server, err)
+	}
+	wg := sync.WaitGroup{}
+	go server.QDRRouter(&wg)
+
+	// send status, this will create status listener
+	// always you need to define how you handle status  when it is received
+	// do not override for events
+	in <- &channel.DataChan{
+		Address:             fmt.Sprintf("%s/%s", addr, "status"),
+		Status:              channel.NEW,
+		Type:                channel.LISTENER,
+		ProcessEventFn:      func(e cneevent.Event) error { return fmt.Errorf("EVENT PROCESS ERROR") },
+		OnReceiveOverrideFn: func(e cloudevents.Event) error { return fmt.Errorf("STATUS RECEEIVE ERROR") },
+	}
+
+	// create a sender
+	in <- &channel.DataChan{
+		Address: fmt.Sprintf("%s/%s", addr, "status"),
+		Type:    channel.SENDER,
+	}
+
+	// ping for status, this will  send the  status check ping to the address
+	in <- &channel.DataChan{
+		Address: fmt.Sprintf("%s/%s", addr, "status"),
+		Data:    &e,
+		Status:  channel.NEW,
+		Type:    channel.EVENT,
+	}
+
+	log.Printf("Reading out channel")
+	// read data
+	d := <-out
+	log.Printf("Processing out channel")
+	assert.Equal(t, channel.EVENT, d.Type)
+	assert.Equal(t, channel.FAILED, d.Status)
+	log.Printf("sending close")
+	closeCh <- true
+	wg.Wait()
+
+}
+
 func TestSendEvent(t *testing.T) {
 	addr := "test/test2"
 	s := "amqp://localhost:5672"
 
-	event := CloudEvents()
+	e := CloudEvents()
 	in := make(chan *channel.DataChan)
 	out := make(chan *channel.DataChan)
 	closeCh := make(chan bool)
@@ -116,20 +221,49 @@ func TestSendEvent(t *testing.T) {
 	// send data
 	in <- &channel.DataChan{
 		Address: addr,
-		Data:    &event,
+		Data:    &e,
+		Status:  channel.NEW,
+		Type:    channel.EVENT,
+	}
+	// read data
+	d := <-out
+	log.Printf("Processing out channel %v", d)
+	dd := cneevent.Data{}
+	err = json.Unmarshal(e.Data(), &dd)
+	assert.Nil(t, err)
+	assert.Equal(t, dd.Version, "1.0")
+
+	// send status, this will create status listener
+	// always you need to define how you handle status  when it is received
+	// do not override for events
+	in <- &channel.DataChan{
+		Address:             fmt.Sprintf("%s/%s", addr, "status"),
+		Status:              channel.NEW,
+		Type:                channel.LISTENER,
+		ProcessEventFn:      func(e cneevent.Event) error { return nil },
+		OnReceiveOverrideFn: func(e cloudevents.Event) error { return nil },
+	}
+
+	// create a sender
+	in <- &channel.DataChan{
+		Address: fmt.Sprintf("%s/%s", addr, "status"),
+		Type:    channel.SENDER,
+	}
+
+	// ping for status, this will  send the  status check ping to the address
+	in <- &channel.DataChan{
+		Address: fmt.Sprintf("%s/%s", addr, "status"),
+		Data:    &e,
 		Status:  channel.NEW,
 		Type:    channel.EVENT,
 	}
 
+	log.Printf("Reading out channel")
 	// read data
-	d := <-out
+	d = <-out
 	log.Printf("Processing out channel")
-	assert.Equal(t, d.Type, channel.EVENT)
-	assert.Equal(t, d.Address, addr)
-	dd := cneevent.Data{}
-	err = json.Unmarshal(event.Data(), &dd)
-	assert.Nil(t, err)
-	assert.Equal(t, dd.Version, "1.0")
+	assert.Equal(t, channel.EVENT, d.Type)
+
 	log.Printf("sending close")
 	closeCh <- true
 	wg.Wait()

@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	"github.com/redhat-cne/sdk-go/pkg/types"
-	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
+
+	"github.com/redhat-cne/sdk-go/pkg/types"
+	"github.com/stretchr/testify/require"
 
 	"github.com/stretchr/testify/assert"
 )
