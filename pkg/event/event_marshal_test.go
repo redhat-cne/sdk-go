@@ -14,7 +14,7 @@ import (
 
 func TestMarshal(t *testing.T) {
 	now := types.Timestamp{Time: time.Now().UTC()}
-	schemaUrl := "http://example.com/schema"
+	schemaURL := "http://example.com/schema"
 	resource := "/cluster/node/ptp"
 	_type := "ptp_status_type"
 	version := "v1"
@@ -44,7 +44,7 @@ func TestMarshal(t *testing.T) {
 			event: func() event.Event {
 				e := v1.CloudNativeEvent()
 				e.SetDataContentType(event.ApplicationJSON)
-				_ = e.SetDataSchema(schemaUrl)
+				_ = e.SetDataSchema(schemaURL)
 				e.Time = &now
 				e.SetType(_type)
 				e.SetData(data)
@@ -60,30 +60,30 @@ func TestMarshal(t *testing.T) {
 				"id":         "",
 				"time":       now.Format(time.RFC3339Nano),
 				"type":       _type,
-				"dataSchema": schemaUrl,
+				"dataSchema": schemaURL,
 			},
 		},
 	}
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
-			event := tc.event
-			gotBytes, err := json.Marshal(event)
+			e := tc.event
+			gotBytes, err := json.Marshal(e)
 			if tc.wantErr != nil {
 				require.Error(t, err, *tc.wantErr)
 				return
 			}
-			assertJsonEquals(t, tc.want, gotBytes)
+			assertJSONEquals(t, tc.want, gotBytes)
 		})
 	}
 }
 
-func mustJsonMarshal(tb testing.TB, body interface{}) []byte {
+func mustJSONMarshal(tb testing.TB, body interface{}) []byte {
 	b, err := json.Marshal(body)
 	require.NoError(tb, err)
 	return b
 }
 
-func assertJsonEquals(t *testing.T, want map[string]interface{}, got []byte) {
+func assertJSONEquals(t *testing.T, want map[string]interface{}, got []byte) {
 	var gotToCompare map[string]interface{}
 	require.NoError(t, json.Unmarshal(got, &gotToCompare))
 

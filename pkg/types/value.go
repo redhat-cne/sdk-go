@@ -282,7 +282,7 @@ func ToTime(v interface{}) (time.Time, error) {
 	}
 }
 
-// IsZero ...
+// IsZero  check if the interface has zero value
 func IsZero(v interface{}) bool {
 	// Fast path
 	if v == nil {
@@ -294,7 +294,7 @@ func IsZero(v interface{}) bool {
 	return reflect.ValueOf(v).IsZero()
 }
 
-// ConvertErr ...
+// ConvertErr  convert error
 type ConvertErr struct {
 	// Value being converted
 	Value interface{}

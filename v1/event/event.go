@@ -21,7 +21,7 @@ func PublishCloudEventToLog(e cloudevents.Event) {
 
 //CloudNativeEvent gets Cloud Native Event object
 func CloudNativeEvent() event.Event {
-	return event.Event{}
+	return event.Event{Type: "Event"}
 }
 
 //CloudNativeData gets Cloud Native Event object
@@ -55,7 +55,7 @@ func SendStatusToDataChannel(inChan chan<- *channel.DataChan, status channel.Sta
 	// go ahead and create QDR to this address
 	inChan <- &channel.DataChan{
 		Address: address,
-		Type:    channel.STATUS,
+		Type:    channel.EVENT,
 		Status:  status,
 	}
 }

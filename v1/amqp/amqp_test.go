@@ -19,12 +19,10 @@ var (
 )
 
 func TestAPI_GetAPIInstance(t *testing.T) {
-
 	localInstance, err := api.GetAMQPInstance(s, in, out, close)
 	if err != nil {
 		t.Skipf("ampq.Dial(%#v): %v", localInstance, err)
 	}
-
 	assert.Equal(t, &globalInstance, &localInstance)
 }
 

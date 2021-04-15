@@ -1,10 +1,11 @@
 package event
 
 import (
-	"github.com/redhat-cne/sdk-go/pkg/types"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/redhat-cne/sdk-go/pkg/types"
 )
 
 var _ Writer = (*Event)(nil)
@@ -12,7 +13,6 @@ var _ Writer = (*Event)(nil)
 // SetType implements Writer.SetType
 func (e *Event) SetType(t string) {
 	e.Type = t
-
 }
 
 // SetID implements Writer.SetID

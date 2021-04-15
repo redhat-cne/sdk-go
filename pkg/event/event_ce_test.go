@@ -19,7 +19,7 @@ import (
 var (
 	now         = types.Timestamp{Time: time.Now().UTC()}
 	uriLocation = "http://localhost:9090/event/subscription/1234"
-	endPointUri = "http://localhost:8080/event/ack/event"
+	endPointURI = "http://localhost:8080/event/ack/event"
 	resource    = "/cluster/node/ptp"
 	_type       = "ptp_status_type"
 	version     = "v1"
@@ -41,7 +41,7 @@ func setup() {
 	pubsub = cnepubsub.PubSub{}
 	_ = pubsub.SetResource(resource)
 	_ = pubsub.SetURILocation(uriLocation)
-	_ = pubsub.SetEndpointURI(endPointUri)
+	_ = pubsub.SetEndpointURI(endPointURI)
 	pubsub.SetID(id)
 
 }
@@ -49,13 +49,13 @@ func setup() {
 func TestEvent_NewCloudEvent(t *testing.T) {
 	setup()
 	testCases := map[string]struct {
-		cne_event  *cneevent.Event
-		cne_pubsub *cnepubsub.PubSub
-		want       *ce.Event
-		wantErr    *string
+		cneEvent  *cneevent.Event
+		cnePubsub *cnepubsub.PubSub
+		want      *ce.Event
+		wantErr   *string
 	}{
 		"struct Data v1": {
-			cne_event: func() *cneevent.Event {
+			cneEvent: func() *cneevent.Event {
 				e := cneeventv1.CloudNativeEvent()
 
 				e.SetDataContentType(cneevent.ApplicationJSON)
@@ -64,7 +64,7 @@ func TestEvent_NewCloudEvent(t *testing.T) {
 				e.SetData(data)
 				return &e
 			}(),
-			cne_pubsub: &pubsub,
+			cnePubsub: &pubsub,
 			want: func() *ce.Event {
 				e := ce.NewEvent()
 				e.SetSpecVersion(ce.VersionV03)
@@ -80,8 +80,8 @@ func TestEvent_NewCloudEvent(t *testing.T) {
 
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
-			event := tc.cne_event
-			cEvent, err := event.NewCloudEvent(tc.cne_pubsub)
+			event := tc.cneEvent
+			cEvent, err := event.NewCloudEvent(tc.cnePubsub)
 			assert.Nil(t, err)
 			tc.want.SetID(cEvent.ID())
 			gotBytes, err := json.Marshal(cEvent)
@@ -97,12 +97,12 @@ func TestEvent_NewCloudEvent(t *testing.T) {
 func TestEvent_GetCloudNativeEvents(t *testing.T) {
 	setup()
 	testCases := map[string]struct {
-		ce_event *ce.Event
-		want     *cneevent.Event
-		wantErr  *string
+		ceEvent *ce.Event
+		want    *cneevent.Event
+		wantErr *string
 	}{
 		"struct Data v1": {
-			ce_event: func() *ce.Event {
+			ceEvent: func() *ce.Event {
 				e := ce.NewEvent()
 				e.SetType(_type)
 				_ = e.SetData(ce.ApplicationJSON, data)
@@ -125,7 +125,7 @@ func TestEvent_GetCloudNativeEvents(t *testing.T) {
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
 			event := cneeventv1.CloudNativeEvent()
-			err := event.GetCloudNativeEvents(tc.ce_event)
+			err := event.GetCloudNativeEvents(tc.ceEvent)
 			assert.Nil(t, err)
 			gotBytes, err := json.Marshal(event)
 			if tc.wantErr != nil {

@@ -7,10 +7,14 @@ import (
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 )
 
+var (
+	channelBufferSize = 10
+)
+
 //NewStatusListenerChannel ...
 func NewStatusListenerChannel(wg *sync.WaitGroup) *ListenerChannel {
 	listener := &ListenerChannel{
-		listener: make(chan RestAPIChannel, 10),
+		listener: make(chan RestAPIChannel, channelBufferSize),
 		store:    make(map[int]chan<- cloudevents.Event),
 		done:     make(chan bool),
 	}

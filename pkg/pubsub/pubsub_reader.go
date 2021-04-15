@@ -12,12 +12,12 @@ func (ps *PubSub) GetID() string {
 	return ps.ID
 }
 
-//GetEndpointURI ...
+// GetEndpointURI returns endpoint uri
 func (ps *PubSub) GetEndpointURI() string {
 	return ps.EndPointURI.String()
 }
 
-// GetURILocation ...
+// GetURILocation returns uri location
 func (ps *PubSub) GetURILocation() string {
 	return ps.URILocation.String()
 }

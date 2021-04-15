@@ -69,7 +69,6 @@ func readDataJSONFromIterator(out *Data, iterator *jsoniter.Iterator) error {
 		default:
 			iterator.Skip()
 		}
-
 	}
 
 	if iterator.Error != nil {
@@ -118,7 +117,6 @@ func readJSONFromIterator(out *Event, iterator *jsoniter.Iterator) error {
 		default:
 			iterator.Skip()
 		}
-
 	}
 
 	if iterator.Error != nil {
@@ -143,6 +141,7 @@ func readTimestamp(iter *jsoniter.Iterator) *types.Timestamp {
 
 func readDataValue(iter *jsoniter.Iterator) ([]DataValue, error) {
 	var values []DataValue
+	var err error
 	for iter.ReadArray() {
 		var cacheValue string
 		dv := DataValue{}
@@ -165,14 +164,14 @@ func readDataValue(iter *jsoniter.Iterator) ([]DataValue, error) {
 			}
 		}
 		if dv.ValueType == DECIMAL {
-			dv.Value, _ = strconv.ParseFloat(cacheValue, 3)
+			dv.Value, err = strconv.ParseFloat(cacheValue, 3)
 		} else {
 			dv.Value = SyncState(cacheValue)
 		}
 		values = append(values, dv)
 	}
 
-	return values, nil
+	return values, err
 }
 
 func readData(iter *jsoniter.Iterator) (*Data, error) {

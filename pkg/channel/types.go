@@ -22,8 +22,6 @@ const (
 	LISTENER Type = iota
 	//SENDER  the  type is to create sender
 	SENDER
-	//STATUS  the  types is check status
-	STATUS
 	//EVENT  the type is an event
 	EVENT
 )
