@@ -88,7 +88,8 @@ func CloudEvents() cloudevents.Event {
 }
 
 func TestSendSuccessStatus(t *testing.T) {
-	addr := "test/test2"
+	time.Sleep(2 * time.Second)
+	addr := "test/test/success"
 	s := "amqp://localhost:5672"
 
 	e := CloudEvents()
@@ -140,7 +141,7 @@ func TestSendSuccessStatus(t *testing.T) {
 }
 
 func TestSendFailureStatus(t *testing.T) {
-	addr := "test/test2"
+	addr := "test/test/failure"
 	s := "amqp://localhost:5672"
 
 	e := CloudEvents()
@@ -192,7 +193,7 @@ func TestSendFailureStatus(t *testing.T) {
 }
 
 func TestSendEvent(t *testing.T) {
-	addr := "test/test2"
+	addr := "test/test/event"
 	s := "amqp://localhost:5672"
 
 	e := CloudEvents()
@@ -271,7 +272,7 @@ func TestSendEvent(t *testing.T) {
 }
 
 func TestDeleteListener(t *testing.T) {
-	addr := "test/test2"
+	addr := "test/listener/delete"
 	s := "amqp://localhost:5672"
 
 	in := make(chan *channel.DataChan)
@@ -306,7 +307,7 @@ func TestDeleteListener(t *testing.T) {
 }
 
 func TestDeleteSender(t *testing.T) {
-	addr := "test/test2"
+	addr := "test/sender/delete"
 	s := "amqp://localhost:5672"
 
 	in := make(chan *channel.DataChan)

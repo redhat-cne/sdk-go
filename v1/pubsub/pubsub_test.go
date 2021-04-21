@@ -22,12 +22,12 @@ var (
 		EndPointURI: &types.URI{URL: url.URL{Scheme: "http", Host: "localhost:8080", Path: "/get/event"}},
 		Resource:    "test/test",
 	}
-	globalInstance = api.GetAPIInstance(storePath, nil)
+	globalInstance = api.GetAPIInstance(storePath)
 )
 
 func TestAPI_GetAPIInstance(t *testing.T) {
 
-	localInstance := api.GetAPIInstance(storePath, nil)
+	localInstance := api.GetAPIInstance(storePath)
 
 	assert.Equal(t, &globalInstance, &localInstance)
 }
