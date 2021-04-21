@@ -1,14 +1,14 @@
 package amqp
 
 import (
-	"fmt"
+	"sync"
+
 	"github.com/Azure/go-amqp"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/redhat-cne/sdk-go/pkg/channel"
+	"github.com/redhat-cne/sdk-go/pkg/errorhandler"
 	"github.com/redhat-cne/sdk-go/pkg/event"
 	amqp1 "github.com/redhat-cne/sdk-go/pkg/protocol/amqp"
-	"log"
-	"sync"
 )
 
 var (
@@ -29,19 +29,15 @@ func GetAMQPInstance(amqpHost string, dataIn <-chan *channel.DataChan, dataOut c
 			instance = &AMQP{
 				Router: router,
 			}
-		} else {
-			log.Printf("error connecting to amqp %v", err)
 		}
 	})
 	if instance == nil || instance.Router == nil {
-		return nil, fmt.Errorf("error conecting to amqp")
-
+		return nil, errorhandler.AMQPConnectionError{Desc: "amqp connection error"}
 	}
 	if instance.Router.Client == nil {
 		client, err := instance.Router.NewClient(amqpHost, []amqp.ConnOption{})
 		if err != nil {
-			log.Printf("error creating client %v", err)
-			return nil, err
+			return nil, errorhandler.AMQPConnectionError{Desc: err.Error()}
 		}
 		instance.Router.Client = client
 	}

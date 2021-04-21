@@ -22,7 +22,6 @@ type API struct {
 	pubFile          string
 	storeFilePath    string
 	transportEnabled bool
-	baseURI          *types.URI
 }
 
 var instance *API
@@ -42,10 +41,9 @@ func New() pubsub.PubSub {
 }
 
 // GetAPIInstance get event instance
-func GetAPIInstance(storeFilePath string, baseURI *types.URI) *API {
+func GetAPIInstance(storeFilePath string) *API {
 	once.Do(func() {
 		instance = &API{
-			baseURI:          baseURI,
 			transportEnabled: true,
 			pubStore: &store.PubSubStore{
 				RWMutex: sync.RWMutex{},
@@ -90,17 +88,7 @@ func (p *API) ReloadStore() {
 	}
 }
 
-// GetBaseURI get base url for rest api, if not enabled then set it to nil
-func (p *API) GetBaseURI() *types.URI {
-	return p.baseURI
-}
-
-// SetBaseURI set base url for rest api, if not enabled then set it to nil
-func (p *API) SetBaseURI(uri *types.URI) {
-	p.baseURI = uri
-}
-
-// HasTransportEnabled flag to idicate if amqp is enabled
+// HasTransportEnabled flag to indicate if amqp is enabled
 func (p *API) HasTransportEnabled() bool {
 	return p.transportEnabled
 }
@@ -164,7 +152,7 @@ func (p *API) HasPublisher(address string) (pubsub.PubSub, bool) {
 // CreateSubscription create a subscription and store it in a file and cache
 func (p *API) CreateSubscription(sub pubsub.PubSub) (pubsub.PubSub, error) {
 	if subExists, ok := p.HasSubscription(sub.GetResource()); ok {
-		log.Printf("There was already a subscription,skipping creation %v", subExists)
+		log.Printf("there was already a subscription in the store,skipping creation %v", subExists)
 		p.subStore.Set(sub.ID, subExists)
 		return subExists, nil
 	}
@@ -174,7 +162,7 @@ func (p *API) CreateSubscription(sub pubsub.PubSub) (pubsub.PubSub, error) {
 	//TODO:might want to use PVC to live beyond pod crash
 	err := writeToFile(sub, fmt.Sprintf("%s/%s", p.storeFilePath, p.subFile))
 	if err != nil {
-		log.Printf("Error writing to store %v\n", err)
+		log.Printf("error writing to a store %v\n", err)
 		return pubsub.PubSub{}, err
 	}
 	log.Printf("Stored in a file %s", fmt.Sprintf("%s/%s", p.storeFilePath, p.subFile))
@@ -196,7 +184,7 @@ func (p *API) CreatePublisher(pub pubsub.PubSub) (pubsub.PubSub, error) {
 	//TODO:might want to use PVC to live beyond pod crash
 	err := writeToFile(pub, fmt.Sprintf("%s/%s", p.storeFilePath, p.pubFile))
 	if err != nil {
-		log.Printf("Error writing to store %v\n", err)
+		log.Printf("error writing to a store %v\n", err)
 		return pubsub.PubSub{}, err
 	}
 	log.Printf("Stored in a file %s", fmt.Sprintf("%s/%s", p.storeFilePath, p.pubFile))
