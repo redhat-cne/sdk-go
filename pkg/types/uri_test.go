@@ -93,13 +93,11 @@ func TestJsonMarshalURL(t *testing.T) {
 	for n, tc := range testCases {
 		tc := tc // Don't use range variable in func literal.
 		t.Run(n, func(t *testing.T) {
-
 			var got []byte
 			tt := types.ParseURI(tc.t)
 			if tt != nil {
 				got, _ = tt.MarshalJSON()
 			}
-
 			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Logf("got: %s", string(got))
 				t.Errorf("unexpected object (-want, +got) = %v", diff)
@@ -173,10 +171,8 @@ func TestJsonUnmarshalURI(t *testing.T) {
 	for n, tc := range testCases {
 		tc := tc // Don't use range variable in func literal.
 		t.Run(n, func(t *testing.T) {
-
 			got := &types.URI{}
 			err := got.UnmarshalJSON(tc.b)
-
 			if tc.wantErr != "" || err != nil {
 				var gotErr string
 				if err != nil {

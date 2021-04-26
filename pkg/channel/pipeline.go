@@ -97,5 +97,4 @@ func (s *ListenerChannel) SetChannel(seq int, dataCh chan<- cloudevents.Event) {
 //SendToListener ...
 func (s *ListenerChannel) SendToListener(fromRest RestAPIChannel) {
 	s.listener <- fromRest
-
 }

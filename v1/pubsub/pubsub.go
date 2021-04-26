@@ -165,8 +165,8 @@ func (p *API) CreateSubscription(sub pubsub.PubSub) (pubsub.PubSub, error) {
 		log.Printf("error writing to a store %v\n", err)
 		return pubsub.PubSub{}, err
 	}
-	log.Printf("Stored in a file %s", fmt.Sprintf("%s/%s", p.storeFilePath, p.subFile))
-	//store the publisher
+	log.Printf("subscription stored into a file %s", fmt.Sprintf("%s/%s  - content %s", p.storeFilePath, p.subFile, sub.String()))
+	// store the publisher
 	p.subStore.Set(sub.ID, sub)
 	return sub, nil
 }
@@ -187,8 +187,8 @@ func (p *API) CreatePublisher(pub pubsub.PubSub) (pubsub.PubSub, error) {
 		log.Printf("error writing to a store %v\n", err)
 		return pubsub.PubSub{}, err
 	}
-	log.Printf("Stored in a file %s", fmt.Sprintf("%s/%s", p.storeFilePath, p.pubFile))
-	//store the publisher
+	log.Printf("publisher stored into a file %s", fmt.Sprintf("%s/%s  - content %s", p.storeFilePath, p.subFile, pub.String()))
+	// store the publisher
 	p.pubStore.Set(pub.ID, pub)
 	return pub, nil
 }
@@ -246,12 +246,12 @@ func (p *API) DeleteAllSubscriptions() error {
 	if err := deleteAllFromFile(fmt.Sprintf("%s/%s", p.storeFilePath, p.subFile)); err != nil {
 		return err
 	}
-	//empty the store
+	// empty the store
 	p.subStore.Store = make(map[string]*pubsub.PubSub)
 	return nil
 }
 
-// DeleteAllPublishers delete all teh publisher information the store and cache.
+// DeleteAllPublishers delete all the publisher information the store and cache.
 func (p *API) DeleteAllPublishers() error {
 	if err := deleteAllFromFile(fmt.Sprintf("%s/%s", p.storeFilePath, p.pubFile)); err != nil {
 		return err
@@ -261,7 +261,7 @@ func (p *API) DeleteAllPublishers() error {
 	return nil
 }
 
-// GetPublishersFromFile  get publisher data from teh file store
+// GetPublishersFromFile  get publisher data from the file store
 func (p *API) GetPublishersFromFile() ([]byte, error) {
 	b, err := loadFromFile(fmt.Sprintf("%s/%s", p.storeFilePath, p.pubFile))
 	return b, err

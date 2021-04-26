@@ -14,7 +14,7 @@ import (
 //  "uriLocation":  "http://localhost:8080/api/ocloudNotifications/v1/publishers/{publisherid}",
 //  "resource":  "/east-edge-10/vdu3/o-ran-sync/sync-group/sync-status/sync-state"
 // }
-//PubSub request model
+// PubSub request model
 type PubSub struct {
 	// ID of the pub/sub; is updated on successful creation of publisher/subscription.
 	ID string `json:"id" omit:"empty"`
