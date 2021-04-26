@@ -1,6 +1,7 @@
 package pubsub_test
 
 import (
+	"encoding/json"
 	"net/url"
 	"os"
 	"testing"
@@ -37,7 +38,14 @@ func TestAPI_CreatePublisher(t *testing.T) {
 	assert.Equal(t, p.URILocation, publisher.URILocation)
 	assert.Equal(t, p.Resource, publisher.Resource)
 	assert.Equal(t, p.EndPointURI, publisher.EndPointURI)
+	b, e := globalInstance.GetPublishersFromFile()
+	assert.Nil(t, e)
+	var pubs []pubsub.PubSub
+	e = json.Unmarshal(b, &pubs)
+	assert.Nil(t, e)
+	assert.Equal(t, p,pubs[0])
 }
+
 func TestAPI_CreateSubscription(t *testing.T) {
 	s, e := globalInstance.CreateSubscription(subscription)
 	assert.Nil(t, e)
@@ -45,6 +53,12 @@ func TestAPI_CreateSubscription(t *testing.T) {
 	assert.Equal(t, s.URILocation, subscription.URILocation)
 	assert.Equal(t, s.Resource, subscription.Resource)
 	assert.Equal(t, s.EndPointURI, subscription.EndPointURI)
+	b, e := globalInstance.GetSubscriptionsFromFile()
+	assert.Nil(t, e)
+	var subs []pubsub.PubSub
+	e = json.Unmarshal(b, &subs)
+	assert.Nil(t, e)
+	assert.Equal(t, s,subs[0])
 }
 
 func TestAPI_DeleteAllPublishers(t *testing.T) {
