@@ -156,8 +156,9 @@ func (p *API) CreateSubscription(sub pubsub.PubSub) (pubsub.PubSub, error) {
 		p.subStore.Set(sub.ID, subExists)
 		return subExists, nil
 	}
-	sub.SetID(uuid.New().String())
-
+	if sub.ID == "" { //this will be always set by rest api
+		sub.SetID(uuid.New().String())
+	}
 	// persist the subscription -
 	//TODO:might want to use PVC to live beyond pod crash
 	err := writeToFile(sub, fmt.Sprintf("%s/%s", p.storeFilePath, p.subFile))
@@ -178,8 +179,9 @@ func (p *API) CreatePublisher(pub pubsub.PubSub) (pubsub.PubSub, error) {
 		p.pubStore.Set(pub.ID, pubExists)
 		return pubExists, nil
 	}
-	pub.SetID(uuid.New().String())
-
+	if pub.ID == "" { //this will be always set by rest api
+		pub.SetID(uuid.New().String())
+	}
 	// persist the subscription -
 	//TODO:might want to use PVC to live beyond pod crash
 	err := writeToFile(pub, fmt.Sprintf("%s/%s", p.storeFilePath, p.pubFile))
@@ -342,7 +344,6 @@ func loadFromFile(filePath string) (b []byte, err error) {
 func writeToFile(sub pubsub.PubSub, filePath string) error {
 	//open file
 	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_RDWR, 0644)
-
 	if err != nil {
 		return err
 	}
@@ -364,6 +365,7 @@ func writeToFile(sub pubsub.PubSub, filePath string) error {
 	if err != nil {
 		return err
 	}
+	log.Printf("Writing following contents  %s to a file %s\n", string(newBytes), filePath)
 	if err := ioutil.WriteFile(filePath, newBytes, 0666); err != nil {
 		return err
 	}
