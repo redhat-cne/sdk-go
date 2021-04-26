@@ -16,7 +16,6 @@ import (
 //PublishCloudEventToLog .. publish event data to a log
 func PublishCloudEventToLog(e cloudevents.Event) {
 	log.Printf("Publishing event to log %#v", e)
-
 }
 
 //CloudNativeEvent gets Cloud Native Event object

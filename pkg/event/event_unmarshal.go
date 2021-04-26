@@ -44,7 +44,6 @@ func ReadDataJSON(out *Data, reader io.Reader) error {
 
 // readJSONFromIterator allows you to read the bytes reader as an event
 func readDataJSONFromIterator(out *Data, iterator *jsoniter.Iterator) error {
-
 	var (
 		// Universally parseable fields.
 		version string
@@ -81,7 +80,6 @@ func readDataJSONFromIterator(out *Data, iterator *jsoniter.Iterator) error {
 
 // readJSONFromIterator allows you to read the bytes reader as an event
 func readJSONFromIterator(out *Event, iterator *jsoniter.Iterator) error {
-
 	var (
 		// Universally parseable fields.
 		id   string

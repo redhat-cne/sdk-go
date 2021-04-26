@@ -2,11 +2,12 @@ package event_test
 
 import (
 	"encoding/json"
+	"testing"
+	"time"
+
 	"github.com/google/go-cmp/cmp"
 	"github.com/redhat-cne/sdk-go/pkg/event"
 	"github.com/redhat-cne/sdk-go/pkg/types"
-	"testing"
-	"time"
 )
 
 func TestUnMarshal(t *testing.T) {

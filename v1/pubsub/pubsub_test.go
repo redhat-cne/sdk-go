@@ -26,9 +26,7 @@ var (
 )
 
 func TestAPI_GetAPIInstance(t *testing.T) {
-
 	localInstance := api.GetAPIInstance(storePath)
-
 	assert.Equal(t, &globalInstance, &localInstance)
 }
 
@@ -106,7 +104,6 @@ func TestAPI_GetFromSubStore(t *testing.T) {
 	storeSub, e := globalInstance.GetFromSubStore(s.Resource)
 	assert.Nil(t, e)
 	assert.Equal(t, s, storeSub)
-
 }
 func TestAPI_GetPublisher(t *testing.T) {
 	p, e := globalInstance.CreatePublisher(publisher)
@@ -144,7 +141,6 @@ func TestAPI_HasPublisher(t *testing.T) {
 	fp, found := globalInstance.HasPublisher(p.Resource)
 	assert.True(t, found)
 	assert.Equal(t, p, fp)
-
 }
 
 func TestAPI_HasSubscription(t *testing.T) {

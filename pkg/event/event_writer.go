@@ -18,7 +18,6 @@ func (e *Event) SetType(t string) {
 // SetID implements Writer.SetID
 func (e *Event) SetID(id string) {
 	e.ID = id
-
 }
 
 // SetTime implements Writer.SetTime
@@ -28,7 +27,6 @@ func (e *Event) SetTime(t time.Time) {
 	} else {
 		e.Time = &types.Timestamp{Time: t}
 	}
-
 }
 
 // SetDataSchema implements Writer.SetDataSchema
