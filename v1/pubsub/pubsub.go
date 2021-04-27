@@ -26,6 +26,7 @@ type API struct {
 
 var instance *API
 var once sync.Once
+var mu sync.Mutex
 
 // NewPubSub create new publisher or subscriber
 func NewPubSub(endPointURI *types.URI, resource string) pubsub.PubSub {
@@ -343,6 +344,8 @@ func loadFromFile(filePath string) (b []byte, err error) {
 // writeToFile writes subscription data to a file
 func writeToFile(sub pubsub.PubSub, filePath string) error {
 	//open file
+	mu.Lock()
+	defer mu.Unlock()
 	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_RDWR, 0644)
 	if err != nil {
 		return err
