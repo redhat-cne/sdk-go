@@ -167,7 +167,7 @@ func (p *API) CreateSubscription(sub pubsub.PubSub) (pubsub.PubSub, error) {
 		log.Printf("error writing to a store %v\n", err)
 		return pubsub.PubSub{}, err
 	}
-	log.Printf("subscription stored into a file %s", fmt.Sprintf("%s/%s  - content %s", p.storeFilePath, p.subFile, sub.String()))
+	log.Printf("subscription persisted into a file %s", fmt.Sprintf("%s/%s  - content %s", p.storeFilePath, p.subFile, sub.String()))
 	// store the publisher
 	p.subStore.Set(sub.ID, sub)
 	return sub, nil
@@ -190,7 +190,7 @@ func (p *API) CreatePublisher(pub pubsub.PubSub) (pubsub.PubSub, error) {
 		log.Printf("error writing to a store %v\n", err)
 		return pubsub.PubSub{}, err
 	}
-	log.Printf("publisher stored into a file %s", fmt.Sprintf("%s/%s  - content %s", p.storeFilePath, p.subFile, pub.String()))
+	log.Printf("publisher persisted into a file %s", fmt.Sprintf("%s/%s  - content %s", p.storeFilePath, p.subFile, pub.String()))
 	// store the publisher
 	p.pubStore.Set(pub.ID, pub)
 	return pub, nil
@@ -201,8 +201,7 @@ func (p *API) GetSubscription(subscriptionID string) (pubsub.PubSub, error) {
 	if sub, ok := p.subStore.Store[subscriptionID]; ok {
 		return *sub, nil
 	}
-
-	return pubsub.PubSub{}, fmt.Errorf("subscription data not found for id %s", subscriptionID)
+	return pubsub.PubSub{}, fmt.Errorf("subscription data was not found for id %s", subscriptionID)
 }
 
 // GetPublisher get a publisher by it's id
@@ -210,8 +209,7 @@ func (p *API) GetPublisher(publisherID string) (pubsub.PubSub, error) {
 	if sub, ok := p.pubStore.Store[publisherID]; ok {
 		return *sub, nil
 	}
-
-	return pubsub.PubSub{}, fmt.Errorf("publisher data not found for id %s", publisherID)
+	return pubsub.PubSub{}, fmt.Errorf("publisher data was not found for id %s", publisherID)
 }
 
 // GetSubscriptions  get all subscription inforamtions
@@ -226,6 +224,7 @@ func (p *API) GetPublishers() map[string]*pubsub.PubSub {
 
 // DeletePublisher delete a publisher by id
 func (p *API) DeletePublisher(publisherID string) error {
+	log.Printf("deleteing publisher")
 	if pub, ok := p.pubStore.Store[publisherID]; ok {
 		err := deleteFromFile(*pub, fmt.Sprintf("%s/%s", p.storeFilePath, p.pubFile))
 		p.pubStore.Delete(publisherID)
@@ -236,6 +235,7 @@ func (p *API) DeletePublisher(publisherID string) error {
 
 // DeleteSubscription delete a subscription by id
 func (p *API) DeleteSubscription(subscriptionID string) error {
+	log.Printf("deleteing subscription")
 	if pub, ok := p.subStore.Store[subscriptionID]; ok {
 		err := deleteFromFile(*pub, fmt.Sprintf("%s/%s", p.storeFilePath, p.subFile))
 		p.subStore.Delete(subscriptionID)
@@ -246,6 +246,7 @@ func (p *API) DeleteSubscription(subscriptionID string) error {
 
 // DeleteAllSubscriptions  delete all subscription information
 func (p *API) DeleteAllSubscriptions() error {
+	log.Printf("deleteing all subscription")
 	if err := deleteAllFromFile(fmt.Sprintf("%s/%s", p.storeFilePath, p.subFile)); err != nil {
 		return err
 	}
@@ -256,6 +257,7 @@ func (p *API) DeleteAllSubscriptions() error {
 
 // DeleteAllPublishers delete all the publisher information the store and cache.
 func (p *API) DeleteAllPublishers() error {
+	log.Printf("deleteing all publishers")
 	if err := deleteAllFromFile(fmt.Sprintf("%s/%s", p.storeFilePath, p.pubFile)); err != nil {
 		return err
 	}
@@ -368,7 +370,7 @@ func writeToFile(sub pubsub.PubSub, filePath string) error {
 	if err != nil {
 		return err
 	}
-	log.Printf("Writing following contents  %s to a file %s\n", string(newBytes), filePath)
+	log.Printf("persisting following contents %s to a file %s\n", string(newBytes), filePath)
 	if err := ioutil.WriteFile(filePath, newBytes, 0666); err != nil {
 		return err
 	}
