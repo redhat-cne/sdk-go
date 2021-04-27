@@ -32,6 +32,7 @@ func TestAPI_GetAPIInstance(t *testing.T) {
 }
 
 func TestAPI_CreatePublisher(t *testing.T) {
+	defer clean()
 	p, e := globalInstance.CreatePublisher(publisher)
 	assert.Nil(t, e)
 	assert.NotEmpty(t, p.ID)
@@ -47,6 +48,7 @@ func TestAPI_CreatePublisher(t *testing.T) {
 }
 
 func TestAPI_CreateSubscription(t *testing.T) {
+	defer clean()
 	s, e := globalInstance.CreateSubscription(subscription)
 	assert.Nil(t, e)
 	assert.NotEmpty(t, s.ID)
@@ -62,6 +64,7 @@ func TestAPI_CreateSubscription(t *testing.T) {
 }
 
 func TestAPI_DeleteAllPublishers(t *testing.T) {
+	defer clean()
 	p, e := globalInstance.CreatePublisher(publisher)
 	assert.Nil(t, e)
 	assert.NotEmpty(t, p.ID)
@@ -86,6 +89,7 @@ func TestAPI_DeleteAllSubscriptions(t *testing.T) {
 }
 
 func TestAPI_DeletePublisher(t *testing.T) {
+	defer clean()
 	p, e := globalInstance.CreatePublisher(publisher)
 	assert.Nil(t, e)
 	assert.NotEmpty(t, p.ID)
@@ -96,6 +100,7 @@ func TestAPI_DeletePublisher(t *testing.T) {
 	assert.Equal(t, delPub, pubsub.PubSub{})
 }
 func TestAPI_DeleteSubscription(t *testing.T) {
+	defer clean()
 	s, e := globalInstance.CreateSubscription(subscription)
 	assert.Nil(t, e)
 	assert.NotEmpty(t, s.ID)
@@ -106,6 +111,7 @@ func TestAPI_DeleteSubscription(t *testing.T) {
 	assert.Equal(t, delSub, pubsub.PubSub{})
 }
 func TestAPI_GetFromPubStore(t *testing.T) {
+	defer clean()
 	p, e := globalInstance.CreatePublisher(publisher)
 	assert.Nil(t, e)
 	storePub, e := globalInstance.GetFromPubStore(p.Resource)
@@ -113,6 +119,7 @@ func TestAPI_GetFromPubStore(t *testing.T) {
 	assert.Equal(t, p, storePub)
 }
 func TestAPI_GetFromSubStore(t *testing.T) {
+	defer clean()
 	s, e := globalInstance.CreateSubscription(subscription)
 	assert.Nil(t, e)
 	storeSub, e := globalInstance.GetFromSubStore(s.Resource)
@@ -120,6 +127,7 @@ func TestAPI_GetFromSubStore(t *testing.T) {
 	assert.Equal(t, s, storeSub)
 }
 func TestAPI_GetPublisher(t *testing.T) {
+	defer clean()
 	p, e := globalInstance.CreatePublisher(publisher)
 	assert.Nil(t, e)
 	storeP, e := globalInstance.GetPublisher(p.ID)
@@ -128,6 +136,7 @@ func TestAPI_GetPublisher(t *testing.T) {
 }
 
 func TestAPI_GetPublishers(t *testing.T) {
+	defer clean()
 	_, e := globalInstance.CreatePublisher(publisher)
 	assert.Nil(t, e)
 	pubs := globalInstance.GetPublishers()
@@ -135,6 +144,7 @@ func TestAPI_GetPublishers(t *testing.T) {
 }
 
 func TestAPI_GetSubscription(t *testing.T) {
+	defer clean()
 	s, e := globalInstance.CreateSubscription(subscription)
 	assert.Nil(t, e)
 	storeS, e := globalInstance.GetSubscription(s.ID)
@@ -143,6 +153,7 @@ func TestAPI_GetSubscription(t *testing.T) {
 }
 
 func TestAPI_GetSubscriptions(t *testing.T) {
+	defer clean()
 	_, e := globalInstance.CreateSubscription(subscription)
 	assert.Nil(t, e)
 	subs := globalInstance.GetSubscriptions()
@@ -150,6 +161,7 @@ func TestAPI_GetSubscriptions(t *testing.T) {
 }
 
 func TestAPI_HasPublisher(t *testing.T) {
+	defer clean()
 	p, e := globalInstance.CreatePublisher(publisher)
 	assert.Nil(t, e)
 	fp, found := globalInstance.HasPublisher(p.Resource)
@@ -158,16 +170,18 @@ func TestAPI_HasPublisher(t *testing.T) {
 }
 
 func TestAPI_HasSubscription(t *testing.T) {
+	defer clean()
 	s, e := globalInstance.CreateSubscription(subscription)
 	assert.Nil(t, e)
 	fs, found := globalInstance.HasSubscription(s.Resource)
 	assert.True(t, found)
 	assert.Equal(t, s, fs)
 }
-
-func TestTeardown(t *testing.T) {
+func clean(){
 	_ = globalInstance.DeleteAllSubscriptions()
 	_ = globalInstance.DeleteAllPublishers()
+}
+func TestTeardown(t *testing.T) {
 	_ = os.Remove("./pub.json")
 	_ = os.Remove("./sub.json")
 }
