@@ -27,12 +27,13 @@ import (
 func strptr(s string) *string { return &s }
 
 var (
-	ceSource        = cetypes.URIRef{URL: url.URL{Scheme: "http", Host: "example.com", Path: "/source"}}
-	ceTimestamp     = cetypes.Timestamp{Time: time.Date(2020, 03, 21, 12, 34, 56, 780000000, time.UTC)}
-	cneTimestamp    = types.Timestamp{Time: time.Date(2020, 03, 21, 12, 34, 56, 780000000, time.UTC)}
-	ceSchema        = cetypes.URI{URL: url.URL{Scheme: "http", Host: "example.com", Path: "/schema"}}
-	_type           = "ptp_status_type"
-	resourceAddress = "/test1/test1"
+	ceSource                      = cetypes.URIRef{URL: url.URL{Scheme: "http", Host: "example.com", Path: "/source"}}
+	ceTimestamp                   = cetypes.Timestamp{Time: time.Date(2020, 03, 21, 12, 34, 56, 780000000, time.UTC)}
+	cneTimestamp                  = types.Timestamp{Time: time.Date(2020, 03, 21, 12, 34, 56, 780000000, time.UTC)}
+	ceSchema                      = cetypes.URI{URL: url.URL{Scheme: "http", Host: "example.com", Path: "/schema"}}
+	_type                         = "ptp_status_type"
+	resourceAddress               = "/test1/test1"
+	timeout         time.Duration = 2 * time.Second
 )
 
 // CloudNativeEvents generates cloud events for testing
@@ -87,6 +88,87 @@ func CloudEvents() cloudevents.Event {
 	return e
 }
 
+func TestDeleteSender(t *testing.T) {
+	time.Sleep(2 * time.Second)
+	addr := "test/sender/delete"
+	s := "amqp://localhost:5672"
+
+	in := make(chan *channel.DataChan)
+	out := make(chan *channel.DataChan)
+	closeCh := make(chan bool)
+	server, err := amqp1.InitServer(s, in, out, closeCh)
+	if err != nil {
+		t.Skipf("ampq.Dial(%#v): %v", server, err)
+	}
+	assert.Equal(t, len(server.Listeners), 0)
+	wg := sync.WaitGroup{}
+	server.QDRRouter(&wg)
+
+	// create a listener
+	in <- &channel.DataChan{
+		Address: addr,
+		Type:    channel.SENDER,
+	}
+	time.Sleep(2 * time.Second)
+	assert.Equal(t, 1, len(server.Senders))
+
+	// send data
+	in <- &channel.DataChan{
+		Address: addr,
+		Status:  channel.DELETE,
+		Type:    channel.SENDER,
+	}
+	time.Sleep(2 * time.Second)
+
+	// read data
+	assert.Equal(t, 0, len(server.Senders))
+	closeCh <- true
+	waitTimeout(&wg, timeout)
+
+}
+
+func TestDeleteListener(t *testing.T) {
+	addr := "test/listener/delete"
+	s := "amqp://localhost:5672"
+
+	in := make(chan *channel.DataChan)
+	out := make(chan *channel.DataChan)
+	closeCh := make(chan bool)
+	server, err := amqp1.InitServer(s, in, out, closeCh)
+	if err != nil {
+		t.Skipf("ampq.Dial(%#v): %v", server, err)
+	}
+	assert.Equal(t, len(server.Listeners), 0)
+	wg := sync.WaitGroup{}
+	server.QDRRouter(&wg)
+
+	// create a listener
+	in <- &channel.DataChan{
+		Address:             addr,
+		Type:                channel.LISTENER,
+		Status:              channel.NEW,
+		ProcessEventFn:      func(e cneevent.Event) error { return nil },
+		OnReceiveOverrideFn: func(e cloudevents.Event) error { return nil },
+	}
+	time.Sleep(2 * time.Second)
+	assert.Equal(t, 1, len(server.Listeners))
+	log.Printf("now sending to delete ")
+	// send data
+	in <- &channel.DataChan{
+		Address: addr,
+		Status:  channel.DELETE,
+		Type:    channel.LISTENER,
+	}
+	// read data
+	time.Sleep(2 * time.Second)
+	log.Printf("now sending to close")
+	// read data
+	assert.Equal(t, 0, len(server.Listeners))
+	closeCh <- true
+	waitTimeout(&wg, timeout)
+
+}
+
 func TestSendSuccessStatus(t *testing.T) {
 	time.Sleep(2 * time.Second)
 	addr := "test/test/success"
@@ -101,7 +183,7 @@ func TestSendSuccessStatus(t *testing.T) {
 		t.Skipf("ampq.Dial(%#v): %v", server, err)
 	}
 	wg := sync.WaitGroup{}
-	go server.QDRRouter(&wg)
+	server.QDRRouter(&wg)
 
 	// send status, this will create status listener
 	// always you need to define how you handle status  when it is received
@@ -127,16 +209,12 @@ func TestSendSuccessStatus(t *testing.T) {
 		Status:  channel.NEW,
 		Type:    channel.EVENT,
 	}
-
-	log.Printf("Reading out channel")
 	// read data
 	d := <-out
-	log.Printf("Processing out channel")
 	assert.Equal(t, channel.EVENT, d.Type)
 	assert.Equal(t, channel.SUCCEED, d.Status)
-	log.Printf("sending close")
 	closeCh <- true
-	wg.Wait()
+	waitTimeout(&wg, timeout)
 
 }
 
@@ -153,7 +231,7 @@ func TestSendFailureStatus(t *testing.T) {
 		t.Skipf("ampq.Dial(%#v): %v", server, err)
 	}
 	wg := sync.WaitGroup{}
-	go server.QDRRouter(&wg)
+	server.QDRRouter(&wg)
 
 	// send status, this will create status listener
 	// always you need to define how you handle status  when it is received
@@ -179,16 +257,12 @@ func TestSendFailureStatus(t *testing.T) {
 		Status:  channel.NEW,
 		Type:    channel.EVENT,
 	}
-
-	log.Printf("Reading out channel")
 	// read data
 	d := <-out
-	log.Printf("Processing out channel")
 	assert.Equal(t, channel.EVENT, d.Type)
 	assert.Equal(t, channel.FAILED, d.Status)
-	log.Printf("sending close")
 	closeCh <- true
-	wg.Wait()
+	waitTimeout(&wg, timeout)
 
 }
 
@@ -205,7 +279,7 @@ func TestSendEvent(t *testing.T) {
 		t.Skipf("ampq.Dial(%#v): %v", server, err)
 	}
 	wg := sync.WaitGroup{}
-	go server.QDRRouter(&wg)
+	server.QDRRouter(&wg)
 
 	// create a sender
 	in <- &channel.DataChan{
@@ -258,85 +332,25 @@ func TestSendEvent(t *testing.T) {
 		Status:  channel.NEW,
 		Type:    channel.EVENT,
 	}
-
-	log.Printf("Reading out channel")
 	// read data
 	d = <-out
-	log.Printf("Processing out channel")
 	assert.Equal(t, channel.EVENT, d.Type)
-
-	log.Printf("sending close")
 	closeCh <- true
-	wg.Wait()
-
+	waitTimeout(&wg, timeout)
 }
 
-func TestDeleteListener(t *testing.T) {
-	addr := "test/listener/delete"
-	s := "amqp://localhost:5672"
-
-	in := make(chan *channel.DataChan)
-	out := make(chan *channel.DataChan)
-	closeCh := make(chan bool)
-	server, err := amqp1.InitServer(s, in, out, closeCh)
-	if err != nil {
-		t.Skipf("ampq.Dial(%#v): %v", server, err)
+// waitTimeout waits for the waitgroup for the specified max timeout.
+// Returns true if waiting timed out.
+func waitTimeout(wg *sync.WaitGroup, timeout time.Duration) bool {
+	c := make(chan struct{})
+	go func() {
+		defer close(c)
+		wg.Wait()
+	}()
+	select {
+	case <-c:
+		return false // completed normally
+	case <-time.After(timeout):
+		return true // timed out
 	}
-	assert.Equal(t, len(server.Listeners), 0)
-	wg := sync.WaitGroup{}
-	go server.QDRRouter(&wg)
-
-	// create a listener
-	in <- &channel.DataChan{
-		Address: addr,
-		Type:    channel.LISTENER,
-	}
-	time.Sleep(2 * time.Second)
-	assert.Equal(t, 1, len(server.Listeners))
-
-	// send data
-	in <- &channel.DataChan{
-		Address: addr,
-		Status:  channel.DELETE,
-		Type:    channel.LISTENER,
-	}
-	time.Sleep(2 * time.Second)
-	// read data
-	assert.Equal(t, 0, len(server.Listeners))
-
-}
-
-func TestDeleteSender(t *testing.T) {
-	addr := "test/sender/delete"
-	s := "amqp://localhost:5672"
-
-	in := make(chan *channel.DataChan)
-	out := make(chan *channel.DataChan)
-	closeCh := make(chan bool)
-	server, err := amqp1.InitServer(s, in, out, closeCh)
-	if err != nil {
-		t.Skipf("ampq.Dial(%#v): %v", server, err)
-	}
-	assert.Equal(t, len(server.Listeners), 0)
-	wg := sync.WaitGroup{}
-	go server.QDRRouter(&wg)
-
-	// create a listener
-	in <- &channel.DataChan{
-		Address: addr,
-		Type:    channel.SENDER,
-	}
-	time.Sleep(2 * time.Second)
-	assert.Equal(t, 1, len(server.Senders))
-
-	// send data
-	in <- &channel.DataChan{
-		Address: addr,
-		Status:  channel.DELETE,
-		Type:    channel.SENDER,
-	}
-	time.Sleep(2 * time.Second)
-	// read data
-	assert.Equal(t, 0, len(server.Senders))
-
 }

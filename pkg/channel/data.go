@@ -12,6 +12,7 @@ type DataChan struct {
 	Status  Status
 	//Type defines type of data (Notification,Metric,Status)
 	Type Type
+	OnReceiveFn  func(e cloudevents.Event)
 	// OnReceiveOverrideFn Optional for event, but override for status pings.This is an override function on receiving msg by amqp listener,
 	// if not set then the data is sent to out channel and processed by side car  default method
 	OnReceiveOverrideFn func(e cloudevents.Event) error
