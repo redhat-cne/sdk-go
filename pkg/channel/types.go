@@ -12,7 +12,12 @@ const (
 	DELETE
 	//FAILED if the event  failed to post
 	FAILED
+
 )
+//String represent of status enum
+func (s Status) String() string {
+	return [...]string{"NEW", "SUCCEED", "DELETE", "FAILED"}[s]
+}
 
 //Type ... specifies type of the event
 type Type int
@@ -25,3 +30,8 @@ const (
 	//EVENT  the type is an event
 	EVENT
 )
+
+// String represent of Type enum
+func (t Type) String() string {
+	return [...]string{"LISTENER", "SENDER", "EVENT"}[t]
+}

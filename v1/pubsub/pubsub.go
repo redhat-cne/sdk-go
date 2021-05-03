@@ -66,6 +66,7 @@ func GetAPIInstance(storeFilePath string) *API {
 // ReloadStore reload store if there is any change or refresh is required
 func (p *API) ReloadStore() {
 	// load for file
+	log.Printf("LOADINFG from strore %s",fmt.Sprintf("%s/%s", p.storeFilePath, p.subFile))
 	if b, err := loadFromFile(fmt.Sprintf("%s/%s", p.storeFilePath, p.subFile)); err == nil {
 		if len(b) > 0 {
 			var subs []pubsub.PubSub
