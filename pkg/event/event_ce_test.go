@@ -8,9 +8,9 @@ import (
 	cnepubsub "github.com/redhat-cne/sdk-go/pkg/pubsub"
 	"github.com/redhat-cne/sdk-go/pkg/types"
 	cneeventv1 "github.com/redhat-cne/sdk-go/v1/event"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"log"
 
 	"testing"
 	"time"

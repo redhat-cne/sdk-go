@@ -44,7 +44,7 @@ func TestAPI_CreatePublisher(t *testing.T) {
 	var pubs []pubsub.PubSub
 	e = json.Unmarshal(b, &pubs)
 	assert.Nil(t, e)
-	assert.Equal(t, p,pubs[0])
+	assert.Equal(t, p, pubs[0])
 }
 
 func TestAPI_CreateSubscription(t *testing.T) {
@@ -60,7 +60,7 @@ func TestAPI_CreateSubscription(t *testing.T) {
 	var subs []pubsub.PubSub
 	e = json.Unmarshal(b, &subs)
 	assert.Nil(t, e)
-	assert.Equal(t, s,subs[0])
+	assert.Equal(t, s, subs[0])
 }
 
 func TestAPI_DeleteAllPublishers(t *testing.T) {
@@ -177,7 +177,7 @@ func TestAPI_HasSubscription(t *testing.T) {
 	assert.True(t, found)
 	assert.Equal(t, s, fs)
 }
-func clean(){
+func clean() {
 	_ = globalInstance.DeleteAllSubscriptions()
 	_ = globalInstance.DeleteAllPublishers()
 }

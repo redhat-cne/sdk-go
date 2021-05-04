@@ -1,7 +1,7 @@
 package channel
 
 import (
-	"log"
+	log "github.com/sirupsen/logrus"
 	"sync"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
@@ -56,7 +56,7 @@ func (s *ListenerChannel) Listen(wg *sync.WaitGroup) {
 	defer wg.Done()
 	defer func() {
 		if recover() != nil {
-			log.Printf("Avoid panic on channel close")
+			log.Warn("avoid panic on channel close")
 		}
 	}()
 	for {
@@ -77,7 +77,7 @@ func (s *ListenerChannel) SendToCaller(sequenceID int, dataCh cloudevents.Event)
 		d <- dataCh
 		delete(s.store, sequenceID)
 	} else {
-		log.Printf("Could not find data to return form status store")
+		log.Warn("Could not find data to return from status store")
 	}
 }
 

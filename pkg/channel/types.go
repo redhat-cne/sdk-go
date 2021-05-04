@@ -7,16 +7,16 @@ const (
 	//NEW if the event is new for the consumer
 	NEW Status = iota
 	// SUCCEED if the event is posted successfully
-	SUCCEED
+	SUCCESS
 	//DELETE if the event is to delete
 	DELETE
 	//FAILED if the event  failed to post
 	FAILED
-
 )
+
 //String represent of status enum
 func (s Status) String() string {
-	return [...]string{"NEW", "SUCCEED", "DELETE", "FAILED"}[s]
+	return [...]string{"NEW", "SUCCESS", "DELETE", "FAILED"}[s]
 }
 
 //Type ... specifies type of the event

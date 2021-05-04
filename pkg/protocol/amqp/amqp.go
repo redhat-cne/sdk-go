@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/redhat-cne/sdk-go/pkg/localmetrics"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/Azure/go-amqp"
 	amqp1 "github.com/cloudevents/sdk-go/protocol/amqp/v2"
@@ -86,7 +88,8 @@ func (q *Router) reConnect(wg *sync.WaitGroup) { //nolint:unused
 	}
 
 	if atomic.CompareAndSwapUint32(&q.state, connected, connecting) {
-		log.Printf("trying to reconnect again ...")
+		localmetrics.UpdateTransportConnectionResetCount(1)
+		log.Info("trying to reconnect again ...")
 		//call reconnect logic
 		wg.Add(1)
 		go func(q *Router, wg *sync.WaitGroup) {
@@ -96,7 +99,7 @@ func (q *Router) reConnect(wg *sync.WaitGroup) { //nolint:unused
 			for {
 				client, err = q.NewClient(q.Host, []amqp.ConnOption{})
 				if err != nil {
-					log.Printf("retrying connecting to amqp.")
+					log.Info("retrying connecting to amqp.")
 					time.Sleep(500 * time.Millisecond)
 					continue
 				}
@@ -104,20 +107,20 @@ func (q *Router) reConnect(wg *sync.WaitGroup) { //nolint:unused
 				break
 			}
 			// update all status
-			log.Printf("fixing all exisitng receivers with the new connection")
+			log.Info("fixing all exisitng receivers with the new connection")
 			wg.Add(1)
 			go func(wg *sync.WaitGroup) {
 				defer wg.Done()
 				for l := range q.listenerReConnectCh { // fix all listener with new client. Receiver is manage by themselves
 					if _, ok := q.Listeners[l.Address]; ok {
 						if err := q.setReceiver(wg, l); err != nil {
-							log.Printf("errror creating new reciever")
+							log.Errorf("error creating new receiver for %s", l.Address)
 						}
 					}
 				}
 			}(wg)
 			close(q.listenerReConnectCh) // Might be closing too early
-			log.Printf("fixing all exisitng sender's with the new connection")
+			log.Info("fixing all existing sender's with the new connection")
 			for address := range q.Senders { // fix all sender with new client. Receiver is manage by themselves
 				_ = q.NewSender(address)
 			}
@@ -175,16 +178,15 @@ func (q *Router) QDRRouter(wg *sync.WaitGroup) {
 						}
 					} else {
 						if _, ok := q.Listeners[d.Address]; !ok {
-							log.Printf("(1)listener not found for the following address %s, creating listener", d.Address)
+							log.Infof("(1)listener not found for the following address %s, creating listener", d.Address)
 							if err := q.setReceiver(wg, d); err != nil {
-								log.Printf("error settign up receiver%s", err.Error())
+								log.Errorf("error setting up receiver%s", err.Error())
 							}
 						} else {
-							log.Printf("(1)listener already found so not creating again %s\n", d.Address)
+							log.Infof("(1)listener already found so not creating again %s\n", d.Address)
 						}
 					}
 				} else if d.Type == channel.SENDER {
-					//log.Printf("reading from data %s", d.Address)
 					if d.Status == channel.DELETE {
 						if sender, ok := q.Senders[d.Address]; ok {
 							q.DeleteSender(d.Address)
@@ -192,25 +194,28 @@ func (q *Router) QDRRouter(wg *sync.WaitGroup) {
 						}
 					} else {
 						if _, ok := q.Senders[d.Address]; !ok {
-							log.Printf("(1)sender not found for the following address, %s  will attempt to create", d.Address)
+							log.Infof("(1)sender not found for the following address, %s will attempt to create", d.Address)
 							err := q.NewSender(d.Address)
 							if err != nil {
-								log.Printf("(1)error creating sender %v for address %s", err, d.Address)
+								log.Errorf("(1)error creating sender %v for address %s", err, d.Address)
+								localmetrics.UpdateSenderCreatedCount(d.Address, localmetrics.FAILED, 1)
+							} else {
+								localmetrics.UpdateSenderCreatedCount(d.Address, localmetrics.SUCCESS, 1)
 							}
 						} else {
-							log.Printf("(1)sender already found so not creating again %s\n", d.Address)
+							log.Infof("(1)sender already found so not creating again %s\n", d.Address)
 						}
 					}
 				} else if d.Type == channel.EVENT && d.Status == channel.NEW {
 					if _, ok := q.Senders[d.Address]; ok {
 						q.SendTo(wg, d.Address, d.Data)
 					} else {
-						log.Printf("did not find sender for address %s, will not try to create.", d.Address)
-						log.Printf("store %#v", q.Senders)
+						log.Warnf("received new event, but did not find sender for address %s, will not try to create.", d.Address)
+						localmetrics.UpdateEventCreatedCount(d.Address, localmetrics.FAILED, 1)
 					}
 				}
 			case <-q.CloseCh:
-				log.Printf("Received close order")
+				log.Info("Received close order")
 				atomic.StoreUint32(&q.state, closed)
 				close(q.listenerReConnectCh)
 				for key, s := range q.Senders {
@@ -273,17 +278,17 @@ func (q *Router) NewSession(sessionOption []amqp.SessionOption) (*amqp.Session, 
 	return session, nil
 }
 
-//NewSender creates new QDR ptp
+// NewSender creates new QDR ptp
 func (q *Router) NewSender(address string) error {
 	var opts []amqp1.Option
 	session, err := q.NewSession([]amqp.SessionOption{})
 	if err != nil {
-		log.Printf("failed to create an amqp session for a sender : %v", err)
+		log.Errorf("failed to create an amqp session for a sender : %v", err)
 		return err
 	}
 	p, err := amqp1.NewSenderProtocolFromClient(q.Client, session, address, opts...)
 	if err != nil {
-		log.Printf("failed to create an amqp sender protocol: %v", err)
+		log.Errorf("failed to create an amqp sender protocol: %v", err)
 		return errorhandler.SenderError{
 			Name: address,
 			Desc: err.Error(),
@@ -291,19 +296,19 @@ func (q *Router) NewSender(address string) error {
 	}
 	c, err := cloudevents.NewClient(p)
 	if err != nil {
-		log.Printf("failed to create an amqp sender client: %v", err)
+		log.Errorf("failed to create an amqp sender client: %v", err)
 		return errorhandler.CloudEventsClientError{
 			Desc: err.Error(),
 		}
 	}
-	log.Printf("created new sender for %s", address)
+	log.Infof("created new sender for %s", address)
 	l := Protocol{Protocol: p}
 	l.Client = c
 	q.SetSender(address, &l)
 	return nil
 }
 
-//NewReceiver creates new QDR receiver
+// NewReceiver creates new QDR receiver
 func (q *Router) NewReceiver(address string) error {
 	var opts []amqp1.Option
 	l := Protocol{}
@@ -312,7 +317,7 @@ func (q *Router) NewReceiver(address string) error {
 	session, err := q.NewSession([]amqp.SessionOption{})
 
 	if err != nil {
-		log.Printf("failed to create an amqp session for a sender : %v", err)
+		log.Errorf("failed to create an amqp session for a sender : %v", err)
 		return errorhandler.ReceiverError{
 			Name: address,
 			Desc: err.Error(),
@@ -321,37 +326,38 @@ func (q *Router) NewReceiver(address string) error {
 
 	p, err := amqp1.NewReceiverProtocolFromClient(q.Client, session, address, opts...)
 	if err != nil {
-		log.Printf("failed to create an amqp protocol for a receiver: %v", err)
+		log.Errorf("failed to create an amqp protocol for a receiver: %v", err)
 		return errorhandler.ReceiverError{
 			Name: address,
 			Desc: err.Error(),
 		}
 	}
-	log.Printf("(new receiver) router connection established %s\n", address)
+	log.Infof("(new receiver) router connection established %s\n", address)
 	parent, cancelParent := context.WithCancel(context.TODO())
 	l.CancelFn = cancelParent
 	l.ParentContext = parent
 	c, err := cloudevents.NewClient(p)
 	if err != nil {
-		log.Printf("failed to create a receiver client: %v", err)
+		log.Errorf("failed to create a receiver client: %v", err)
 		return errorhandler.CloudEventsClientError{
 			Desc: err.Error(),
 		}
 	}
-	log.Printf("created new client for receiver %s", address)
+	log.Infof("created new client for receiver %s", address)
 	l.Protocol = p
 	l.Client = c
 	q.SetListener(address, &l)
 	return nil
 }
 
-//Receive is a QDR receiver listening to a address specified
+// Receive is a QDR receiver listening to a address specified
 func (q *Router) Receive(wg *sync.WaitGroup, address string, fn func(e cloudevents.Event)) {
 	defer wg.Done()
 	if val, ok := q.Listeners[address]; ok {
-		log.Printf("waiting and listening at  %s\n", address)
+		log.Infof("waiting and listening at  %s\n", address)
 		if err := val.Client.StartReceiver(val.ParentContext, fn); err != nil {
-			log.Printf("receiver eror %s, will try to reconnect", err.Error())
+			log.Warnf("receiver eror %s, will try to reconnect", err.Error())
+			localmetrics.UpdateReceiverCreatedCount(address, localmetrics.CONNECTION_RESET, 1)
 		}
 		if _, ok := q.Listeners[address]; ok && q.state != closed {
 			q.reConnect(wg) // call to reconnect
@@ -362,18 +368,19 @@ func (q *Router) Receive(wg *sync.WaitGroup, address string, fn func(e cloudeven
 				OnReceiveFn: fn,
 			}
 		} else {
-			log.Printf("server was closed\n")
+			log.Infof("server was closed\n")
 		}
 	} else {
-		log.Printf("amqp receiver not found in the list\n")
+		log.Warnf("amqp receiver not found in the list\n")
 	}
 }
 
-//SendTo sends events to the address specified
+// SendTo sends events to the address specified
 func (q *Router) SendTo(wg *sync.WaitGroup, address string, e *cloudevents.Event) {
 	if sender, ok := q.Senders[address]; ok {
 		if sender == nil {
-			log.Printf("event failed to send due to connection error,waiting to be reconnected %s", address)
+			log.Errorf("event failed to send due to connection error,waiting to be reconnected %s", address)
+			localmetrics.UpdateEventCreatedCount(address, localmetrics.FAILED, 1)
 			q.DataOut <- &channel.DataChan{
 				Address: address,
 				Data:    e,
@@ -391,11 +398,12 @@ func (q *Router) SendTo(wg *sync.WaitGroup, address string, e *cloudevents.Event
 			sendCount := 0
 		RetrySend:
 			if result := sender.Client.Send(ctx, *e); cloudevents.IsUndelivered(result) {
-				log.Printf("failed to send(TO): %s result %v ", address, result)
+				log.Errorf("failed to send(TO): %s result %v ", address, result)
 				// TODO: retry for N times and then declare connection error
 				if result == io.EOF {
 					q.SetSender(address, nil)
-					log.Printf("event failed to send: %v", result)
+					log.Errorf("event failed to send: %v", result)
+					localmetrics.UpdateEventCreatedCount(address, localmetrics.CONNECTION_RESET, 1)
 					q.DataOut <- &channel.DataChan{
 						Address: address,
 						Data:    e,
@@ -407,12 +415,13 @@ func (q *Router) SendTo(wg *sync.WaitGroup, address string, e *cloudevents.Event
 				} else {
 					// try 3 times
 					for sendCount < sendTimes {
-						log.Printf("retry for %d times and then declare connection error\n", sendTimes)
+						log.Warnf("retry for %d times and then declare connection error\n", sendTimes)
 						time.Sleep(500 * time.Millisecond)
 						sendCount++
 						goto RetrySend
 					}
-					log.Printf("event failed to send after %d : %v", sendTimes, result)
+					log.Errorf("event failed to send after %d : %v", sendTimes, result)
+					localmetrics.UpdateEventCreatedCount(address, localmetrics.FAILED, 1)
 					q.DataOut <- &channel.DataChan{
 						Address: address,
 						Data:    e,
@@ -421,20 +430,22 @@ func (q *Router) SendTo(wg *sync.WaitGroup, address string, e *cloudevents.Event
 					}
 				}
 			} else if cloudevents.IsACK(result) {
+				localmetrics.UpdateEventCreatedCount(address, localmetrics.SUCCESS, 1)
 				q.DataOut <- &channel.DataChan{
 					Address: address,
 					Data:    e,
-					Status:  channel.SUCCEED,
+					Status:  channel.SUCCESS,
 					Type:    channel.EVENT,
 				}
 			}
 		}(q, sender, address, e, wg)
 	}
 }
+
 func (q *Router) setReceiver(wg *sync.WaitGroup, d *channel.DataChan) error {
 	err := q.NewReceiver(d.Address)
 	if err != nil {
-		log.Printf("error creating Receiver %v", err)
+		log.Errorf("error creating Receiver %v", err)
 		return err
 	}
 	d.OnReceiveFn = func(e cloudevents.Event) {
@@ -448,15 +459,19 @@ func (q *Router) setReceiver(wg *sync.WaitGroup, d *channel.DataChan) error {
 		if d.OnReceiveOverrideFn != nil {
 			if err := d.OnReceiveOverrideFn(e); err != nil {
 				out.Status = channel.FAILED
+				localmetrics.UpdateEventReceivedCount(d.Address, localmetrics.FAILED, 1)
 			} else {
-				out.Status = channel.SUCCEED
+				localmetrics.UpdateEventReceivedCount(d.Address, localmetrics.SUCCESS, 1)
+				out.Status = channel.SUCCESS
 			}
+		} else {
+			localmetrics.UpdateEventReceivedCount(d.Address, localmetrics.SUCCESS, 1)
 		}
 		q.DataOut <- &out
 	}
 	wg.Add(1)
 	go q.Receive(wg, d.Address, d.OnReceiveFn)
-	log.Printf("done setting up receiver for consumer")
+	log.Infof("done setting up receiver for consumer")
 	return nil
 }
 
@@ -477,18 +492,18 @@ func NewReceiver(hostName string, port int, receiverAddress string) (*Protocol, 
 
 	p, err := amqp1.NewReceiverProtocol(fmt.Sprintf("%s:%d", hostName, port), receiverAddress, []amqp.ConnOption{}, []amqp.SessionOption{}, opts...)
 	if err != nil {
-		log.Printf("Failed to create amqp protocol for a Receiver: %v", err)
+		log.Errorf("failed to create amqp protocol for a receiver: %v", err)
 		return nil, errorhandler.ReceiverError{Desc: err.Error()}
 
 	}
-	log.Printf("(New Receiver) Connection established %s\n", receiverAddress)
+	log.Infof("(New Receiver) Connection established %s\n", receiverAddress)
 
 	parent, cancelParent := context.WithCancel(context.TODO())
 	receiver.CancelFn = cancelParent
 	receiver.ParentContext = parent
 	c, err := cloudevents.NewClient(p)
 	if err != nil {
-		log.Printf("Failed to create client: %v", err)
+		log.Errorf("failed to create amqp client: %v", err)
 		return nil, errorhandler.CloudEventsClientError{Desc: err.Error()}
 	}
 	receiver.Protocol = p
@@ -502,7 +517,7 @@ func NewSender(hostName string, port int, address string) (*Protocol, error) {
 	var opts []amqp1.Option
 	p, err := amqp1.NewSenderProtocol(fmt.Sprintf("%s:%d", hostName, port), address, []amqp.ConnOption{}, []amqp.SessionOption{}, opts...)
 	if err != nil {
-		log.Printf("Failed to create amqp protocol: %v", err)
+		log.Errorf("failed to create amqp protocol: %v", err)
 		return nil, errorhandler.SenderError{
 			Name: address,
 			Desc: err.Error(),
@@ -510,7 +525,7 @@ func NewSender(hostName string, port int, address string) (*Protocol, error) {
 	}
 	c, err := cloudevents.NewClient(p)
 	if err != nil {
-		log.Printf("Failed to create client: %v", err)
+		log.Errorf("failed to create amqp client: %v", err)
 		return nil, errorhandler.CloudEventsClientError{
 			Desc: err.Error(),
 		}

@@ -3,7 +3,6 @@ package amqp_test
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/url"
 	"time"
 
@@ -152,7 +151,6 @@ func TestDeleteListener(t *testing.T) {
 	}
 	time.Sleep(2 * time.Second)
 	assert.Equal(t, 1, len(server.Listeners))
-	log.Printf("now sending to delete ")
 	// send data
 	in <- &channel.DataChan{
 		Address: addr,
@@ -161,7 +159,6 @@ func TestDeleteListener(t *testing.T) {
 	}
 	// read data
 	time.Sleep(2 * time.Second)
-	log.Printf("now sending to close")
 	// read data
 	assert.Equal(t, 0, len(server.Listeners))
 	closeCh <- true
@@ -212,10 +209,9 @@ func TestSendSuccessStatus(t *testing.T) {
 	// read data
 	d := <-out
 	assert.Equal(t, channel.EVENT, d.Type)
-	assert.Equal(t, channel.SUCCEED, d.Status)
+	assert.Equal(t, channel.SUCCESS, d.Status)
 	closeCh <- true
 	waitTimeout(&wg, timeout)
-
 }
 
 func TestSendFailureStatus(t *testing.T) {
@@ -263,7 +259,6 @@ func TestSendFailureStatus(t *testing.T) {
 	assert.Equal(t, channel.FAILED, d.Status)
 	closeCh <- true
 	waitTimeout(&wg, timeout)
-
 }
 
 func TestSendEvent(t *testing.T) {
@@ -302,7 +297,7 @@ func TestSendEvent(t *testing.T) {
 	}
 	// read data
 	d := <-out
-	log.Printf("Processing out channel %v", d)
+	assert.Equal(t, channel.EVENT, d.Type)
 	dd := cneevent.Data{}
 	err = json.Unmarshal(e.Data(), &dd)
 	assert.Nil(t, err)
