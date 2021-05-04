@@ -4,9 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"sync"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/google/uuid"
 	"github.com/redhat-cne/sdk-go/pkg/pubsub"
@@ -66,7 +67,6 @@ func GetAPIInstance(storeFilePath string) *API {
 // ReloadStore reload store if there is any change or refresh is required
 func (p *API) ReloadStore() {
 	// load for file
-	log.Printf("LOADINFG from strore %s",fmt.Sprintf("%s/%s", p.storeFilePath, p.subFile))
 	if b, err := loadFromFile(fmt.Sprintf("%s/%s", p.storeFilePath, p.subFile)); err == nil {
 		if len(b) > 0 {
 			var subs []pubsub.PubSub
@@ -154,7 +154,7 @@ func (p *API) HasPublisher(address string) (pubsub.PubSub, bool) {
 // CreateSubscription create a subscription and store it in a file and cache
 func (p *API) CreateSubscription(sub pubsub.PubSub) (pubsub.PubSub, error) {
 	if subExists, ok := p.HasSubscription(sub.GetResource()); ok {
-		log.Printf("there was already a subscription in the store,skipping creation %v", subExists)
+		log.Warnf("there was already a subscription in the store,skipping creation %v", subExists)
 		p.subStore.Set(sub.ID, subExists)
 		return subExists, nil
 	}
@@ -165,10 +165,10 @@ func (p *API) CreateSubscription(sub pubsub.PubSub) (pubsub.PubSub, error) {
 	//TODO:might want to use PVC to live beyond pod crash
 	err := writeToFile(sub, fmt.Sprintf("%s/%s", p.storeFilePath, p.subFile))
 	if err != nil {
-		log.Printf("error writing to a store %v\n", err)
+		log.Errorf("error writing to a store %v\n", err)
 		return pubsub.PubSub{}, err
 	}
-	log.Printf("subscription persisted into a file %s", fmt.Sprintf("%s/%s  - content %s", p.storeFilePath, p.subFile, sub.String()))
+	log.Infof("subscription persisted into a file %s", fmt.Sprintf("%s/%s  - content %s", p.storeFilePath, p.subFile, sub.String()))
 	// store the publisher
 	p.subStore.Set(sub.ID, sub)
 	return sub, nil
@@ -177,7 +177,7 @@ func (p *API) CreateSubscription(sub pubsub.PubSub) (pubsub.PubSub, error) {
 // CreatePublisher  create a publisher data and store it a file and cache
 func (p *API) CreatePublisher(pub pubsub.PubSub) (pubsub.PubSub, error) {
 	if pubExists, ok := p.HasPublisher(pub.GetResource()); ok {
-		log.Printf("There was already a publisher,skipping creation %v", pubExists)
+		log.Warnf("There was already a publisher,skipping creation %v", pubExists)
 		p.pubStore.Set(pub.ID, pubExists)
 		return pubExists, nil
 	}
@@ -188,10 +188,10 @@ func (p *API) CreatePublisher(pub pubsub.PubSub) (pubsub.PubSub, error) {
 	//TODO:might want to use PVC to live beyond pod crash
 	err := writeToFile(pub, fmt.Sprintf("%s/%s", p.storeFilePath, p.pubFile))
 	if err != nil {
-		log.Printf("error writing to a store %v\n", err)
+		log.Errorf("error writing to a store %v\n", err)
 		return pubsub.PubSub{}, err
 	}
-	log.Printf("publisher persisted into a file %s", fmt.Sprintf("%s/%s  - content %s", p.storeFilePath, p.subFile, pub.String()))
+	log.Infof("publisher persisted into a file %s", fmt.Sprintf("%s/%s  - content %s", p.storeFilePath, p.subFile, pub.String()))
 	// store the publisher
 	p.pubStore.Set(pub.ID, pub)
 	return pub, nil
@@ -225,7 +225,7 @@ func (p *API) GetPublishers() map[string]*pubsub.PubSub {
 
 // DeletePublisher delete a publisher by id
 func (p *API) DeletePublisher(publisherID string) error {
-	log.Printf("deleteing publisher")
+	log.Info("deleting publisher")
 	if pub, ok := p.pubStore.Store[publisherID]; ok {
 		err := deleteFromFile(*pub, fmt.Sprintf("%s/%s", p.storeFilePath, p.pubFile))
 		p.pubStore.Delete(publisherID)
@@ -236,7 +236,7 @@ func (p *API) DeletePublisher(publisherID string) error {
 
 // DeleteSubscription delete a subscription by id
 func (p *API) DeleteSubscription(subscriptionID string) error {
-	log.Printf("deleteing subscription")
+	log.Info("deleting subscription")
 	if pub, ok := p.subStore.Store[subscriptionID]; ok {
 		err := deleteFromFile(*pub, fmt.Sprintf("%s/%s", p.storeFilePath, p.subFile))
 		p.subStore.Delete(subscriptionID)
@@ -247,7 +247,7 @@ func (p *API) DeleteSubscription(subscriptionID string) error {
 
 // DeleteAllSubscriptions  delete all subscription information
 func (p *API) DeleteAllSubscriptions() error {
-	log.Printf("deleteing all subscription")
+	log.Info("deleting all subscription")
 	if err := deleteAllFromFile(fmt.Sprintf("%s/%s", p.storeFilePath, p.subFile)); err != nil {
 		return err
 	}
@@ -258,7 +258,7 @@ func (p *API) DeleteAllSubscriptions() error {
 
 // DeleteAllPublishers delete all the publisher information the store and cache.
 func (p *API) DeleteAllPublishers() error {
-	log.Printf("deleteing all publishers")
+	log.Info("deleting all publishers")
 	if err := deleteAllFromFile(fmt.Sprintf("%s/%s", p.storeFilePath, p.pubFile)); err != nil {
 		return err
 	}
@@ -319,7 +319,7 @@ func deleteFromFile(sub pubsub.PubSub, filePath string) error {
 	}
 	newBytes, err := json.MarshalIndent(&allSubs, "", " ")
 	if err != nil {
-		log.Printf("error deleting sub %v", err)
+		log.Errorf("error deleting sub %v", err)
 		return err
 	}
 	if err := ioutil.WriteFile(filePath, newBytes, 0666); err != nil {
@@ -371,7 +371,7 @@ func writeToFile(sub pubsub.PubSub, filePath string) error {
 	if err != nil {
 		return err
 	}
-	log.Printf("persisting following contents %s to a file %s\n", string(newBytes), filePath)
+	log.Infof("persisting following contents %s to a file %s\n", string(newBytes), filePath)
 	if err := ioutil.WriteFile(filePath, newBytes, 0666); err != nil {
 		return err
 	}

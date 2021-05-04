@@ -3,7 +3,7 @@ package event
 import (
 	"encoding/json"
 	"fmt"
-	"log"
+	log "github.com/sirupsen/logrus"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/google/uuid"
@@ -15,7 +15,7 @@ import (
 
 //PublishCloudEventToLog .. publish event data to a log
 func PublishCloudEventToLog(e cloudevents.Event) {
-	log.Printf("Publishing event to log %#v", e)
+	log.Infof("Publishing event to log %#v", e)
 }
 
 //CloudNativeEvent gets Cloud Native Event object
@@ -35,7 +35,7 @@ func CloudNativeDataValues() event.DataValue {
 
 //SendEventToLog ...
 func SendEventToLog(e event.Event) {
-	log.Printf("Publishing event to log %#v", e)
+	log.Infof("Publishing event to log %#v", e)
 }
 
 //SendNewEventToDataChannel send created publisher information for QDR to process
