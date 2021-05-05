@@ -10,7 +10,15 @@ GO SDK for Cloud Native Events API
 https://github.com/redhat-cne/cloud-event-proxy
 
 
-
+## Collecting metrics with Prometheus
+Cloud native events SDK-go comes with following metrics collectors .
+1. Number of events received  by the transport
+2. Number of events published by the transport.
+3. Number of connection resets.
+4. Number of sender created
+5. Number of receiver created
+      
+[SDK-GO Metrics details ](docs/metrics.md)
 
 
 

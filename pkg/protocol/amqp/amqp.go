@@ -1,3 +1,17 @@
+// Copyright 2020 The Cloud Native Events Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package amqp
 
 import (
@@ -200,7 +214,7 @@ func (q *Router) QDRRouter(wg *sync.WaitGroup) {
 								log.Errorf("(1)error creating sender %v for address %s", err, d.Address)
 								localmetrics.UpdateSenderCreatedCount(d.Address, localmetrics.FAILED, 1)
 							} else {
-								localmetrics.UpdateSenderCreatedCount(d.Address, localmetrics.SUCCESS, 1)
+								localmetrics.UpdateSenderCreatedCount(d.Address, localmetrics.ACTIVE, 1)
 							}
 						} else {
 							log.Infof("(1)sender already found so not creating again %s\n", d.Address)
@@ -269,7 +283,7 @@ func (q *Router) NewClient(server string, connOption []amqp.ConnOption) (*amqp.C
 	return client, nil
 }
 
-//NewSession Open a session
+// NewSession Open a session
 func (q *Router) NewSession(sessionOption []amqp.SessionOption) (*amqp.Session, error) {
 	session, err := q.Client.NewSession(sessionOption...)
 	if err != nil {
@@ -355,9 +369,11 @@ func (q *Router) Receive(wg *sync.WaitGroup, address string, fn func(e cloudeven
 	defer wg.Done()
 	if val, ok := q.Listeners[address]; ok {
 		log.Infof("waiting and listening at  %s\n", address)
+		localmetrics.UpdateReceiverCreatedCount(address, localmetrics.ACTIVE, 1)
 		if err := val.Client.StartReceiver(val.ParentContext, fn); err != nil {
 			log.Warnf("receiver eror %s, will try to reconnect", err.Error())
 			localmetrics.UpdateReceiverCreatedCount(address, localmetrics.CONNECTION_RESET, 1)
+			localmetrics.UpdateReceiverCreatedCount(address, localmetrics.ACTIVE, -1)
 		}
 		if _, ok := q.Listeners[address]; ok && q.state != closed {
 			q.reConnect(wg) // call to reconnect
