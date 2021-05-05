@@ -121,7 +121,7 @@ func (q *Router) reConnect(wg *sync.WaitGroup) { //nolint:unused
 				break
 			}
 			// update all status
-			log.Info("fixing all exisitng receivers with the new connection")
+			log.Info("fixing all existing receivers with the new connection")
 			wg.Add(1)
 			go func(wg *sync.WaitGroup) {
 				defer wg.Done()
@@ -187,8 +187,9 @@ func (q *Router) QDRRouter(wg *sync.WaitGroup) {
 					// create receiver and let it run
 					if d.Status == channel.DELETE {
 						if listener, ok := q.Listeners[d.Address]; ok {
-							delete(q.Listeners, d.Address)
+							q.DeleteListener(d.Address)
 							listener.CancelFn()
+							localmetrics.UpdateReceiverCreatedCount(d.Address, localmetrics.ACTIVE, -1)
 						}
 					} else {
 						if _, ok := q.Listeners[d.Address]; !ok {
@@ -205,6 +206,7 @@ func (q *Router) QDRRouter(wg *sync.WaitGroup) {
 						if sender, ok := q.Senders[d.Address]; ok {
 							q.DeleteSender(d.Address)
 							sender.Protocol.Close(context.Background())
+							localmetrics.UpdateSenderCreatedCount(d.Address, localmetrics.ACTIVE, -1)
 						}
 					} else {
 						if _, ok := q.Senders[d.Address]; !ok {
@@ -221,7 +223,10 @@ func (q *Router) QDRRouter(wg *sync.WaitGroup) {
 						}
 					}
 				} else if d.Type == channel.EVENT && d.Status == channel.NEW {
-					if _, ok := q.Senders[d.Address]; ok {
+					if q.state!=connected {
+						log.Errorf("amqp connection is not in `connected` state; ignoring event for %s",d.Address)
+						localmetrics.UpdateEventCreatedCount(d.Address, localmetrics.CONNECTION_RESET, 1)
+					}else if _, ok := q.Senders[d.Address]; ok {
 						q.SendTo(wg, d.Address, d.Data)
 					} else {
 						log.Warnf("received new event, but did not find sender for address %s, will not try to create.", d.Address)
