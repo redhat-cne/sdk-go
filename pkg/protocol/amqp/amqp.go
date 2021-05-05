@@ -224,7 +224,9 @@ func (q *Router) QDRRouter(wg *sync.WaitGroup) {
 					}
 				} else if d.Type == channel.EVENT && d.Status == channel.NEW {
 					if q.state!=connected {
-						log.Errorf("amqp connection is not in `connected` state; ignoring event for %s",d.Address)
+						log.Errorf("amqp connection is not in `connected` state; ignoring event posted for %s",d.Address)
+						d.Status=channel.FAILED
+						q.DataOut <- d
 						localmetrics.UpdateEventCreatedCount(d.Address, localmetrics.CONNECTION_RESET, 1)
 					}else if _, ok := q.Senders[d.Address]; ok {
 						q.SendTo(wg, d.Address, d.Data)
@@ -234,7 +236,7 @@ func (q *Router) QDRRouter(wg *sync.WaitGroup) {
 					}
 				}
 			case <-q.CloseCh:
-				log.Info("Received close order")
+				log.Warn("shutting down amqp listeners and senders")
 				atomic.StoreUint32(&q.state, closed)
 				close(q.listenerReConnectCh)
 				for key, s := range q.Senders {
