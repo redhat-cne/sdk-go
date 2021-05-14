@@ -36,7 +36,7 @@ type AMQP struct {
 }
 
 //GetAMQPInstance get event instance
-func GetAMQPInstance(amqpHost string, dataIn <-chan *channel.DataChan, dataOut chan<- *channel.DataChan, closeCh <-chan bool) (*AMQP, error) {
+func GetAMQPInstance(amqpHost string, dataIn <-chan *channel.DataChan, dataOut chan<- *channel.DataChan, closeCh <-chan struct{}) (*AMQP, error) {
 	once.Do(func() {
 		router, err := amqp1.InitServer(amqpHost, dataIn, dataOut, closeCh)
 		if err == nil {

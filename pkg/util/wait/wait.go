@@ -44,6 +44,7 @@ var NeverStop <-chan struct{} = make(chan struct{})
 type Group struct {
 	wg sync.WaitGroup
 }
+
 // Wait ... for goroutine
 func (g *Group) Wait() {
 	g.wg.Wait()

@@ -40,13 +40,12 @@ import (
 func strptr(s string) *string { return &s }
 
 var (
-	ceSource                      = cetypes.URIRef{URL: url.URL{Scheme: "http", Host: "example.com", Path: "/source"}}
-	ceTimestamp                   = cetypes.Timestamp{Time: time.Date(2020, 03, 21, 12, 34, 56, 780000000, time.UTC)}
-	cneTimestamp                  = types.Timestamp{Time: time.Date(2020, 03, 21, 12, 34, 56, 780000000, time.UTC)}
-	ceSchema                      = cetypes.URI{URL: url.URL{Scheme: "http", Host: "example.com", Path: "/schema"}}
-	_type                         = "ptp_status_type"
-	resourceAddress               = "/test1/test1"
-	timeout         time.Duration = 2 * time.Second
+	ceSource        = cetypes.URIRef{URL: url.URL{Scheme: "http", Host: "example.com", Path: "/source"}}
+	ceTimestamp     = cetypes.Timestamp{Time: time.Date(2020, 03, 21, 12, 34, 56, 780000000, time.UTC)}
+	cneTimestamp    = types.Timestamp{Time: time.Date(2020, 03, 21, 12, 34, 56, 780000000, time.UTC)}
+	ceSchema        = cetypes.URI{URL: url.URL{Scheme: "http", Host: "example.com", Path: "/schema"}}
+	_type           = "ptp_status_type"
+	resourceAddress = "/test1/test1"
 )
 
 // CloudNativeEvents generates cloud events for testing
@@ -102,13 +101,13 @@ func CloudEvents() cloudevents.Event {
 }
 
 func TestDeleteSender(t *testing.T) {
-	time.Sleep(2 * time.Second)
+	time.Sleep(250 * time.Millisecond)
 	addr := "test/sender/delete"
 	s := "amqp://localhost:5672"
 
 	in := make(chan *channel.DataChan)
 	out := make(chan *channel.DataChan)
-	closeCh := make(chan bool)
+	closeCh := make(chan struct{})
 	server, err := amqp1.InitServer(s, in, out, closeCh)
 	if err != nil {
 		t.Skipf("ampq.Dial(%#v): %v", server, err)
@@ -122,7 +121,7 @@ func TestDeleteSender(t *testing.T) {
 		Address: addr,
 		Type:    channel.SENDER,
 	}
-	time.Sleep(2 * time.Second)
+	time.Sleep(250 * time.Millisecond)
 	assert.Equal(t, 1, len(server.Senders))
 
 	// send data
@@ -131,13 +130,11 @@ func TestDeleteSender(t *testing.T) {
 		Status:  channel.DELETE,
 		Type:    channel.SENDER,
 	}
-	time.Sleep(2 * time.Second)
+	time.Sleep(250 * time.Millisecond)
 
 	// read data
 	assert.Equal(t, 0, len(server.Senders))
-	closeCh <- true
-	waitTimeout(&wg, timeout)
-
+	close(closeCh)
 }
 
 func TestDeleteListener(t *testing.T) {
@@ -146,7 +143,7 @@ func TestDeleteListener(t *testing.T) {
 
 	in := make(chan *channel.DataChan)
 	out := make(chan *channel.DataChan)
-	closeCh := make(chan bool)
+	closeCh := make(chan struct{})
 	server, err := amqp1.InitServer(s, in, out, closeCh)
 	if err != nil {
 		t.Skipf("ampq.Dial(%#v): %v", server, err)
@@ -163,7 +160,7 @@ func TestDeleteListener(t *testing.T) {
 		ProcessEventFn:      func(e cneevent.Event) error { return nil },
 		OnReceiveOverrideFn: func(e cloudevents.Event) error { return nil },
 	}
-	time.Sleep(2 * time.Second)
+	time.Sleep(250 * time.Millisecond)
 	assert.Equal(t, 1, len(server.Listeners))
 	// send data
 	in <- &channel.DataChan{
@@ -172,23 +169,21 @@ func TestDeleteListener(t *testing.T) {
 		Type:    channel.LISTENER,
 	}
 	// read data
-	time.Sleep(2 * time.Second)
+	time.Sleep(250 * time.Millisecond)
 	// read data
 	assert.Equal(t, 0, len(server.Listeners))
-	closeCh <- true
-	waitTimeout(&wg, timeout)
-
+	close(closeCh)
 }
 
 func TestSendSuccessStatus(t *testing.T) {
-	time.Sleep(2 * time.Second)
+	time.Sleep(250 * time.Millisecond)
 	addr := "test/test/success"
 	s := "amqp://localhost:5672"
 
 	e := CloudEvents()
 	in := make(chan *channel.DataChan)
 	out := make(chan *channel.DataChan)
-	closeCh := make(chan bool)
+	closeCh := make(chan struct{})
 	server, err := amqp1.InitServer(s, in, out, closeCh)
 	if err != nil {
 		t.Skipf("ampq.Dial(%#v): %v", server, err)
@@ -224,8 +219,8 @@ func TestSendSuccessStatus(t *testing.T) {
 	d := <-out
 	assert.Equal(t, channel.EVENT, d.Type)
 	assert.Equal(t, channel.SUCCESS, d.Status)
-	closeCh <- true
-	waitTimeout(&wg, timeout)
+	close(closeCh)
+	//waitTimeout(&wg, timeout)
 }
 
 func TestSendFailureStatus(t *testing.T) {
@@ -235,7 +230,7 @@ func TestSendFailureStatus(t *testing.T) {
 	e := CloudEvents()
 	in := make(chan *channel.DataChan)
 	out := make(chan *channel.DataChan)
-	closeCh := make(chan bool)
+	closeCh := make(chan struct{})
 	server, err := amqp1.InitServer(s, in, out, closeCh)
 	if err != nil {
 		t.Skipf("ampq.Dial(%#v): %v", server, err)
@@ -271,8 +266,7 @@ func TestSendFailureStatus(t *testing.T) {
 	d := <-out
 	assert.Equal(t, channel.EVENT, d.Type)
 	assert.Equal(t, channel.FAILED, d.Status)
-	closeCh <- true
-	waitTimeout(&wg, timeout)
+	close(closeCh)
 }
 
 func TestSendEvent(t *testing.T) {
@@ -282,7 +276,7 @@ func TestSendEvent(t *testing.T) {
 	e := CloudEvents()
 	in := make(chan *channel.DataChan)
 	out := make(chan *channel.DataChan)
-	closeCh := make(chan bool)
+	closeCh := make(chan struct{})
 	server, err := amqp1.InitServer(s, in, out, closeCh)
 	if err != nil {
 		t.Skipf("ampq.Dial(%#v): %v", server, err)
@@ -344,22 +338,5 @@ func TestSendEvent(t *testing.T) {
 	// read data
 	d = <-out
 	assert.Equal(t, channel.EVENT, d.Type)
-	closeCh <- true
-	waitTimeout(&wg, timeout)
-}
-
-// waitTimeout waits for the waitgroup for the specified max timeout.
-// Returns true if waiting timed out.
-func waitTimeout(wg *sync.WaitGroup, timeout time.Duration) bool {
-	c := make(chan struct{})
-	go func() {
-		defer close(c)
-		wg.Wait()
-	}()
-	select {
-	case <-c:
-		return false // completed normally
-	case <-time.After(timeout):
-		return true // timed out
-	}
+	close(closeCh)
 }
