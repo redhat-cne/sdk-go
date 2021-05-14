@@ -67,11 +67,11 @@ type Router struct {
 	state               uint32
 	listenerReConnectCh chan *channel.DataChan
 	//close on true
-	CloseCh <-chan bool
+	CloseCh <-chan struct{}
 }
 
 //InitServer initialize QDR configurations
-func InitServer(amqpHost string, dataIn <-chan *channel.DataChan, dataOut chan<- *channel.DataChan, closeCh <-chan bool) (*Router, error) {
+func InitServer(amqpHost string, dataIn <-chan *channel.DataChan, dataOut chan<- *channel.DataChan, closeCh <-chan struct{}) (*Router, error) {
 	server := Router{
 		Listeners: map[string]*Protocol{},
 		Senders:   map[string]*Protocol{},
@@ -223,12 +223,12 @@ func (q *Router) QDRRouter(wg *sync.WaitGroup) {
 						}
 					}
 				} else if d.Type == channel.EVENT && d.Status == channel.NEW {
-					if q.state!=connected {
-						log.Errorf("amqp connection is not in `connected` state; ignoring event posted for %s",d.Address)
-						d.Status=channel.FAILED
+					if q.state != connected {
+						log.Errorf("amqp connection is not in `connected` state; ignoring event posted for %s", d.Address)
+						d.Status = channel.FAILED
 						q.DataOut <- d
 						localmetrics.UpdateEventCreatedCount(d.Address, localmetrics.CONNECTION_RESET, 1)
-					}else if _, ok := q.Senders[d.Address]; ok {
+					} else if _, ok := q.Senders[d.Address]; ok {
 						q.SendTo(wg, d.Address, d.Data)
 					} else {
 						log.Warnf("received new event, but did not find sender for address %s, will not try to create.", d.Address)

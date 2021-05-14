@@ -28,7 +28,7 @@ var (
 	s                 = "amqp://localhost:5672"
 	in                = make(chan *channel.DataChan)
 	out               = make(chan *channel.DataChan)
-	close             = make(chan bool)
+	close             = make(chan struct{})
 	globalInstance, _ = api.GetAMQPInstance(s, in, out, close)
 )
 
