@@ -3,6 +3,8 @@ package hwevent
 import (
 	"io"
 
+	"encoding/base64"
+	"strconv"
 	"sync"
 
 	jsoniter "github.com/json-iterator/go"
@@ -63,7 +65,7 @@ func readDataJSONFromIterator(out *Data, iterator *jsoniter.Iterator) error {
 		case "version":
 			version = iterator.ReadString()
 		case "data":
-			data  = iterator.ReadStringAsSlice()
+			data = iterator.ReadStringAsSlice()
 		default:
 			iterator.Skip()
 		}
@@ -132,12 +134,10 @@ func readTimestamp(iter *jsoniter.Iterator) *types.Timestamp {
 	return t
 }
 
-
-
 func readData(iter *jsoniter.Iterator) (*Data, error) {
 	data := &Data{
 		Version: "",
-		Data: nil,
+		Data:    nil,
 	}
 
 	for key := iter.ReadObject(); key != ""; key = iter.ReadObject() {
@@ -150,6 +150,16 @@ func readData(iter *jsoniter.Iterator) (*Data, error) {
 			data.Version = iter.ReadString()
 		case "data":
 			data.Data = iter.SkipAndReturnBytes()
+			unQuoted, err := strconv.Unquote(string(data.Data))
+			if err != nil {
+				return data, err
+			}
+			// []byte is encoded as a base64-encoded string with json.Marshal
+			decoded, err := base64.StdEncoding.DecodeString(unQuoted)
+			if err != nil {
+				return data, err
+			}
+			data.Data = decoded
 		default:
 			iter.Skip()
 		}

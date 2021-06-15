@@ -18,26 +18,6 @@ import (
 	"fmt"
 )
 
-// DataType ...
-type DataType string
-
-const (
-	// NOTIFICATION ...
-	NOTIFICATION DataType = "notification"
-	// METRIC ...
-	METRIC DataType = "metric"
-)
-
-// ValueType ...
-type ValueType string
-
-const (
-	// ENUMERATION ...
-	ENUMERATION ValueType = "enumeration"
-	// DECIMAL ...
-	DECIMAL ValueType = "decimal64.3"
-)
-
 // Data ... cloud native events data
 // Data Json payload is as follows,
 //{
@@ -45,10 +25,9 @@ const (
 //
 //}
 type Data struct {
-	Version string      `json:"version" example:"v1"`
-	Data   []byte `json:"data"`
+	Version string `json:"version" example:"v1"`
+	Data    []byte `json:"data"`
 }
-
 
 // SetVersion  ...
 func (d *Data) SetVersion(s string) error {
@@ -60,10 +39,7 @@ func (d *Data) SetVersion(s string) error {
 	return nil
 }
 
-
 // GetVersion ...
 func (d *Data) GetVersion() string {
 	return d.Version
 }
-
-

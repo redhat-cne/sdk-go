@@ -2,9 +2,11 @@ package hwevent_test
 
 import (
 	"encoding/json"
-	"github.com/redhat-cne/sdk-go/pkg/hwevent"
+
 	"testing"
 	"time"
+
+	"github.com/redhat-cne/sdk-go/pkg/hwevent"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/redhat-cne/sdk-go/pkg/types"
@@ -25,8 +27,8 @@ func TestUnMarshal(t *testing.T) {
 		"struct Data fan": {
 			body: mustJSONMarshal(t, map[string]interface{}{
 				"data": map[string]interface{}{
-					"data":  []byte(`{"resource": "/cluster/node/hw", "dataType": "fan", "value": ""}`),
-					"version":  version,
+					"data":    []byte(`{"resource": "/cluster/node/hw", "dataType": "fan", "value": ""}`),
+					"version": version,
 				},
 				"id":         id,
 				"time":       now.Format(time.RFC3339Nano),
@@ -40,7 +42,7 @@ func TestUnMarshal(t *testing.T) {
 				DataSchema: nil,
 				Data: &hwevent.Data{
 					Version: version,
-					Data: []byte(`{"resource": "/cluster/node/hw", "dataType": "fan", "value": ""}`),
+					Data:    []byte(`{"resource": "/cluster/node/hw", "dataType": "fan", "value": ""}`),
 				},
 			},
 			wantErr: nil,

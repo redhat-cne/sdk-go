@@ -75,8 +75,7 @@ func (e Event) String() string {
 	b.WriteString("  data: \n")
 	b.WriteString("  version: " + e.Data.Version + "\n")
 	b.WriteString("  values: \n")
-	b.WriteString("  data: " + string(e.Data.Data)  + "\n")
-
+	b.WriteString("  data: " + string(e.Data.Data) + "\n")
 
 	return b.String()
 }

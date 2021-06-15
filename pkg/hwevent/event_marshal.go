@@ -111,7 +111,13 @@ func writeJSONData(in *Data, writer io.Writer, stream *jsoniter.Stream) error {
 		stream.WriteString(data.GetVersion())
 		stream.WriteMore()
 		stream.WriteObjectField("data")
-		stream.Write(data.Data)
+		n, err := stream.Write(data.Data)
+		if err != nil {
+			return fmt.Errorf("error writing data: %w", err)
+		}
+		if n < len(data.Data) {
+			return fmt.Errorf("failed to write data: %v of %v bytes written", n, len(data.Data))
+		}
 		stream.WriteObjectEnd()
 	} else {
 		return fmt.Errorf("data version is not set")

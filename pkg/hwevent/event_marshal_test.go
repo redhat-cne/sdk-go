@@ -16,9 +16,10 @@ package hwevent_test
 
 import (
 	"encoding/json"
-	"github.com/redhat-cne/sdk-go/pkg/hwevent"
 	"testing"
 	"time"
+
+	"github.com/redhat-cne/sdk-go/pkg/hwevent"
 
 	"github.com/stretchr/testify/require"
 
@@ -53,18 +54,14 @@ func TestMarshal(t *testing.T) {
 			want: map[string]interface{}{
 				"dataContentType": "application/json",
 				"data": map[string]interface{}{
-					"data": []byte(`{"resource":
-					"cluster/node/hw",
-					"dataType": "notification",
-					"value":     "ACQUIRING-SYNC",
-					"valueType": "enumeration"}`),
-					"version" :"v1",
-
+					// NOTE: Marshal results in compact JSON format without whitespaces
+					"data":    []byte(`{"resource":"cluster/node/hw","dataType":"notification","value":"ACQUIRING-SYNC","valueType":"enumeration"}`),
+					"version": "v1",
 				},
-				"id":              "",
-				"time":            now.Format(time.RFC3339Nano),
-				"type":            _type,
-				"dataSchema":      schemaURL,
+				"id":         "",
+				"time":       now.Format(time.RFC3339Nano),
+				"type":       _type,
+				"dataSchema": schemaURL,
 			},
 		},
 	}
@@ -89,13 +86,13 @@ func mustJSONMarshal(tb testing.TB, body interface{}) []byte {
 
 func assertJSONEquals(t *testing.T, want map[string]interface{}, got []byte) {
 	//var gotToCompare map[string]interface{}
-	gotToCompare:= hwevent.Event{}
+	gotToCompare := hwevent.Event{}
 	require.NoError(t, json.Unmarshal(got, &gotToCompare))
 
 	// Marshal and unmarshal want to make sure the types are correct
 	wantBytes, err := json.Marshal(want)
 	require.NoError(t, err)
-	 wantToCompare:=  hwevent.Event{}
+	wantToCompare := hwevent.Event{}
 	require.NoError(t, json.Unmarshal(wantBytes, &wantToCompare))
 
 	require.Equal(t, wantToCompare, gotToCompare)
