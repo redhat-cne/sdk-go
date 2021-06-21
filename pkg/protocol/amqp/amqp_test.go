@@ -157,7 +157,7 @@ func TestDeleteListener(t *testing.T) {
 		Address:             addr,
 		Type:                channel.LISTENER,
 		Status:              channel.NEW,
-		ProcessEventFn:      func(e cneevent.Event) error { return nil },
+		ProcessEventFn:      func(e interface{}) error { return nil },
 		OnReceiveOverrideFn: func(e cloudevents.Event) error { return nil },
 	}
 	time.Sleep(250 * time.Millisecond)
@@ -198,7 +198,7 @@ func TestSendSuccessStatus(t *testing.T) {
 		Address:             fmt.Sprintf("%s/%s", addr, "status"),
 		Status:              channel.NEW,
 		Type:                channel.LISTENER,
-		ProcessEventFn:      func(e cneevent.Event) error { return nil },
+		ProcessEventFn:      func(e interface{}) error { return nil },
 		OnReceiveOverrideFn: func(e cloudevents.Event) error { return nil },
 	}
 
@@ -245,7 +245,7 @@ func TestSendFailureStatus(t *testing.T) {
 		Address:             fmt.Sprintf("%s/%s", addr, "status"),
 		Status:              channel.NEW,
 		Type:                channel.LISTENER,
-		ProcessEventFn:      func(e cneevent.Event) error { return fmt.Errorf("EVENT PROCESS ERROR") },
+		ProcessEventFn:      func(e interface{}) error { return fmt.Errorf("EVENT PROCESS ERROR") },
 		OnReceiveOverrideFn: func(e cloudevents.Event) error { return fmt.Errorf("STATUS RECEEIVE ERROR") },
 	}
 
@@ -318,7 +318,7 @@ func TestSendEvent(t *testing.T) {
 		Address:             fmt.Sprintf("%s/%s", addr, "status"),
 		Status:              channel.NEW,
 		Type:                channel.LISTENER,
-		ProcessEventFn:      func(e cneevent.Event) error { return nil },
+		ProcessEventFn:      func(e interface{}) error { return nil },
 		OnReceiveOverrideFn: func(e cloudevents.Event) error { return nil },
 	}
 

@@ -16,12 +16,13 @@ package hwevent_test
 
 import (
 	"encoding/json"
+
 	ce "github.com/cloudevents/sdk-go/v2"
 	"github.com/google/uuid"
-	cneevent "github.com/redhat-cne/sdk-go/pkg/event"
+	hwevent "github.com/redhat-cne/sdk-go/pkg/hwevent"
 	cnepubsub "github.com/redhat-cne/sdk-go/pkg/pubsub"
 	"github.com/redhat-cne/sdk-go/pkg/types"
-	cneeventv1 "github.com/redhat-cne/sdk-go/v1/event"
+	hweventv1 "github.com/redhat-cne/sdk-go/v1/hwevent"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -31,31 +32,16 @@ import (
 )
 
 var (
-	now         = types.Timestamp{Time: time.Now().UTC()}
-	uriLocation = "http://localhost:9090/event/subscription/1234"
-	endPointURI = "http://localhost:8080/event/ack/event"
-	resource    = "/cluster/node/ptp"
-	_type       = "ptp_status_type"
-	version     = "v1"
-	id          = uuid.New().String()
-	data        cneevent.Data
-	pubsub      cnepubsub.PubSub
+	now    = types.Timestamp{Time: time.Now().UTC()}
+	_type  = "HW_EVENT"
+	id     = uuid.New().String()
+	data   hwevent.Data
+	pubsub cnepubsub.PubSub
 )
 
 func setup() {
-	data = cneevent.Data{}
-	value := cneevent.DataValue{
-		Resource:  resource,
-		DataType:  cneevent.NOTIFICATION,
-		ValueType: cneevent.ENUMERATION,
-		Value:     cneevent.ACQUIRING_SYNC,
-	}
-	data.SetVersion(version) //nolint:errcheck
-	data.AppendValues(value) //nolint:errcheck
-	pubsub = cnepubsub.PubSub{}
-	_ = pubsub.SetResource(resource)
-	_ = pubsub.SetURILocation(uriLocation)
-	_ = pubsub.SetEndpointURI(endPointURI)
+	data = hwevent.Data{}
+	data.SetData([]byte(`{"EventId":"TestEventId","EventTimestamp":"2019-07-29T15:13:49Z","EventType":"Alert","Message":"Test Event","MessageArgs":["NoAMS","Busy","Cached"],"MessageId":"iLOEvents.2.1.ServerPoweredOff","OriginOfCondition":"/redfish/v1/Systems/1/","Severity":"OK"}`)) //nolint:errcheck
 	pubsub.SetID(id)
 
 }
@@ -63,16 +49,15 @@ func setup() {
 func TestEvent_NewCloudEvent(t *testing.T) {
 	setup()
 	testCases := map[string]struct {
-		cneEvent  *cneevent.Event
+		hwEvent   *hwevent.Event
 		cnePubsub *cnepubsub.PubSub
 		want      *ce.Event
 		wantErr   *string
 	}{
 		"struct Data v1": {
-			cneEvent: func() *cneevent.Event {
-				e := cneeventv1.CloudNativeEvent()
-
-				e.SetDataContentType(cneevent.ApplicationJSON)
+			hwEvent: func() *hwevent.Event {
+				e := hweventv1.CloudNativeEvent()
+				e.SetDataContentType(hwevent.ApplicationJSON)
 				e.SetTime(now.Time)
 				e.SetType(_type)
 				e.SetData(data)
@@ -94,7 +79,7 @@ func TestEvent_NewCloudEvent(t *testing.T) {
 
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
-			event := tc.cneEvent
+			event := tc.hwEvent
 			cEvent, err := event.NewCloudEvent(tc.cnePubsub)
 			assert.Nil(t, err)
 			tc.want.SetID(cEvent.ID())
@@ -112,7 +97,7 @@ func TestEvent_GetCloudNativeEvents(t *testing.T) {
 	setup()
 	testCases := map[string]struct {
 		ceEvent *ce.Event
-		want    *cneevent.Event
+		want    *hwevent.Event
 		wantErr *string
 	}{
 		"struct Data v1": {
@@ -125,9 +110,9 @@ func TestEvent_GetCloudNativeEvents(t *testing.T) {
 				e.SetID(id)
 				return &e
 			}(),
-			want: func() *cneevent.Event {
-				e := cneeventv1.CloudNativeEvent()
-				e.SetDataContentType(cneevent.ApplicationJSON)
+			want: func() *hwevent.Event {
+				e := hweventv1.CloudNativeEvent()
+				e.SetDataContentType(hwevent.ApplicationJSON)
 				e.SetTime(now.Time)
 				e.SetType(_type)
 				e.SetData(data)
@@ -138,7 +123,7 @@ func TestEvent_GetCloudNativeEvents(t *testing.T) {
 
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
-			event := cneeventv1.CloudNativeEvent()
+			event := hweventv1.CloudNativeEvent()
 			err := event.GetCloudNativeEvents(tc.ceEvent)
 			assert.Nil(t, err)
 			gotBytes, err := json.Marshal(event)
@@ -165,7 +150,7 @@ func assertCEJsonEquals(t *testing.T, want *ce.Event, got []byte) {
 	require.Equal(t, wantToCompare, gotToCompare)
 }
 
-func assertCNEJsonEquals(t *testing.T, want *cneevent.Event, got []byte) {
+func assertCNEJsonEquals(t *testing.T, want *hwevent.Event, got []byte) {
 	var gotToCompare map[string]interface{}
 	require.NoError(t, json.Unmarshal(got, &gotToCompare))
 

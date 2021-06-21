@@ -27,7 +27,7 @@ func TestUnMarshal(t *testing.T) {
 		"struct Data fan": {
 			body: mustJSONMarshal(t, map[string]interface{}{
 				"data": map[string]interface{}{
-					"data":    []byte(`{"resource": "/cluster/node/hw", "dataType": "fan", "value": ""}`),
+					"data":    []byte(`{"EventId":"TestEventId","EventTimestamp":"2019-07-29T15:13:49Z","EventType":"Alert","Message":"Test Event","MessageArgs":["NoAMS","Busy","Cached"],"MessageId":"iLOEvents.2.1.ServerPoweredOff","OriginOfCondition":"/redfish/v1/Systems/1/","Severity":"OK"}`),
 					"version": version,
 				},
 				"id":         id,
@@ -42,7 +42,7 @@ func TestUnMarshal(t *testing.T) {
 				DataSchema: nil,
 				Data: &hwevent.Data{
 					Version: version,
-					Data:    []byte(`{"resource": "/cluster/node/hw", "dataType": "fan", "value": ""}`),
+					Data:    []byte(`{"EventId":"TestEventId","EventTimestamp":"2019-07-29T15:13:49Z","EventType":"Alert","Message":"Test Event","MessageArgs":["NoAMS","Busy","Cached"],"MessageId":"iLOEvents.2.1.ServerPoweredOff","OriginOfCondition":"/redfish/v1/Systems/1/","Severity":"OK"}`),
 				},
 			},
 			wantErr: nil,

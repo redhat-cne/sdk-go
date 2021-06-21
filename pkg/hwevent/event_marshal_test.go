@@ -34,7 +34,7 @@ func TestMarshal(t *testing.T) {
 	version := "v1"
 	data := hwevent.Data{}
 	data.SetVersion(version) //nolint:errcheck
-	data.Data = []byte(`{"resource": "cluster/node/hw","dataType": "notification","value": "ACQUIRING-SYNC", "valueType": "enumeration" }`)
+	data.Data = []byte(`{"EventId":"TestEventId","EventTimestamp":"2019-07-29T15:13:49Z","EventType":"Alert","Message":"Test Event","MessageArgs":["NoAMS","Busy","Cached"],"MessageId":"iLOEvents.2.1.ServerPoweredOff","OriginOfCondition":"/redfish/v1/Systems/1/","Severity":"OK"}`)
 
 	testCases := map[string]struct {
 		event   hwevent.Event
@@ -55,7 +55,7 @@ func TestMarshal(t *testing.T) {
 				"dataContentType": "application/json",
 				"data": map[string]interface{}{
 					// NOTE: Marshal results in compact JSON format without whitespaces
-					"data":    []byte(`{"resource":"cluster/node/hw","dataType":"notification","value":"ACQUIRING-SYNC","valueType":"enumeration"}`),
+					"data":    []byte(`{"EventId":"TestEventId","EventTimestamp":"2019-07-29T15:13:49Z","EventType":"Alert","Message":"Test Event","MessageArgs":["NoAMS","Busy","Cached"],"MessageId":"iLOEvents.2.1.ServerPoweredOff","OriginOfCondition":"/redfish/v1/Systems/1/","Severity":"OK"}`),
 					"version": "v1",
 				},
 				"id":         "",

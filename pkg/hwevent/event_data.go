@@ -43,3 +43,8 @@ func (d *Data) SetVersion(s string) error {
 func (d *Data) GetVersion() string {
 	return d.Version
 }
+
+// SetValues ...
+func (d *Data) SetData(b []byte) {
+	d.Data = b
+}

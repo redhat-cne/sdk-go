@@ -17,6 +17,7 @@ package hwevent
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 
 	cloudevent "github.com/cloudevents/sdk-go/v2"
 	"github.com/google/uuid"
@@ -32,9 +33,13 @@ func (e *Event) NewCloudEvent(ps *pubsub.PubSub) (*cloudevent.Event, error) {
 	ce.SetSource(ps.Resource) // bus address
 	ce.SetSpecVersion(cloudevent.VersionV03)
 	ce.SetID(uuid.New().String())
+	log.Printf("DZK 1 %v\n", e.GetData())
+
 	if err := ce.SetData(cloudevent.ApplicationJSON, e.GetData()); err != nil {
+		log.Printf("DZK 2\n")
 		return nil, err
 	}
+	log.Printf("DZK 3\n")
 	return &ce, nil
 }
 

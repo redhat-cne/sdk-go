@@ -100,9 +100,13 @@ func GetCloudNativeEvents(ce cloudevents.Event) (e hwevent.Event, err error) {
 		return e, fmt.Errorf("event data is empty")
 	}
 	data := hwevent.Data{}
+	log.Infof("DZK 0620-1")
+	log.Infof("DZK 0620-1 %v", ce.Data())
 	if err = json.Unmarshal(ce.Data(), &data); err != nil {
 		return
 	}
+	//data = ce.Data()
+	log.Infof("DZK 0620-2")
 	e.SetDataContentType(hwevent.ApplicationJSON)
 	e.SetTime(ce.Time())
 	e.SetType(ce.Type())

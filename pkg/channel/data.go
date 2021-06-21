@@ -16,7 +16,6 @@ package channel
 
 import (
 	cloudevents "github.com/cloudevents/sdk-go/v2"
-	"github.com/redhat-cne/sdk-go/pkg/event"
 )
 
 // DataChan ...
@@ -31,5 +30,5 @@ type DataChan struct {
 	// if not set then the data is sent to out channel and processed by side car  default method
 	OnReceiveOverrideFn func(e cloudevents.Event) error
 	// ProcessEventFn  Optional, this allows to customize message handler thar was received at the out channel
-	ProcessEventFn func(e event.Event) error
+	ProcessEventFn func(e interface{}) error
 }
