@@ -39,9 +39,11 @@ var (
 	pubsub cnepubsub.PubSub
 )
 
+const RedfishEvent = `{"@odata.context":"/redfish/v1/$metadata#Event.Event","@odata.type":"#Event.v1_0_0.Event","Events":[{"EventId":"TestEventId","EventTimestamp":"2019-07-29T15:13:49Z","EventType":"Alert","Message":"Test Event","MessageArgs":["NoAMS","Busy","Cached"],"MessageId":"iLOEvents.2.1.ServerPoweredOff","OriginOfCondition":"/redfish/v1/Systems/1/","Severity":"OK"}],"Name":"Events"}`
+
 func setup() {
 	data = hwevent.Data{}
-	data.SetData([]byte(`{"EventId":"TestEventId","EventTimestamp":"2019-07-29T15:13:49Z","EventType":"Alert","Message":"Test Event","MessageArgs":["NoAMS","Busy","Cached"],"MessageId":"iLOEvents.2.1.ServerPoweredOff","OriginOfCondition":"/redfish/v1/Systems/1/","Severity":"OK"}`)) //nolint:errcheck
+	data.SetData([]byte(RedfishEvent)) //nolint:errcheck
 	pubsub.SetID(id)
 
 }

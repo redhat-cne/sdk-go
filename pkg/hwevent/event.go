@@ -29,18 +29,25 @@ import (
 //  "data": {
 //    "version": "v1.0",
 //    "data": `{
-//      "EventId": "TestEventId",
-//      "EventTimestamp": "2019-07-29T15:13:49Z",
-// 	    "EventType": "Alert",
-//      "Message": "Test Event",
-//      "MessageArgs": [
-//          "NoAMS",
-//          "Busy",
-//          "Cached"
-//      ],
-// 	    "MessageId": "iLOEvents.2.1.ServerPoweredOff",
-// 	    "OriginOfCondition": "/redfish/v1/Systems/1/",
-// 	    "Severity": "OK"
+// 	    "@odata.context": "/redfish/v1/$metadata#Event.Event",
+// 	    "@odata.type": "#Event.v1_0_0.Event",
+// 	    "Events": [
+// 	      {
+// 		    "EventId": "TestEventId",
+// 		    "EventTimestamp": "2019-07-29T15:13:49Z",
+// 	        "EventType": "Alert",
+// 		    "Message": "Test Event",
+// 		    "MessageArgs": [
+// 		      "NoAMS",
+// 		      "Busy",
+// 		      "Cached"
+// 		    ],
+// 		    "MessageId": "iLOEvents.2.1.ServerPoweredOff",
+// 		    "OriginOfCondition": "/redfish/v1/Systems/1/",
+// 		    "Severity": "OK"
+// 	      }
+// 	    ],
+// 	    "Name": "Events"
 //    }`
 //  }
 //}
