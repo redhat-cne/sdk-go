@@ -44,7 +44,7 @@ func (d *Data) GetVersion() string {
 	return d.Version
 }
 
-// SetValues ...
+// SetData ...
 func (d *Data) SetData(b []byte) {
 	d.Data = b
 }

@@ -162,7 +162,7 @@ func readDataValue(iter *jsoniter.Iterator) ([]DataValue, error) {
 			}
 		}
 		if dv.ValueType == DECIMAL {
-			dv.Value, err = strconv.ParseFloat(cacheValue, 3)
+			dv.Value, err = strconv.ParseFloat(cacheValue, 64)
 		} else {
 			dv.Value = SyncState(cacheValue)
 		}
