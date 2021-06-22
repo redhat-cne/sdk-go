@@ -20,27 +20,31 @@ import (
 	"github.com/redhat-cne/sdk-go/pkg/types"
 )
 
-// Event represents the canonical representation of a Cloud Native Event.
+// Event represents the canonical representation of a Hardware Event.
 // Event Json  payload is as follows,
 //{
-//	"id": "5ce55d17-9234-4fee-a589-d0f10cb32b8e",
-//	"type": "event.synchronization-state-chang",
-//	"time": "2021-02-05T17:31:00Z",
-//	"data": {
-//		"version": "v1.0",
-//		"values": [{
-//			"resource": "/cluster/node/ptp",
-//			"data_type": "notification",
-//			"value_type": "enumeration",
-//			"value": "ACQUIRING-SYNC"
-//			}, {
-//			"resource": "/cluster/node/clock",
-//			"data_type": "metric",
-// 			"value_type": "decimal64.3",
-//			"value": 100.3
-//			}]
-//		}
+//  "id": "5ce55d17-9234-4fee-a589-d0f10cb32b8e",
+//  "type": "event.synchronization-state-chang",
+//  "time": "2021-02-05T17:31:00Z",
+//  "data": {
+//    "version": "v1.0",
+//    "data": `{
+//      "EventId": "TestEventId",
+//      "EventTimestamp": "2019-07-29T15:13:49Z",
+// 	    "EventType": "Alert",
+//      "Message": "Test Event",
+//      "MessageArgs": [
+//          "NoAMS",
+//          "Busy",
+//          "Cached"
+//      ],
+// 	    "MessageId": "iLOEvents.2.1.ServerPoweredOff",
+// 	    "OriginOfCondition": "/redfish/v1/Systems/1/",
+// 	    "Severity": "OK"
+//    }`
+//  }
 //}
+
 //Event request model
 type Event struct {
 	// ID of the event; must be non-empty and unique within the scope of the producer.

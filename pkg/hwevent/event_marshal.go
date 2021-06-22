@@ -19,8 +19,6 @@ import (
 	"fmt"
 	"io"
 
-	log "github.com/sirupsen/logrus"
-
 	jsoniter "github.com/json-iterator/go"
 )
 
@@ -140,7 +138,6 @@ func writeJSONData(in *Data, writer io.Writer, stream *jsoniter.Stream) error {
 // MarshalJSON implements a custom json marshal method used when this type is
 // marshaled using json.Marshal.
 func (e Event) MarshalJSON() ([]byte, error) {
-	log.Debugf("DZK UnmarshalJSON for event is called")
 	var buf bytes.Buffer
 	err := WriteJSON(&e, &buf)
 	return buf.Bytes(), err
@@ -149,7 +146,6 @@ func (e Event) MarshalJSON() ([]byte, error) {
 // MarshalJSON implements a custom json marshal method used when this type is
 // marshaled using json.Marshal.
 func (d Data) MarshalJSON() ([]byte, error) {
-	log.Debugf("DZK UnmarshalJSON for data is called")
 	var buf bytes.Buffer
 	err := WriteDataJSON(&d, &buf)
 	return buf.Bytes(), err

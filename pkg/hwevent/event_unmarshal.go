@@ -7,8 +7,6 @@ import (
 	"strconv"
 	"sync"
 
-	log "github.com/sirupsen/logrus"
-
 	jsoniter "github.com/json-iterator/go"
 
 	"github.com/redhat-cne/sdk-go/pkg/types"
@@ -48,7 +46,6 @@ func ReadDataJSON(out *Data, reader io.Reader) error {
 
 // readJSONFromIterator allows you to read the bytes reader as an event
 func readDataJSONFromIterator(out *Data, iterator *jsoniter.Iterator) error {
-	log.Debugf("DZK entering readDataJSONFromIterator")
 	var (
 		// Universally parseable fields.
 		version string
@@ -68,22 +65,7 @@ func readDataJSONFromIterator(out *Data, iterator *jsoniter.Iterator) error {
 		case "version":
 			version = iterator.ReadString()
 		case "data":
-			//			data = iterator.ReadStringAsSlice()
-
 			data = iterator.SkipAndReturnBytes()
-			log.Debugf("DZK unmarchalling data %v", string(data))
-
-			// unQuoted, err := strconv.Unquote(string(data))
-			// if err != nil {
-			// 	log.Errorf("Unquote error: %v", err)
-			// }
-			// // byte array, when marshalled to json it will be encoded as base64.
-			// decoded, err := base64.StdEncoding.DecodeString(unQuoted)
-			// if err != nil {
-			// 	log.Errorf("base64 decode error: %v", err)
-			// }
-			// data = decoded
-
 		default:
 			iterator.Skip()
 		}
@@ -105,9 +87,6 @@ func readJSONFromIterator(out *Event, iterator *jsoniter.Iterator) error {
 		typ  string
 		time *types.Timestamp
 		data *Data
-
-		// These fields require knowledge about the specversion to be parsed.
-		//schemaurl jsoniter.Any
 	)
 
 	for key := iterator.ReadObject(); key != ""; key = iterator.ReadObject() {
@@ -168,8 +147,6 @@ func readData(iter *jsoniter.Iterator) (*Data, error) {
 			data.Version = iter.ReadString()
 		case "data":
 			data.Data = iter.SkipAndReturnBytes()
-			log.Debugf("DZK unmarchalling data %v", string(data.Data))
-
 			unQuoted, err := strconv.Unquote(string(data.Data))
 			if err != nil {
 				return data, err
@@ -191,7 +168,6 @@ func readData(iter *jsoniter.Iterator) (*Data, error) {
 // UnmarshalJSON implements the json unmarshal method used when this type is
 // unmarshaled using json.Unmarshal.
 func (e *Event) UnmarshalJSON(b []byte) error {
-	log.Debugf("DZK UnmarshalJSON for event is called")
 	iterator := jsoniter.ConfigFastest.BorrowIterator(b)
 	defer jsoniter.ConfigFastest.ReturnIterator(iterator)
 	return readJSONFromIterator(e, iterator)
@@ -200,7 +176,6 @@ func (e *Event) UnmarshalJSON(b []byte) error {
 // UnmarshalJSON implements the json unmarshal method used when this type is
 // unmarshaled using json.Unmarshal.
 func (d *Data) UnmarshalJSON(b []byte) error {
-	log.Debugf("DZK UnmarshalJSON for data is called")
 	iterator := jsoniter.ConfigFastest.BorrowIterator(b)
 	defer jsoniter.ConfigFastest.ReturnIterator(iterator)
 	return readDataJSONFromIterator(d, iterator)
