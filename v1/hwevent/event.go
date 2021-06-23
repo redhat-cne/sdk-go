@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package event
+package hwevent
 
 import (
 	"encoding/json"
@@ -25,7 +25,7 @@ import (
 	"github.com/redhat-cne/sdk-go/pkg/channel"
 	"github.com/redhat-cne/sdk-go/pkg/pubsub"
 
-	"github.com/redhat-cne/sdk-go/pkg/event"
+	"github.com/redhat-cne/sdk-go/pkg/hwevent"
 )
 
 // PublishCloudEventToLog .. publish event data to a log
@@ -34,22 +34,18 @@ func PublishCloudEventToLog(e cloudevents.Event) {
 }
 
 // CloudNativeEvent gets Cloud Native Event object
-func CloudNativeEvent() event.Event {
-	return event.Event{Type: "Event"}
+func CloudNativeEvent() hwevent.Event {
+	// TODO: change type like "HwEvent" into Enum
+	return hwevent.Event{Type: "HwEvent"}
 }
 
 // CloudNativeData gets Cloud Native Event object
-func CloudNativeData() event.Data {
-	return event.Data{}
-}
-
-// CloudNativeDataValues gets CNE data values object
-func CloudNativeDataValues() event.DataValue {
-	return event.DataValue{}
+func CloudNativeData() hwevent.Data {
+	return hwevent.Data{}
 }
 
 // SendEventToLog ...
-func SendEventToLog(e event.Event) {
+func SendEventToLog(e hwevent.Event) {
 	log.Infof("Publishing event to log %#v", e)
 }
 
@@ -85,7 +81,7 @@ func SendCloudEventsToDataChannel(inChan chan<- *channel.DataChan, status channe
 }
 
 // CreateCloudEvents create new cloud event from cloud native events and pubsub
-func CreateCloudEvents(e event.Event, ps pubsub.PubSub) (*cloudevents.Event, error) {
+func CreateCloudEvents(e hwevent.Event, ps pubsub.PubSub) (*cloudevents.Event, error) {
 	ce := cloudevents.NewEvent(cloudevents.VersionV03)
 	ce.SetTime(e.GetTime())
 	ce.SetType(e.Type)
@@ -100,15 +96,15 @@ func CreateCloudEvents(e event.Event, ps pubsub.PubSub) (*cloudevents.Event, err
 }
 
 // GetCloudNativeEvents  get event data from cloud events object if its valid else return error
-func GetCloudNativeEvents(ce cloudevents.Event) (e event.Event, err error) {
+func GetCloudNativeEvents(ce cloudevents.Event) (e hwevent.Event, err error) {
 	if ce.Data() == nil {
 		return e, fmt.Errorf("event data is empty")
 	}
-	data := event.Data{}
+	data := hwevent.Data{}
 	if err = json.Unmarshal(ce.Data(), &data); err != nil {
 		return
 	}
-	e.SetDataContentType(event.ApplicationJSON)
+	e.SetDataContentType(hwevent.ApplicationJSON)
 	e.SetTime(ce.Time())
 	e.SetType(ce.Type())
 	e.SetData(data)

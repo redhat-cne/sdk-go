@@ -21,7 +21,6 @@ import (
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/redhat-cne/sdk-go/pkg/channel"
 	"github.com/redhat-cne/sdk-go/pkg/errorhandler"
-	"github.com/redhat-cne/sdk-go/pkg/event"
 	amqp1 "github.com/redhat-cne/sdk-go/pkg/protocol/amqp"
 )
 
@@ -116,7 +115,7 @@ func CreateListener(inChan chan<- *channel.DataChan, address string) {
 //CreateNewStatusListener send status address information  on a channel to create it's listener object
 func CreateNewStatusListener(inChan chan<- *channel.DataChan, address string,
 	onReceiveOverrideFn func(e cloudevents.Event) error,
-	processEventFn func(e event.Event) error) {
+	processEventFn func(e interface{}) error) {
 	// go ahead and create QDR listener to this address
 	inChan <- &channel.DataChan{
 		Address:             address,

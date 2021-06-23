@@ -1,7 +1,9 @@
-package event
+package hwevent
 
 import (
 	"io"
+
+	"encoding/base64"
 	"strconv"
 	"sync"
 
@@ -28,14 +30,14 @@ func returnIterator(iter *jsoniter.Iterator) {
 	iterPool.Put(iter)
 }
 
-//ReadJSON ...
+// ReadJSON ...
 func ReadJSON(out *Event, reader io.Reader) error {
 	iterator := borrowIterator(reader)
 	defer returnIterator(iterator)
 	return readJSONFromIterator(out, iterator)
 }
 
-//ReadDataJSON ...
+// ReadDataJSON ...
 func ReadDataJSON(out *Data, reader io.Reader) error {
 	iterator := borrowIterator(reader)
 	defer returnIterator(iterator)
@@ -47,7 +49,7 @@ func readDataJSONFromIterator(out *Data, iterator *jsoniter.Iterator) error {
 	var (
 		// Universally parseable fields.
 		version string
-		data    []DataValue
+		data    []byte
 		// These fields require knowledge about the specversion to be parsed.
 		//schemaurl jsoniter.Any
 	)
@@ -62,9 +64,8 @@ func readDataJSONFromIterator(out *Data, iterator *jsoniter.Iterator) error {
 		switch key {
 		case "version":
 			version = iterator.ReadString()
-		case "values":
-			data, _ = readDataValue(iterator)
-
+		case "data":
+			data = iterator.SkipAndReturnBytes()
 		default:
 			iterator.Skip()
 		}
@@ -74,7 +75,7 @@ func readDataJSONFromIterator(out *Data, iterator *jsoniter.Iterator) error {
 		return iterator.Error
 	}
 	out.Version = version
-	out.Values = data
+	out.Data = data
 	return nil
 }
 
@@ -86,9 +87,6 @@ func readJSONFromIterator(out *Event, iterator *jsoniter.Iterator) error {
 		typ  string
 		time *types.Timestamp
 		data *Data
-
-		// These fields require knowledge about the specversion to be parsed.
-		//schemaurl jsoniter.Any
 	)
 
 	for key := iterator.ReadObject(); key != ""; key = iterator.ReadObject() {
@@ -108,10 +106,6 @@ func readJSONFromIterator(out *Event, iterator *jsoniter.Iterator) error {
 		case "data":
 			data, _ = readData(iterator)
 		case "version":
-
-		case "values":
-		//case "DataSchema":
-		//schemaurl = iterator.ReadAny()
 		default:
 			iterator.Skip()
 		}
@@ -137,45 +131,10 @@ func readTimestamp(iter *jsoniter.Iterator) *types.Timestamp {
 	return t
 }
 
-func readDataValue(iter *jsoniter.Iterator) ([]DataValue, error) {
-	var values []DataValue
-	var err error
-	for iter.ReadArray() {
-		var cacheValue string
-		dv := DataValue{}
-		for dvField := iter.ReadObject(); dvField != ""; dvField = iter.ReadObject() {
-			switch dvField {
-			case "resource":
-				dv.Resource = iter.ReadString()
-			case "dataType":
-				dv.DataType = DataType(iter.ReadString())
-			case "valueType":
-				dv.ValueType = ValueType(iter.ReadString())
-			case "value":
-				if dv.ValueType == DECIMAL {
-					dv.Value = iter.ReadFloat64()
-				} else {
-					cacheValue = iter.ReadString()
-				}
-			default:
-				iter.Skip()
-			}
-		}
-		if dv.ValueType == DECIMAL {
-			dv.Value, err = strconv.ParseFloat(cacheValue, 64)
-		} else {
-			dv.Value = SyncState(cacheValue)
-		}
-		values = append(values, dv)
-	}
-
-	return values, err
-}
-
 func readData(iter *jsoniter.Iterator) (*Data, error) {
 	data := &Data{
 		Version: "",
-		Values:  []DataValue{},
+		Data:    nil,
 	}
 
 	for key := iter.ReadObject(); key != ""; key = iter.ReadObject() {
@@ -186,12 +145,18 @@ func readData(iter *jsoniter.Iterator) (*Data, error) {
 		switch key {
 		case "version":
 			data.Version = iter.ReadString()
-		case "values":
-			values, err := readDataValue(iter)
+		case "data":
+			data.Data = iter.SkipAndReturnBytes()
+			unQuoted, err := strconv.Unquote(string(data.Data))
 			if err != nil {
 				return data, err
 			}
-			data.Values = values
+			// []byte is encoded as a base64-encoded string with json.Marshal
+			decoded, err := base64.StdEncoding.DecodeString(unQuoted)
+			if err != nil {
+				return data, err
+			}
+			data.Data = decoded
 		default:
 			iter.Skip()
 		}
