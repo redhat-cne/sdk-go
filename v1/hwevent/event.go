@@ -28,27 +28,28 @@ import (
 	"github.com/redhat-cne/sdk-go/pkg/hwevent"
 )
 
-//PublishCloudEventToLog .. publish event data to a log
+// PublishCloudEventToLog .. publish event data to a log
 func PublishCloudEventToLog(e cloudevents.Event) {
 	log.Infof("Publishing event to log %#v", e)
 }
 
-//CloudNativeEvent gets Cloud Native Event object
+// CloudNativeEvent gets Cloud Native Event object
 func CloudNativeEvent() hwevent.Event {
+	// TODO: change type like "HwEvent" into Enum
 	return hwevent.Event{Type: "HwEvent"}
 }
 
-//CloudNativeData gets Cloud Native Event object
+// CloudNativeData gets Cloud Native Event object
 func CloudNativeData() hwevent.Data {
 	return hwevent.Data{}
 }
 
-//SendEventToLog ...
+// SendEventToLog ...
 func SendEventToLog(e hwevent.Event) {
 	log.Infof("Publishing event to log %#v", e)
 }
 
-//SendNewEventToDataChannel send created publisher information for QDR to process
+// SendNewEventToDataChannel send created publisher information for QDR to process
 func SendNewEventToDataChannel(inChan chan<- *channel.DataChan, address string, e *cloudevents.Event) {
 	// go ahead and create QDR to this address
 	inChan <- &channel.DataChan{
@@ -59,7 +60,7 @@ func SendNewEventToDataChannel(inChan chan<- *channel.DataChan, address string, 
 	}
 }
 
-//SendStatusToDataChannel send created publisher information for QDR to process
+// SendStatusToDataChannel send created publisher information for QDR to process
 func SendStatusToDataChannel(inChan chan<- *channel.DataChan, status channel.Status, address string) {
 	// go ahead and create QDR to this address
 	inChan <- &channel.DataChan{
@@ -79,7 +80,7 @@ func SendCloudEventsToDataChannel(inChan chan<- *channel.DataChan, status channe
 	}
 }
 
-//CreateCloudEvents create new cloud event from cloud native events and pubsub
+// CreateCloudEvents create new cloud event from cloud native events and pubsub
 func CreateCloudEvents(e hwevent.Event, ps pubsub.PubSub) (*cloudevents.Event, error) {
 	ce := cloudevents.NewEvent(cloudevents.VersionV03)
 	ce.SetTime(e.GetTime())

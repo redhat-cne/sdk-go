@@ -52,7 +52,7 @@ import (
 //  }
 //}
 
-//Event request model
+// Event request model
 type Event struct {
 	// ID of the event; must be non-empty and unique within the scope of the producer.
 	// +required

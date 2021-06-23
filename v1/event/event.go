@@ -28,32 +28,32 @@ import (
 	"github.com/redhat-cne/sdk-go/pkg/event"
 )
 
-//PublishCloudEventToLog .. publish event data to a log
+// PublishCloudEventToLog .. publish event data to a log
 func PublishCloudEventToLog(e cloudevents.Event) {
 	log.Infof("Publishing event to log %#v", e)
 }
 
-//CloudNativeEvent gets Cloud Native Event object
+// CloudNativeEvent gets Cloud Native Event object
 func CloudNativeEvent() event.Event {
 	return event.Event{Type: "Event"}
 }
 
-//CloudNativeData gets Cloud Native Event object
+// CloudNativeData gets Cloud Native Event object
 func CloudNativeData() event.Data {
 	return event.Data{}
 }
 
-//CloudNativeDataValues gets CNE data values object
+// CloudNativeDataValues gets CNE data values object
 func CloudNativeDataValues() event.DataValue {
 	return event.DataValue{}
 }
 
-//SendEventToLog ...
+// SendEventToLog ...
 func SendEventToLog(e event.Event) {
 	log.Infof("Publishing event to log %#v", e)
 }
 
-//SendNewEventToDataChannel send created publisher information for QDR to process
+// SendNewEventToDataChannel send created publisher information for QDR to process
 func SendNewEventToDataChannel(inChan chan<- *channel.DataChan, address string, e *cloudevents.Event) {
 	// go ahead and create QDR to this address
 	inChan <- &channel.DataChan{
@@ -64,7 +64,7 @@ func SendNewEventToDataChannel(inChan chan<- *channel.DataChan, address string, 
 	}
 }
 
-//SendStatusToDataChannel send created publisher information for QDR to process
+// SendStatusToDataChannel send created publisher information for QDR to process
 func SendStatusToDataChannel(inChan chan<- *channel.DataChan, status channel.Status, address string) {
 	// go ahead and create QDR to this address
 	inChan <- &channel.DataChan{
@@ -84,7 +84,7 @@ func SendCloudEventsToDataChannel(inChan chan<- *channel.DataChan, status channe
 	}
 }
 
-//CreateCloudEvents create new cloud event from cloud native events and pubsub
+// CreateCloudEvents create new cloud event from cloud native events and pubsub
 func CreateCloudEvents(e event.Event, ps pubsub.PubSub) (*cloudevents.Event, error) {
 	ce := cloudevents.NewEvent(cloudevents.VersionV03)
 	ce.SetTime(e.GetTime())

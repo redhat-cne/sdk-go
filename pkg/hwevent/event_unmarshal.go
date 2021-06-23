@@ -30,14 +30,14 @@ func returnIterator(iter *jsoniter.Iterator) {
 	iterPool.Put(iter)
 }
 
-//ReadJSON ...
+// ReadJSON ...
 func ReadJSON(out *Event, reader io.Reader) error {
 	iterator := borrowIterator(reader)
 	defer returnIterator(iterator)
 	return readJSONFromIterator(out, iterator)
 }
 
-//ReadDataJSON ...
+// ReadDataJSON ...
 func ReadDataJSON(out *Data, reader io.Reader) error {
 	iterator := borrowIterator(reader)
 	defer returnIterator(iterator)
