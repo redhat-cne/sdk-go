@@ -39,6 +39,7 @@ import (
 var (
 	amqpLinkCredit uint32 = 50
 	cancelTimeout         = 100 * time.Millisecond
+	retryTimeout          = 500 * time.Millisecond
 	channelBuffer  int    = 10
 )
 
@@ -66,6 +67,8 @@ type Router struct {
 	Client              *amqp.Client
 	state               uint32
 	listenerReConnectCh chan *channel.DataChan
+	cancelTimeout       time.Duration
+	retryTimeout        time.Duration
 	//close on true
 	CloseCh <-chan struct{}
 }
@@ -79,6 +82,8 @@ func InitServer(amqpHost string, dataIn <-chan *channel.DataChan, dataOut chan<-
 		Host:      amqpHost,
 		DataOut:   dataOut,
 		CloseCh:   closeCh,
+		cancelTimeout:   cancelTimeout,
+		retryTimeout: retryTimeout,
 	}
 	// if connection fails new thread will try to fix it
 	atomic.StoreUint32(&server.state, connectionError)
@@ -92,6 +97,16 @@ func InitServer(amqpHost string, dataIn <-chan *channel.DataChan, dataOut chan<-
 	server.Client = client
 	atomic.StoreUint32(&server.state, connected)
 	return &server, nil
+}
+
+// CancelTimeOut  update amqp context timeout
+func (q *Router) CancelTimeOut(d time.Duration) {
+	q.cancelTimeout = d
+}
+
+// RetryTime  to retry before new connection
+func (q *Router) RetryTime(d time.Duration) {
+	q.retryTimeout = d
 }
 
 func (q *Router) reConnect(wg *sync.WaitGroup) { //nolint:unused
@@ -114,7 +129,7 @@ func (q *Router) reConnect(wg *sync.WaitGroup) { //nolint:unused
 				client, err = q.NewClient(q.Host, []amqp.ConnOption{})
 				if err != nil {
 					log.Info("retrying connecting to amqp.")
-					time.Sleep(500 * time.Millisecond)
+					time.Sleep(q.retryTimeout)
 					continue
 				}
 				q.Client = client
@@ -415,7 +430,7 @@ func (q *Router) SendTo(wg *sync.WaitGroup, address string, e *cloudevents.Event
 		wg.Add(1)
 		go func(q *Router, sender *Protocol, address string, e *cloudevents.Event, wg *sync.WaitGroup) {
 			defer wg.Done()
-			ctx, cancel := context.WithTimeout(context.Background(), cancelTimeout)
+			ctx, cancel := context.WithTimeout(context.Background(), q.cancelTimeout)
 			defer cancel()
 			sendTimes := 3
 			sendCount := 0
@@ -439,7 +454,7 @@ func (q *Router) SendTo(wg *sync.WaitGroup, address string, e *cloudevents.Event
 					// try 3 times
 					for sendCount < sendTimes {
 						log.Warnf("retry for %d times and then declare connection error\n", sendTimes)
-						time.Sleep(500 * time.Millisecond)
+						time.Sleep(q.retryTimeout)
 						sendCount++
 						goto RetrySend
 					}
