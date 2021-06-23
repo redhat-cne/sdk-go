@@ -454,7 +454,7 @@ func (q *Router) SendTo(wg *sync.WaitGroup, address string, e *cloudevents.Event
 					// try 3 times
 					for sendCount < sendTimes {
 						log.Warnf("retry for %d times and then declare connection error\n", sendTimes)
-						time.Sleep(500 * time.Millisecond)
+						time.Sleep(q.retryTimeout)
 						sendCount++
 						goto RetrySend
 					}
