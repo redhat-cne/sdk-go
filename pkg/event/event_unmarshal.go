@@ -152,11 +152,7 @@ func readDataValue(iter *jsoniter.Iterator) ([]DataValue, error) {
 			case "valueType":
 				dv.ValueType = ValueType(iter.ReadString())
 			case "value":
-				if dv.ValueType == DECIMAL {
-					dv.Value = iter.ReadFloat64()
-				} else {
-					cacheValue = iter.ReadString()
-				}
+				cacheValue = iter.ReadString()
 			default:
 				iter.Skip()
 			}
