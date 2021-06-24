@@ -16,6 +16,7 @@ package event_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 	"time"
 
@@ -33,14 +34,20 @@ func TestMarshal(t *testing.T) {
 	_type := "ptp_status_type"
 	version := "v1"
 	data := event.Data{}
-	value := event.DataValue{
+	value := []event.DataValue{{
 		Resource:  resource,
 		DataType:  event.NOTIFICATION,
 		ValueType: event.ENUMERATION,
-		Value:     event.ACQUIRING_SYNC,
-	}
+		Value:     event.FREERUN,
+	}, {
+		Resource:  resource,
+		DataType:  event.METRIC,
+		ValueType: event.DECIMAL,
+		Value:     10.7,
+	}}
 	data.SetVersion(version) //nolint:errcheck
-	data.AppendValues(value) //nolint:errcheck
+	data.Values = value      //nolint:errcheck
+	fmt.Print(data)
 
 	testCases := map[string]struct {
 		event   event.Event
@@ -68,7 +75,17 @@ func TestMarshal(t *testing.T) {
 			want: map[string]interface{}{
 				"dataContentType": "application/json",
 				"data": map[string]interface{}{
-					"values":  []interface{}{map[string]interface{}{"resource": resource, "dataType": "notification", "value": "ACQUIRING-SYNC", "valueType": "enumeration"}},
+					"values": []interface{}{
+						map[string]interface{}{
+							"resource":  resource,
+							"dataType":  "notification",
+							"value":     "FREERUN",
+							"valueType": "enumeration"},
+						map[string]interface{}{
+							"resource":  resource,
+							"dataType":  "metric",
+							"value":     "10.7",
+							"valueType": "decimal64.3"}},
 					"version": "v1",
 				},
 				"id":         "",
