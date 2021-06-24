@@ -17,9 +17,8 @@ package event
 import (
 	"bytes"
 	"fmt"
-	"io"
-
 	jsoniter "github.com/json-iterator/go"
+	"io"
 )
 
 // WriteJSON writes the in event in the provided writer.
@@ -102,17 +101,21 @@ func WriteDataJSON(in *Data, writer io.Writer) error {
 	return stream.Flush()
 }
 func writeJSONData(in *Data, writer io.Writer, stream *jsoniter.Stream) error {
-	stream.WriteObjectStart()
-
 	// Let's write the body
 	if in != nil {
+		stream.WriteObjectStart()
 		data := in
 		stream.WriteObjectField("version")
 		stream.WriteString(data.GetVersion())
 		stream.WriteMore()
 		stream.WriteObjectField("values")
 		stream.WriteArrayStart()
+		count := 0
 		for _, v := range data.Values {
+			if count > 0 {
+				stream.WriteMore()
+			}
+			count++
 			stream.WriteObjectStart()
 			stream.WriteObjectField("resource")
 			stream.WriteString(v.GetResource())
@@ -130,7 +133,7 @@ func writeJSONData(in *Data, writer io.Writer, stream *jsoniter.Stream) error {
 				stream.WriteString(fmt.Sprintf("%v", v.Value))
 
 			case DECIMAL:
-				stream.WriteFloat64(v.Value.(float64))
+				stream.WriteString(fmt.Sprintf("%v", v.Value))
 
 			default:
 				// if type is other than above
