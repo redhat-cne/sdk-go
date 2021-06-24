@@ -27,8 +27,18 @@ func TestUnMarshal(t *testing.T) {
 			body: mustJSONMarshal(t, map[string]interface{}{
 				"data": map[string]interface{}{
 					"resource": resource,
-					"values":   []interface{}{map[string]interface{}{"resource": resource, "dataType": "notification", "value": "FREERUN", "valueType": "enumeration"}},
-					"version":  version,
+					"values": []interface{}{
+						map[string]interface{}{
+							"resource":  resource,
+							"dataType":  "notification",
+							"value":     "FREERUN",
+							"valueType": "enumeration"},
+						map[string]interface{}{
+							"resource":  resource,
+							"dataType":  "metric",
+							"value":     "10.63",
+							"valueType": "decimal64.3"}},
+					"version": version,
 				},
 				"id":         id,
 				"time":       now.Format(time.RFC3339Nano),
@@ -49,6 +59,12 @@ func TestUnMarshal(t *testing.T) {
 							ValueType: event.ENUMERATION,
 							Value:     event.FREERUN,
 						},
+						{
+							Resource:  resource,
+							DataType:  event.METRIC,
+							ValueType: event.DECIMAL,
+							Value:     10.63,
+						},
 					},
 				},
 			},
@@ -57,7 +73,17 @@ func TestUnMarshal(t *testing.T) {
 		"struct Data metric": {
 			body: mustJSONMarshal(t, map[string]interface{}{
 				"data": map[string]interface{}{
-					"values":  []interface{}{map[string]interface{}{"resource": resource, "dataType": "metric", "value": "10.64", "valueType": "decimal64.3"}},
+					"values": []interface{}{
+						map[string]interface{}{
+							"resource":  resource,
+							"dataType":  "notification",
+							"value":     "FREERUN",
+							"valueType": "enumeration"},
+						map[string]interface{}{
+							"resource":  resource,
+							"dataType":  "metric",
+							"value":     "64.3",
+							"valueType": "decimal64.3"}},
 					"version": version,
 				},
 				"id":         id,
@@ -76,9 +102,15 @@ func TestUnMarshal(t *testing.T) {
 					Values: []event.DataValue{
 						{
 							Resource:  resource,
+							DataType:  event.NOTIFICATION,
+							ValueType: event.ENUMERATION,
+							Value:     event.FREERUN,
+						},
+						{
+							Resource:  resource,
 							DataType:  event.METRIC,
 							ValueType: event.DECIMAL,
-							Value:     10.64,
+							Value:     64.3,
 						},
 					},
 				},
