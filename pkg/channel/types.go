@@ -43,9 +43,11 @@ const (
 	SENDER
 	//EVENT  the type is an event
 	EVENT
+	//STATUS  the type is an STATUS CHECK
+	STATUS
 )
 
 // String represent of Type enum
 func (t Type) String() string {
-	return [...]string{"LISTENER", "SENDER", "EVENT"}[t]
+	return [...]string{"LISTENER", "SENDER", "EVENT" ,"STATUS"}[t]
 }
