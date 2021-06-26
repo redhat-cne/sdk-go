@@ -37,13 +37,13 @@ var (
 	//amqpEventReceivedCount ...  Total no of events received by the transport
 	amqpEventReceivedCount = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "cne_events_amqp_received",
+			Name: "cne_amqp_events_received",
 			Help: "Metric to get number of events received  by the transport",
 		}, []string{"address", "status"})
 	//amqpEventPublishedCount ...  Total no of events published by the transport
 	amqpEventPublishedCount = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "cne_events_amqp_published",
+			Name: "cne_amqp_events_published",
 			Help: "Metric to get number of events published by the transport",
 		}, []string{"address", "status"})
 
@@ -71,7 +71,7 @@ var (
 	//amqpStatusCheckCount ...  Total no of status check received by the transport
 	amqpStatusCheckCount = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "cne_status_check_amqp_published",
+			Name: "cne_amqp_status_check_published",
 			Help: "Metric to get number of status check published by the transport",
 		}, []string{"address", "status"})
 
