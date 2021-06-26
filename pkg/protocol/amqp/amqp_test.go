@@ -213,7 +213,7 @@ func TestSendSuccessStatus(t *testing.T) {
 		Address: fmt.Sprintf("%s/%s", addr, "status"),
 		Data:    &e,
 		Status:  channel.NEW,
-		Type:    channel.EVENT,
+		Type:    channel.STATUS,
 	}
 	// read data
 	d := <-out
@@ -260,7 +260,7 @@ func TestSendFailureStatus(t *testing.T) {
 		Address: fmt.Sprintf("%s/%s", addr, "status"),
 		Data:    &e,
 		Status:  channel.NEW,
-		Type:    channel.EVENT,
+		Type:    channel.STATUS,
 	}
 	// read data
 	d := <-out

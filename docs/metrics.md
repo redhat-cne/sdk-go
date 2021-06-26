@@ -35,7 +35,7 @@ All these metrics are prefixed with `cne_`
 | cne_amqp_connection_reset     | Metric to get number of connection resets.  | Gauge   |
 | cne_amqp_sender     | Metric to get number of sender created.  | Gauge   |
 | cne_amqp_receiver     | Metric to get number of receiver created.  | Gauge   |
-
+| cne_status_check_amqp_published | Metric to get number of status check published by the transport | Gauge |
 
 `cne_events_amqp_received` -  The number of events received by the amqp protocol, and their status by address.
 
@@ -87,5 +87,17 @@ Example
 cne_amqp_receiver{address="/news-service/finance",status="active"} 1
 cne_amqp_receiver{address="/news-service/sports",status="active"} 1
 ```
+
+`cne_status_check_amqp_published` -  This metrics indicates status check that were published via amqp , grouped by address and status.
+
+Example
+```json
+# HELP cne_status_check_amqp_published  Metric to get number of status check published by the transport
+# TYPE cne_status_check_amqp_published gauge
+cne_status_check_amqp_published{address="/news-service/finance/status",status="failed"} 1
+cne_status_check_amqp_published{address="/news-service/sports/status",status="connection reset"} 1
+cne_status_check_amqp_published{address="/news-service/sports/status",status="success"} 1
+```
+
 
 

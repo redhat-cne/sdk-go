@@ -67,6 +67,14 @@ var (
 			Name: "cne_amqp_receiver",
 			Help: "Metric to get number of receiver created",
 		}, []string{"address", "status"})
+
+	//amqpStatusCheckCount ...  Total no of status check received by the transport
+	amqpStatusCheckCount = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "cne_status_check_amqp_published",
+			Help: "Metric to get number of status check published by the transport",
+		}, []string{"address", "status"})
+
 )
 
 // RegisterMetrics ...
@@ -76,6 +84,7 @@ func RegisterMetrics() {
 	prometheus.MustRegister(amqpConnectionResetCount)
 	prometheus.MustRegister(amqpSenderCount)
 	prometheus.MustRegister(amqpReceiverCount)
+	prometheus.MustRegister(amqpStatusCheckCount)
 }
 
 // UpdateTransportConnectionResetCount ...
@@ -94,6 +103,13 @@ func UpdateEventCreatedCount(address string, status MetricStatus, val int) {
 	amqpEventPublishedCount.With(
 		prometheus.Labels{"address": address, "status": string(status)}).Add(float64(val))
 }
+
+// UpdateEventCreatedCount ...
+func UpdateStatusCheckCount(address string, status MetricStatus, val int) {
+	amqpEventPublishedCount.With(
+		prometheus.Labels{"address": address, "status": string(status)}).Add(float64(val))
+}
+
 
 // UpdateSenderCreatedCount ...
 func UpdateSenderCreatedCount(address string, status MetricStatus, val int) {
