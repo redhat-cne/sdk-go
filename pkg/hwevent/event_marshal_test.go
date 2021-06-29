@@ -16,6 +16,7 @@ package hwevent_test
 
 import (
 	"encoding/json"
+	"github.com/redhat-cne/sdk-go/pkg/channel"
 	"testing"
 	"time"
 
@@ -43,7 +44,7 @@ func TestMarshal(t *testing.T) {
 	}{
 		"struct Data v1": {
 			event: func() hwevent.Event {
-				e := hwevent.Event{Type: "Event"}
+				e := hwevent.Event{Type: channel.Event}
 				e.SetDataContentType(event.ApplicationJSON)
 				_ = e.SetDataSchema(schemaURL)
 				e.Time = &now
