@@ -35,7 +35,7 @@ func PublishCloudEventToLog(e cloudevents.Event) {
 
 // CloudNativeEvent gets Cloud Native Event object
 func CloudNativeEvent() event.Event {
-	return event.Event{Type: "Event"}
+	return event.Event{Type: channel.Event}
 }
 
 // CloudNativeData gets Cloud Native Event object

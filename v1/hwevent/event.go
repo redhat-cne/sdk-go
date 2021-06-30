@@ -36,7 +36,7 @@ func PublishCloudEventToLog(e cloudevents.Event) {
 // CloudNativeEvent gets Cloud Native Event object
 func CloudNativeEvent() hwevent.Event {
 	// TODO: change type like "HwEvent" into Enum
-	return hwevent.Event{Type: "HwEvent"}
+	return hwevent.Event{Type: channel.HWEvent}
 }
 
 // CloudNativeData gets Cloud Native Event object
