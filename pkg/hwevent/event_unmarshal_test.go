@@ -14,7 +14,7 @@ import (
 
 func TestUnMarshal(t *testing.T) {
 	now := types.Timestamp{Time: time.Now().UTC()}
-	_type := "hw_fan_event"
+	_type := "HW_EVENT"
 	version := "v1"
 	id := "ABC-1234"
 
@@ -27,7 +27,7 @@ func TestUnMarshal(t *testing.T) {
 		"struct Data fan": {
 			body: mustJSONMarshal(t, map[string]interface{}{
 				"data": map[string]interface{}{
-					"data":    []byte(`{"EventId":"TestEventId","EventTimestamp":"2019-07-29T15:13:49Z","EventType":"Alert","Message":"Test Event","MessageArgs":["NoAMS","Busy","Cached"],"MessageId":"iLOEvents.2.1.ServerPoweredOff","OriginOfCondition":"/redfish/v1/Systems/1/","Severity":"OK"}`),
+					"data":    JSON_EVENT_TMP0100,
 					"version": version,
 				},
 				"id":         id,
@@ -42,7 +42,7 @@ func TestUnMarshal(t *testing.T) {
 				DataSchema: nil,
 				Data: &hwevent.Data{
 					Version: version,
-					Data:    []byte(`{"EventId":"TestEventId","EventTimestamp":"2019-07-29T15:13:49Z","EventType":"Alert","Message":"Test Event","MessageArgs":["NoAMS","Busy","Cached"],"MessageId":"iLOEvents.2.1.ServerPoweredOff","OriginOfCondition":"/redfish/v1/Systems/1/","Severity":"OK"}`),
+					Data:    &REDFISH_EVENT_TMP0100,
 				},
 			},
 			wantErr: nil,
