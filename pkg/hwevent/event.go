@@ -77,16 +77,14 @@ type Event struct {
 // String returns a pretty-printed representation of the Event.
 func (e Event) String() string {
 	b := strings.Builder{}
-	b.WriteString("  id: " + e.ID + "\n")
-	b.WriteString("  type: " + e.Type + "\n")
+	b.WriteString("id: " + e.ID + "\n")
+	b.WriteString("type: " + e.Type + "\n")
 	if e.Time != nil {
-		b.WriteString("  time: " + e.Time.String() + "\n")
+		b.WriteString("time: " + e.Time.String() + "\n")
 	}
 
-	b.WriteString("  data: \n")
-	b.WriteString("  version: " + e.Data.Version + "\n")
-	b.WriteString("  values: \n")
-	b.WriteString("  data: " + string(e.Data.Data) + "\n")
+	b.WriteString("data: \n")
+	b.WriteString(e.Data.String())
 
 	return b.String()
 }

@@ -16,28 +16,30 @@ package hwevent
 
 import (
 	"fmt"
+	"strings"
 )
 
-// The structs are defined based on Event v1.4, which is part of
+// The structs efined here are based on Event v1.4, which is part of
 // Redfish Schema Bundle 2019.2.
-// Reference: https://redfish.dmtf.org/schemas/v1/Event.v1_4_0.yaml
+// Reference: https://redfish.dmtf.org/schemas/v1/Event.v1_4_1.json
 
-// EventRecord is defined in Redfish Event_v1_4_0_EventRecord
+// EventRecord is defined in Redfish Event_v1_4_1_EventRecord
+// Required fields: EventType, MessageId, MemberId
 type EventRecord struct {
 	// The Actions property shall contain the available actions
 	// for this resource.
-	Actions []string `json:"Actions"`
+	Actions []byte `json:"Actions,omitempty"`
 	// *deprecated* This property has been Deprecated in favor of Context
 	// found at the root level of the object.
-	Context string `json:"Context"`
+	Context string `json:"Context,omitempty"`
 	// This value is the identifier used to correlate events that
 	// came from the same cause.
-	EventGroupId int `json:"EventGroupId"`
+	EventGroupID int `json:"EventGroupId,omitempty"`
 	// The value of this property shall indicate a unique identifier
 	// for the event, the format of which is implementation dependent.
-	EventID string `json:"EventId"`
+	EventID string `json:"EventId,omitempty"`
 	// This is time the event occurred.
-	EventTimestamp string `json:"EventTimestamp"`
+	EventTimestamp string `json:"EventTimestamp,omitempty"`
 	// *deprecated* This property has been deprecated.  Starting Redfish
 	// Spec 1.6 (Event 1.3), subscriptions are based on RegistryId and ResourceType
 	// and not EventType.
@@ -48,45 +50,123 @@ type EventRecord struct {
 	MemberID string `json:"MemberId"`
 	// This property shall contain an optional human readable
 	// message.
-	Message string `json:"Message"`
+	Message string `json:"Message,omitempty"`
 	// This array of message arguments are substituted for the arguments
 	// in the message when looked up in the message registry.
-	MessageArgs []string `json:"MessageArgs"`
+	MessageArgs []string `json:"MessageArgs,omitempty"`
 	// This property shall be a key into message registry as
 	// described in the Redfish specification.
 	MessageID string `json:"MessageId"`
+	// This is the manufacturer/provider specific extension
+	Oem []byte `json:"Oem,omitempty"`
+	// This indicates the resource that originated the condition that
+	// caused the event to be generated.
+	OriginOfCondition string `json:"OriginOfCondition,omitempty"`
 	//  This is the severity of the event.
-	Severity string `json:"Severity"`
+	Severity string `json:"Severity,omitempty"`
 }
 
-// RedfishEvent Event_v1_4_0_Event
+// String returns a pretty-printed representation of the EventRecord.
+func (e EventRecord) String() string {
+	b := strings.Builder{}
+	if e.Actions != nil {
+		b.WriteString("Actions: " + string(e.Actions.Oem) + "\n")
+	}
+	if e.Context != "" {
+		b.WriteString("Context: " + e.Context + "\n")
+	}
+	b.WriteString("EventGroupId: " + string(e.EventGroupID) + "\n")
+	if e.EventID != "" {
+		b.WriteString("EventId: " + e.EventID + "\n")
+	}
+	if e.EventTimestamp != "" {
+		b.WriteString("EventTimestamp: " + e.EventTimestamp + "\n")
+	}
+	b.WriteString("EventType: " + e.EventType + "\n")
+	b.WriteString("MemberId: " + e.MemberID + "\n")
+	if e.Message != "" {
+		b.WriteString("Message: " + e.Message + "\n")
+	}
+	if e.MessageArgs != nil {
+		b.WriteString("MessageArgs: ")
+		for _, arg := range e.MessageArgs {
+			b.WriteString(arg + ", ")
+		}
+		b.WriteString("\n")
+	}
+	b.WriteString("MessageId: " + e.MessageID + "\n")
+	if e.Oem != nil {
+		b.WriteString("Oem: " + string(e.Oem) + "\n")
+	}
+	return b.String()
+}
+
+// RedfishEvent Event_v1_4_1_Event
 // The Event schema describes the JSON payload received by an Event
 // Destination (which has subscribed to event notification) when events occurs.  This
 // resource contains data about event(s), including descriptions, severity and
 // MessageId reference to a Message Registry that can be accessed for further
 // information.
+// Required fields: @odata.type, Events, Id, Name
 type RedfishEvent struct {
-	OdataContext string `json:"@odata.context"`
-	OdataID      string `json:"@odata.id"`
+	OdataContext string `json:"@odata.context,omitempty"`
 	OdataType    string `json:"@odata.type"`
-	// This property shall contain a client supplied context
-	// for the Event Destination to which this event is being sent.
-	Context string `json:"Context"`
-	Events  []struct {
-	} `json:"Events"`
-	ID   string `json:"Id"`
-	Name string `json:"Name"`
+	// The available actions for this resource.
+	Actions []byte `json:"Actions,omitempty"`
+	// A context can be supplied at subscription time.  This property
+	// is the context value supplied by the subscriber.
+	Context     string        `json:"Context,omitempty"`
+	Description string        `json:"Description,omitempty"`
+	Events      []EventRecord `json:"Events"`
+	ID          string        `json:"Id"`
+	Name        string        `json:"Name"`
+	// This is the manufacturer/provider specific extension
+	Oem []byte `json:"Oem,omitempty"`
+}
+
+// String returns a pretty-printed representation of the RedfishEvent.
+func (e RedfishEvent) String() string {
+	b := strings.Builder{}
+	if e.OdataContext != "" {
+		b.WriteString("@odata.context: " + e.OdataContext + "\n")
+	}
+	b.WriteString("@odata.type: " + e.OdataType + "\n")
+	if e.Actions != nil {
+		b.WriteString("Actions: " + string(e.Actions.Oem) + "\n")
+	}
+	if e.Context != "" {
+		b.WriteString("Context: " + e.Context + "\n")
+	}
+	b.WriteString("Id: " + e.ID + "\n")
+	b.WriteString("Name: " + e.Name + "\n")
+	if e.Oem != nil {
+		b.WriteString("Oem: " + string(e.Oem) + "\n")
+	}
+	for i, e := range e.Events {
+		b.WriteString("Events[" + string(i) + "]:\n")
+		b.WriteString(e.String())
+	}
+	return b.String()
 }
 
 // Data ... cloud native events data
 // Data Json payload is as follows,
 //{
-//	"version": "v1.0",
+//	"version": "v1.4.0",
 //
 //}
 type Data struct {
-	Version string `json:"version" example:"v1"`
-	Data    []byte `json:"data"`
+	Version string       `json:"version" example:"v1"`
+	Data    RedfishEvent `json:"data"`
+}
+
+// String returns a pretty-printed representation of the Data.
+func (d Data) String() string {
+	b := strings.Builder{}
+	b.WriteString("version: " + d.Version + "\n")
+	b.WriteString("data:\n")
+	b.WriteString(d.Data.String())
+	return b.String()
 }
 
 // SetVersion  ...
@@ -105,6 +185,6 @@ func (d *Data) GetVersion() string {
 }
 
 // SetData ...
-func (d *Data) SetData(b []byte) {
+func (d *Data) SetData(b RedfishEvent) {
 	d.Data = b
 }

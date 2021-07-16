@@ -111,12 +111,106 @@ func writeJSONData(in *Data, writer io.Writer, stream *jsoniter.Stream) error {
 		stream.WriteString(data.GetVersion())
 		stream.WriteMore()
 		stream.WriteObjectField("data")
-		n, err := stream.Write(data.Data)
-		if err != nil {
+		if err := writeJSONRedfishEvent(&data.Data, writer, stream); err != nil {
 			return fmt.Errorf("error writing data: %w", err)
 		}
-		if n < len(data.Data) {
-			return fmt.Errorf("failed to write data: %v of %v bytes written", n, len(data.Data))
+		stream.WriteObjectEnd()
+	} else {
+		return fmt.Errorf("data version is not set")
+	}
+
+	// Let's do a check on the error
+	if stream.Error != nil {
+		return fmt.Errorf("error while writing the event Data: %w", stream.Error)
+	}
+
+	// Let's do a check on the error
+	if stream.Error != nil {
+		return fmt.Errorf("error while writing the event extensions: %w", stream.Error)
+	}
+	return nil
+}
+
+func writeJSONRedfishEvent(in *RedfishEvent, writer io.Writer, stream *jsoniter.Stream) error {
+	stream.WriteObjectStart()
+
+	// Let's write the body
+	if in != nil {
+		data := in
+		stream.WriteObjectField("@odata.context")
+		stream.WriteString(data.OdataContext)
+		stream.WriteMore()
+		stream.WriteObjectField("@odata.type")
+		stream.WriteString(data.OdataType)
+		stream.WriteMore()
+		//		stream.WriteObjectField("Actions")
+		//		stream.WriteString(data.Actions)
+		stream.WriteMore()
+		stream.WriteObjectField("Context")
+		stream.WriteString(data.Context)
+		stream.WriteMore()
+		stream.WriteObjectField("Events")
+		//		stream.WriteString(data.Events)
+		stream.WriteMore()
+		stream.WriteObjectField("Id")
+		stream.WriteString(data.ID)
+		stream.WriteMore()
+		stream.WriteObjectField("Name")
+		stream.WriteString(data.Name)
+		stream.WriteMore()
+		stream.WriteObjectField("Oem")
+		_, err := stream.Write(data.Oem)
+		if err != nil {
+			return fmt.Errorf("error writing Oem: %w", err)
+		}
+		stream.WriteObjectEnd()
+	} else {
+		return fmt.Errorf("data version is not set")
+	}
+
+	// Let's do a check on the error
+	if stream.Error != nil {
+		return fmt.Errorf("error while writing the event Data: %w", stream.Error)
+	}
+
+	// Let's do a check on the error
+	if stream.Error != nil {
+		return fmt.Errorf("error while writing the event extensions: %w", stream.Error)
+	}
+	return nil
+}
+
+func writeJSONEventRecord(in *EventRecord, writer io.Writer, stream *jsoniter.Stream) error {
+	stream.WriteObjectStart()
+
+	// Let's write the body
+	if in != nil {
+		data := in
+		stream.WriteObjectField("@odata.context")
+		stream.WriteString(data.OdataContext)
+		stream.WriteMore()
+		stream.WriteObjectField("@odata.type")
+		stream.WriteString(data.OdataType)
+		stream.WriteMore()
+		stream.WriteObjectField("Actions")
+		stream.WriteString(data.Actions)
+		stream.WriteMore()
+		stream.WriteObjectField("Context")
+		stream.WriteString(data.Context)
+		stream.WriteMore()
+		stream.WriteObjectField("Events")
+		stream.WriteString(data.Events)
+		stream.WriteMore()
+		stream.WriteObjectField("Id")
+		stream.WriteString(data.ID)
+		stream.WriteMore()
+		stream.WriteObjectField("Name")
+		stream.WriteString(data.Name)
+		stream.WriteMore()
+		stream.WriteObjectField("Oem")
+		_, err := stream.Write(data.Oem)
+		if err != nil {
+			return fmt.Errorf("error writing Oem: %w", err)
 		}
 		stream.WriteObjectEnd()
 	} else {
