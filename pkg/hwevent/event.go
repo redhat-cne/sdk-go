@@ -82,7 +82,7 @@ func (e Event) String() string {
 		b.WriteString("time: " + e.Time.String() + "\n")
 	}
 
-	b.WriteString("data: \n")
+	b.WriteString("data:")
 	b.WriteString(e.Data.String())
 
 	return b.String()

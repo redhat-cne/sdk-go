@@ -100,16 +100,12 @@ func TestEvent_NewCloudEvent(t *testing.T) {
 		t.Run(n, func(t *testing.T) {
 			event := tc.hwEvent
 			cEvent, err := event.NewCloudEvent(tc.cnePubsub)
-			if err != nil {
-				log.Errorf("NewCloudEvent returns err %v\n", err)
-			}
 			assert.Nil(t, err)
 			tc.want.SetID(cEvent.ID())
 			gotBytes, err := json.Marshal(cEvent)
 			log.Printf("cloud events %s\n", string(gotBytes))
 			if tc.wantErr != nil {
 				require.Error(t, err, *tc.wantErr)
-				return
 			}
 			assertCEJsonEquals(t, tc.want, gotBytes)
 		})
@@ -151,7 +147,6 @@ func TestEvent_GetCloudNativeEvents(t *testing.T) {
 			gotBytes, err := json.Marshal(event)
 			if tc.wantErr != nil {
 				require.Error(t, err, *tc.wantErr)
-				return
 			}
 			assertCNEJsonEquals(t, tc.want, gotBytes)
 		})
