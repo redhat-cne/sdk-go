@@ -16,6 +16,7 @@ package event_test
 
 import (
 	"encoding/json"
+
 	ce "github.com/cloudevents/sdk-go/v2"
 	"github.com/google/uuid"
 	cneevent "github.com/redhat-cne/sdk-go/pkg/event"
@@ -102,7 +103,6 @@ func TestEvent_NewCloudEvent(t *testing.T) {
 			log.Printf("cloud events %s\n", string(gotBytes))
 			if tc.wantErr != nil {
 				require.Error(t, err, *tc.wantErr)
-				return
 			}
 			assertCEJsonEquals(t, tc.want, gotBytes)
 		})
@@ -144,7 +144,6 @@ func TestEvent_GetCloudNativeEvents(t *testing.T) {
 			gotBytes, err := json.Marshal(event)
 			if tc.wantErr != nil {
 				require.Error(t, err, *tc.wantErr)
-				return
 			}
 			assertCNEJsonEquals(t, tc.want, gotBytes)
 

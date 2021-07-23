@@ -21,7 +21,7 @@ import (
 
 	ce "github.com/cloudevents/sdk-go/v2"
 	"github.com/google/uuid"
-	hwevent "github.com/redhat-cne/sdk-go/pkg/hwevent"
+	"github.com/redhat-cne/sdk-go/pkg/hwevent"
 	cnepubsub "github.com/redhat-cne/sdk-go/pkg/pubsub"
 	"github.com/redhat-cne/sdk-go/pkg/types"
 	hweventv1 "github.com/redhat-cne/sdk-go/v1/hwevent"
@@ -36,15 +36,33 @@ var (
 	id     = uuid.New().String()
 	data   hwevent.Data
 	pubsub cnepubsub.PubSub
-)
 
-const RedfishEvent = `{"@odata.context":"/redfish/v1/$metadata#Event.Event","@odata.type":"#Event.v1_0_0.Event","Events":[{"EventId":"TestEventId","EventTimestamp":"2019-07-29T15:13:49Z","EventType":"Alert","Message":"Test Event","MessageArgs":["NoAMS","Busy","Cached"],"MessageId":"iLOEvents.2.1.ServerPoweredOff","OriginOfCondition":"/redfish/v1/Systems/1/","Severity":"OK"}],"Name":"Events"}`
+	EVENT_RECORD_TMP0100 = hwevent.EventRecord{
+		Context:        "any string is valid",
+		EventID:        "2162",
+		EventTimestamp: "2021-07-13T15:07:59+0300",
+		EventType:      "Alert",
+		MemberID:       "615703",
+		Message:        "The system board Inlet temperature is less than the lower warning threshold.",
+		MessageArgs:    []string{"Inlet"},
+		MessageID:      "TMP0100",
+		Severity:       "Warning",
+	}
+
+	REDFISH_EVENT_TMP0100 = hwevent.RedfishEvent{
+		OdataContext: "/redfish/v1/$metadata#Event.Event",
+		OdataType:    "#Event.v1_3_0.Event",
+		Context:      "any string is valid",
+		Events:       []hwevent.EventRecord{EVENT_RECORD_TMP0100},
+		ID:           "5e004f5a-e3d1-11eb-ae9c-3448edf18a38",
+		Name:         "Event Array",
+	}
+)
 
 func setup() {
 	data = hwevent.Data{}
-	data.SetData([]byte(RedfishEvent)) //nolint:errcheck
+	data.SetData(&REDFISH_EVENT_TMP0100) //nolint:errcheck
 	pubsub.SetID(id)
-
 }
 
 func TestEvent_NewCloudEvent(t *testing.T) {
@@ -88,7 +106,6 @@ func TestEvent_NewCloudEvent(t *testing.T) {
 			log.Printf("cloud events %s\n", string(gotBytes))
 			if tc.wantErr != nil {
 				require.Error(t, err, *tc.wantErr)
-				return
 			}
 			assertCEJsonEquals(t, tc.want, gotBytes)
 		})
@@ -130,10 +147,8 @@ func TestEvent_GetCloudNativeEvents(t *testing.T) {
 			gotBytes, err := json.Marshal(event)
 			if tc.wantErr != nil {
 				require.Error(t, err, *tc.wantErr)
-				return
 			}
 			assertCNEJsonEquals(t, tc.want, gotBytes)
-
 		})
 	}
 }

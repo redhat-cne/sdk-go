@@ -16,26 +16,50 @@ package hwevent_test
 
 import (
 	"encoding/json"
-	"github.com/redhat-cne/sdk-go/pkg/channel"
 	"testing"
 	"time"
 
-	"github.com/redhat-cne/sdk-go/pkg/hwevent"
-
-	"github.com/stretchr/testify/require"
-
+	"github.com/redhat-cne/sdk-go/pkg/channel"
 	"github.com/redhat-cne/sdk-go/pkg/event"
+	"github.com/redhat-cne/sdk-go/pkg/hwevent"
 	"github.com/redhat-cne/sdk-go/pkg/types"
+	"github.com/stretchr/testify/require"
+)
+
+var (
+	JSON_EVENT_TMP0100 = map[string]interface{}{
+		"@odata.context": "/redfish/v1/$metadata#Event.Event",
+		"@odata.id":      "/redfish/v1/EventService/Events/5e004f5a-e3d1-11eb-ae9c-3448edf18a38",
+		"@odata.type":    "#Event.v1_3_0.Event",
+		"Context":        "any string is valid",
+		"Events": []interface{}{
+			map[string]interface{}{
+				"Context":                 "any string is valid",
+				"EventId":                 "2162",
+				"EventTimestamp":          "2021-07-13T15:07:59+0300",
+				"EventType":               "Alert",
+				"MemberId":                "615703",
+				"Message":                 "The system board Inlet temperature is less than the lower warning threshold.",
+				"MessageArgs":             []string{"Inlet"},
+				"MessageArgs@odata.count": 1,
+				"MessageId":               "TMP0100",
+				"Severity":                "Warning",
+			},
+		},
+		"Id":   "5e004f5a-e3d1-11eb-ae9c-3448edf18a38",
+		"Name": "Event Array",
+	}
 )
 
 func TestMarshal(t *testing.T) {
 	now := types.Timestamp{Time: time.Now().UTC()}
 	schemaURL := "http://example.com/schema"
-	_type := "hw_fan_type"
+	_type := "HW_EVENT"
 	version := "v1"
 	data := hwevent.Data{}
 	data.SetVersion(version) //nolint:errcheck
-	data.Data = []byte(RedfishEvent)
+
+	data.Data = &REDFISH_EVENT_TMP0100
 
 	testCases := map[string]struct {
 		event   hwevent.Event
@@ -56,7 +80,7 @@ func TestMarshal(t *testing.T) {
 				"dataContentType": "application/json",
 				"data": map[string]interface{}{
 					// NOTE: Marshal results in compact JSON format without whitespaces
-					"data":    []byte(RedfishEvent),
+					"data":    JSON_EVENT_TMP0100,
 					"version": "v1",
 				},
 				"id":         "",
