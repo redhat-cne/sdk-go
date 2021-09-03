@@ -512,26 +512,28 @@ func (q *Router) setReceiver(wg *sync.WaitGroup, d *channel.DataChan) error {
 		log.Errorf("error creating Receiver %v", err)
 		return err
 	}
-	d.OnReceiveFn = func(e cloudevents.Event) {
-		out := channel.DataChan{
-			Address:        d.Address,
-			Data:           &e,
-			Status:         channel.NEW,
-			Type:           channel.EVENT,
-			ProcessEventFn: d.ProcessEventFn,
-		}
-		if d.OnReceiveOverrideFn != nil {
-			if err := d.OnReceiveOverrideFn(e, &out); err != nil {
-				out.Status = channel.FAILED
-				localmetrics.UpdateEventReceivedCount(d.Address, localmetrics.FAILED, 1)
+	if d.OnReceiveFn == nil { // only attach override if onReceiveFn is nil
+		d.OnReceiveFn = func(e cloudevents.Event) {
+			out := channel.DataChan{
+				Address:        d.Address,
+				Data:           &e,
+				Status:         channel.NEW,
+				Type:           channel.EVENT,
+				ProcessEventFn: d.ProcessEventFn,
+			}
+			if d.OnReceiveOverrideFn != nil {
+				if err := d.OnReceiveOverrideFn(e, &out); err != nil {
+					out.Status = channel.FAILED
+					localmetrics.UpdateEventReceivedCount(d.Address, localmetrics.FAILED, 1)
+				} else {
+					localmetrics.UpdateEventReceivedCount(d.Address, localmetrics.SUCCESS, 1)
+					out.Status = channel.SUCCESS
+				}
 			} else {
 				localmetrics.UpdateEventReceivedCount(d.Address, localmetrics.SUCCESS, 1)
-				out.Status = channel.SUCCESS
 			}
-		} else {
-			localmetrics.UpdateEventReceivedCount(d.Address, localmetrics.SUCCESS, 1)
+			q.DataOut <- &out
 		}
-		q.DataOut <- &out
 	}
 	wg.Add(1)
 	go q.Receive(wg, d.Address, d.OnReceiveFn)
