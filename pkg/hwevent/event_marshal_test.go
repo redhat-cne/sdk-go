@@ -43,7 +43,11 @@ var (
 				"MessageArgs":             []string{"Inlet"},
 				"MessageArgs@odata.count": 1,
 				"MessageId":               "TMP0100",
-				"Severity":                "Warning",
+				// Do not use []byte here since json.Marshal from standard library will encode []byte with base64
+				"OriginOfCondition": map[string]interface{}{
+					"@odata.id": "/redfish/v1/Systems/System.Embedded.1",
+				},
+				"Severity": "Warning",
 			},
 		},
 		"Id":   "5e004f5a-e3d1-11eb-ae9c-3448edf18a38",
@@ -103,18 +107,12 @@ func TestMarshal(t *testing.T) {
 	}
 }
 
-func mustJSONMarshal(tb testing.TB, body interface{}) []byte {
-	b, err := json.Marshal(body)
-	require.NoError(tb, err)
-	return b
-}
-
 func assertJSONEquals(t *testing.T, want map[string]interface{}, got []byte) {
-	//var gotToCompare map[string]interface{}
 	gotToCompare := hwevent.Event{}
 	require.NoError(t, json.Unmarshal(got, &gotToCompare))
 
-	// Marshal and unmarshal want to make sure the types are correct
+	// Marshal and unmarshal `want` to make sure the types are correct
+	// NOTE: json.Marshal from the standard `encoding/json` library is used here
 	wantBytes, err := json.Marshal(want)
 	require.NoError(t, err)
 	wantToCompare := hwevent.Event{}
