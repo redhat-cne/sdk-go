@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/redhat-cne/sdk-go/pkg/hwevent"
+	"github.com/stretchr/testify/require"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/redhat-cne/sdk-go/pkg/types"
@@ -66,4 +67,10 @@ func TestUnMarshal(t *testing.T) {
 			}
 		})
 	}
+}
+
+func mustJSONMarshal(tb testing.TB, body interface{}) []byte {
+	b, err := json.Marshal(body)
+	require.NoError(tb, err)
+	return b
 }

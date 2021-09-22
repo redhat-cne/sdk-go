@@ -38,17 +38,17 @@ var (
 	pubsub cnepubsub.PubSub
 
 	EVENT_RECORD_TMP0100 = hwevent.EventRecord{
-		Context:        "any string is valid",
-		EventID:        "2162",
-		EventTimestamp: "2021-07-13T15:07:59+0300",
-		EventType:      "Alert",
-		MemberID:       "615703",
-		Message:        "The system board Inlet temperature is less than the lower warning threshold.",
-		MessageArgs:    []string{"Inlet"},
-		MessageID:      "TMP0100",
-		Severity:       "Warning",
+		Context:           "any string is valid",
+		EventID:           "2162",
+		EventTimestamp:    "2021-07-13T15:07:59+0300",
+		EventType:         "Alert",
+		MemberID:          "615703",
+		Message:           "The system board Inlet temperature is less than the lower warning threshold.",
+		MessageArgs:       []string{"Inlet"},
+		MessageID:         "TMP0100",
+		OriginOfCondition: []byte(`{"@odata.id":"/redfish/v1/Systems/System.Embedded.1"}`),
+		Severity:          "Warning",
 	}
-
 	REDFISH_EVENT_TMP0100 = hwevent.RedfishEvent{
 		OdataContext: "/redfish/v1/$metadata#Event.Event",
 		OdataType:    "#Event.v1_3_0.Event",
@@ -157,7 +157,7 @@ func assertCEJsonEquals(t *testing.T, want *ce.Event, got []byte) {
 	var gotToCompare map[string]interface{}
 	require.NoError(t, json.Unmarshal(got, &gotToCompare))
 
-	// Marshal and unmarshal want to make sure the types are correct
+	// Marshal and unmarshal `want` to make sure the types are correct
 	wantBytes, err := json.Marshal(want)
 	require.NoError(t, err)
 	var wantToCompare map[string]interface{}
@@ -170,7 +170,7 @@ func assertCNEJsonEquals(t *testing.T, want *hwevent.Event, got []byte) {
 	var gotToCompare map[string]interface{}
 	require.NoError(t, json.Unmarshal(got, &gotToCompare))
 
-	// Marshal and unmarshal want to make sure the types are correct
+	// Marshal and unmarshal `want` to make sure the types are correct
 	wantBytes, err := json.Marshal(want)
 	require.NoError(t, err)
 	var wantToCompare map[string]interface{}
