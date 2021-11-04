@@ -23,6 +23,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/redhat-cne/sdk-go/pkg/event"
+	"github.com/redhat-cne/sdk-go/pkg/event/ptp"
 	"github.com/redhat-cne/sdk-go/pkg/types"
 	v1 "github.com/redhat-cne/sdk-go/v1/event"
 )
@@ -31,14 +32,14 @@ func TestMarshal(t *testing.T) {
 	now := types.Timestamp{Time: time.Now().UTC()}
 	schemaURL := "http://example.com/schema"
 	resource := "/cluster/node/ptp"
-	_type := "ptp_status_type"
+	_type := string(ptp.PtpStateChange)
 	version := "v1"
 	data := event.Data{}
 	value := []event.DataValue{{
 		Resource:  resource,
 		DataType:  event.NOTIFICATION,
 		ValueType: event.ENUMERATION,
-		Value:     event.FREERUN,
+		Value:     ptp.FREERUN,
 	}, {
 		Resource:  resource,
 		DataType:  event.METRIC,

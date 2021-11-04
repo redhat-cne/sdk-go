@@ -27,6 +27,7 @@ import (
 	"github.com/redhat-cne/sdk-go/pkg/types"
 
 	cneevent "github.com/redhat-cne/sdk-go/pkg/event"
+	"github.com/redhat-cne/sdk-go/pkg/event/ptp"
 
 	"github.com/redhat-cne/sdk-go/pkg/channel"
 
@@ -44,7 +45,7 @@ var (
 	ceTimestamp     = cetypes.Timestamp{Time: time.Date(2020, 03, 21, 12, 34, 56, 780000000, time.UTC)}
 	cneTimestamp    = types.Timestamp{Time: time.Date(2020, 03, 21, 12, 34, 56, 780000000, time.UTC)}
 	ceSchema        = cetypes.URI{URL: url.URL{Scheme: "http", Host: "example.com", Path: "/schema"}}
-	_type           = "ptp_status_type"
+	_type           = string(ptp.PtpStateChange)
 	resourceAddress = "/test1/test1"
 )
 
@@ -55,7 +56,7 @@ func CloudNativeEvents() cneevent.Event {
 		Resource:  resourceAddress,
 		DataType:  cneevent.NOTIFICATION,
 		ValueType: cneevent.ENUMERATION,
-		Value:     cneevent.ACQUIRING_SYNC,
+		Value:     ptp.ACQUIRING_SYNC,
 	}
 	data.SetVersion("1.0")   //nolint:errcheck
 	data.AppendValues(value) //nolint:errcheck
@@ -78,7 +79,7 @@ func CloudEvents() cloudevents.Event {
 		Resource:  resourceAddress,
 		DataType:  cneevent.NOTIFICATION,
 		ValueType: cneevent.ENUMERATION,
-		Value:     cneevent.ACQUIRING_SYNC,
+		Value:     ptp.ACQUIRING_SYNC,
 	}
 	data.SetVersion("1.0")   //nolint:errcheck
 	data.AppendValues(value) //nolint:errcheck
