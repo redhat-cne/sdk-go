@@ -1,4 +1,4 @@
-// Copyright 2020 The Cloud Native Events Authors
+// Copyright 2021 The Cloud Native Events Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,32 +12,38 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package hwevent_test
+package redfish_test
 
 import (
 	"encoding/json"
-	"testing"
-	"time"
 
 	ce "github.com/cloudevents/sdk-go/v2"
 	"github.com/google/uuid"
-	"github.com/redhat-cne/sdk-go/pkg/hwevent"
+	cneevent "github.com/redhat-cne/sdk-go/pkg/event"
+	"github.com/redhat-cne/sdk-go/pkg/event/redfish"
 	cnepubsub "github.com/redhat-cne/sdk-go/pkg/pubsub"
 	"github.com/redhat-cne/sdk-go/pkg/types"
-	hweventv1 "github.com/redhat-cne/sdk-go/v1/hwevent"
+	cneeventv1 "github.com/redhat-cne/sdk-go/v1/event"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"testing"
+	"time"
 )
 
 var (
-	now    = types.Timestamp{Time: time.Now().UTC()}
-	_type  = "HW_EVENT"
-	id     = uuid.New().String()
-	data   hwevent.Data
-	pubsub cnepubsub.PubSub
+	now         = types.Timestamp{Time: time.Now().UTC()}
+	uriLocation = "http://localhost:8089/api/cloudNotifications/v1/subscriptions/da42fb86-819e-47c5-84a3-5512d5a3c732"
+	endPointURI = "http://localhost:9089/event"
+	resource    = "/cluster/node/nodename/redfish/event"
+	_type       = string(redfish.Alert)
+	version     = "v1"
+	id          = uuid.New().String()
+	data        cneevent.Data
+	pubsub      cnepubsub.PubSub
 
-	EVENT_RECORD_TMP0100 = hwevent.EventRecord{
+	EVENT_RECORD_TMP0100 = redfish.EventRecord{
 		Context:           "any string is valid",
 		EventID:           "2162",
 		EventTimestamp:    "2021-07-13T15:07:59+0300",
@@ -49,34 +55,47 @@ var (
 		OriginOfCondition: []byte(`{"@odata.id":"/redfish/v1/Systems/System.Embedded.1"}`),
 		Severity:          "Warning",
 	}
-	REDFISH_EVENT_TMP0100 = hwevent.RedfishEvent{
+	REDFISH_EVENT_TMP0100 = redfish.Event{
 		OdataContext: "/redfish/v1/$metadata#Event.Event",
 		OdataType:    "#Event.v1_3_0.Event",
 		Context:      "any string is valid",
-		Events:       []hwevent.EventRecord{EVENT_RECORD_TMP0100},
+		Events:       []redfish.EventRecord{EVENT_RECORD_TMP0100},
 		ID:           "5e004f5a-e3d1-11eb-ae9c-3448edf18a38",
 		Name:         "Event Array",
 	}
 )
 
 func setup() {
-	data = hwevent.Data{}
-	data.SetData(&REDFISH_EVENT_TMP0100) //nolint:errcheck
+	data = cneevent.Data{}
+	value := cneevent.DataValue{
+		Resource:  resource,
+		DataType:  cneevent.NOTIFICATION,
+		ValueType: cneevent.REDFISH_EVENT,
+		Value:     REDFISH_EVENT_TMP0100,
+	}
+	data.SetVersion(version) //nolint:errcheck
+	data.AppendValues(value) //nolint:errcheck
+	pubsub = cnepubsub.PubSub{}
+	_ = pubsub.SetResource(resource)
+	_ = pubsub.SetURILocation(uriLocation)
+	_ = pubsub.SetEndpointURI(endPointURI)
 	pubsub.SetID(id)
+
 }
 
 func TestEvent_NewCloudEvent(t *testing.T) {
 	setup()
 	testCases := map[string]struct {
-		hwEvent   *hwevent.Event
+		cneEvent  *cneevent.Event
 		cnePubsub *cnepubsub.PubSub
 		want      *ce.Event
 		wantErr   *string
 	}{
 		"struct Data v1": {
-			hwEvent: func() *hwevent.Event {
-				e := hweventv1.CloudNativeEvent()
-				e.SetDataContentType(hwevent.ApplicationJSON)
+			cneEvent: func() *cneevent.Event {
+				e := cneeventv1.CloudNativeEvent()
+
+				e.SetDataContentType(cneevent.ApplicationJSON)
 				e.SetTime(now.Time)
 				e.SetType(_type)
 				e.SetData(data)
@@ -98,7 +117,7 @@ func TestEvent_NewCloudEvent(t *testing.T) {
 
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
-			event := tc.hwEvent
+			event := tc.cneEvent
 			cEvent, err := event.NewCloudEvent(tc.cnePubsub)
 			assert.Nil(t, err)
 			tc.want.SetID(cEvent.ID())
@@ -115,7 +134,7 @@ func TestEvent_GetCloudNativeEvents(t *testing.T) {
 	setup()
 	testCases := map[string]struct {
 		ceEvent *ce.Event
-		want    *hwevent.Event
+		want    *cneevent.Event
 		wantErr *string
 	}{
 		"struct Data v1": {
@@ -128,9 +147,9 @@ func TestEvent_GetCloudNativeEvents(t *testing.T) {
 				e.SetID(id)
 				return &e
 			}(),
-			want: func() *hwevent.Event {
-				e := hweventv1.CloudNativeEvent()
-				e.SetDataContentType(hwevent.ApplicationJSON)
+			want: func() *cneevent.Event {
+				e := cneeventv1.CloudNativeEvent()
+				e.SetDataContentType(cneevent.ApplicationJSON)
 				e.SetTime(now.Time)
 				e.SetType(_type)
 				e.SetData(data)
@@ -141,7 +160,7 @@ func TestEvent_GetCloudNativeEvents(t *testing.T) {
 
 	for n, tc := range testCases {
 		t.Run(n, func(t *testing.T) {
-			event := hweventv1.CloudNativeEvent()
+			event := cneeventv1.CloudNativeEvent()
 			err := event.GetCloudNativeEvents(tc.ceEvent)
 			assert.Nil(t, err)
 			gotBytes, err := json.Marshal(event)
@@ -149,6 +168,7 @@ func TestEvent_GetCloudNativeEvents(t *testing.T) {
 				require.Error(t, err, *tc.wantErr)
 			}
 			assertCNEJsonEquals(t, tc.want, gotBytes)
+
 		})
 	}
 }
@@ -157,7 +177,7 @@ func assertCEJsonEquals(t *testing.T, want *ce.Event, got []byte) {
 	var gotToCompare map[string]interface{}
 	require.NoError(t, json.Unmarshal(got, &gotToCompare))
 
-	// Marshal and unmarshal `want` to make sure the types are correct
+	// Marshal and unmarshal want to make sure the types are correct
 	wantBytes, err := json.Marshal(want)
 	require.NoError(t, err)
 	var wantToCompare map[string]interface{}
@@ -166,11 +186,11 @@ func assertCEJsonEquals(t *testing.T, want *ce.Event, got []byte) {
 	require.Equal(t, wantToCompare, gotToCompare)
 }
 
-func assertCNEJsonEquals(t *testing.T, want *hwevent.Event, got []byte) {
+func assertCNEJsonEquals(t *testing.T, want *cneevent.Event, got []byte) {
 	var gotToCompare map[string]interface{}
 	require.NoError(t, json.Unmarshal(got, &gotToCompare))
 
-	// Marshal and unmarshal `want` to make sure the types are correct
+	// Marshal and unmarshal want to make sure the types are correct
 	wantBytes, err := json.Marshal(want)
 	require.NoError(t, err)
 	var wantToCompare map[string]interface{}

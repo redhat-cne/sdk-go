@@ -1,4 +1,4 @@
-// Copyright 2020 The Cloud Native Events Authors
+// Copyright 2021 The Cloud Native Events Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,16 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package hwevent_test
+package redfish_test
 
 import (
 	"encoding/json"
 	"testing"
 	"time"
 
-	"github.com/redhat-cne/sdk-go/pkg/channel"
 	"github.com/redhat-cne/sdk-go/pkg/event"
-	"github.com/redhat-cne/sdk-go/pkg/hwevent"
+	"github.com/redhat-cne/sdk-go/pkg/event/redfish"
 	"github.com/redhat-cne/sdk-go/pkg/types"
 	"github.com/stretchr/testify/require"
 )
@@ -58,21 +57,26 @@ var (
 func TestMarshal(t *testing.T) {
 	now := types.Timestamp{Time: time.Now().UTC()}
 	schemaURL := "http://example.com/schema"
-	_type := "HW_EVENT"
+	_type := string(redfish.Alert)
 	version := "v1"
-	data := hwevent.Data{}
+	data := event.Data{}
+	value := event.DataValue{
+		Resource:  resource,
+		DataType:  event.NOTIFICATION,
+		ValueType: event.REDFISH_EVENT,
+		Value:     REDFISH_EVENT_TMP0100,
+	}
 	data.SetVersion(version) //nolint:errcheck
-
-	data.Data = &REDFISH_EVENT_TMP0100
+	data.AppendValues(value) //nolint:errcheck
 
 	testCases := map[string]struct {
-		event   hwevent.Event
+		event   event.Event
 		want    map[string]interface{}
 		wantErr *string
 	}{
 		"struct Data v1": {
-			event: func() hwevent.Event {
-				e := hwevent.Event{Type: channel.Event}
+			event: func() event.Event {
+				e := event.Event{Type: string(redfish.Alert)}
 				e.SetDataContentType(event.ApplicationJSON)
 				_ = e.SetDataSchema(schemaURL)
 				e.Time = &now
@@ -83,8 +87,15 @@ func TestMarshal(t *testing.T) {
 			want: map[string]interface{}{
 				"dataContentType": "application/json",
 				"data": map[string]interface{}{
-					// NOTE: Marshal results in compact JSON format without whitespaces
-					"data":    JSON_EVENT_TMP0100,
+					"values": []interface{}{
+						map[string]interface{}{
+							"resource": resource,
+							"dataType": event.NOTIFICATION,
+							// NOTE: Marshal results in compact JSON format without whitespaces
+							"value":     JSON_EVENT_TMP0100,
+							"valueType": event.REDFISH_EVENT,
+						},
+					},
 					"version": "v1",
 				},
 				"id":         "",
@@ -108,14 +119,14 @@ func TestMarshal(t *testing.T) {
 }
 
 func assertJSONEquals(t *testing.T, want map[string]interface{}, got []byte) {
-	gotToCompare := hwevent.Event{}
+	gotToCompare := event.Event{}
 	require.NoError(t, json.Unmarshal(got, &gotToCompare))
 
 	// Marshal and unmarshal `want` to make sure the types are correct
 	// NOTE: json.Marshal from the standard `encoding/json` library is used here
 	wantBytes, err := json.Marshal(want)
 	require.NoError(t, err)
-	wantToCompare := hwevent.Event{}
+	wantToCompare := event.Event{}
 	require.NoError(t, json.Unmarshal(wantBytes, &wantToCompare))
 
 	require.Equal(t, wantToCompare, gotToCompare)

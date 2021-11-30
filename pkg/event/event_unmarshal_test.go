@@ -2,18 +2,20 @@ package event_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/redhat-cne/sdk-go/pkg/event"
+	"github.com/redhat-cne/sdk-go/pkg/event/ptp"
 	"github.com/redhat-cne/sdk-go/pkg/types"
 )
 
 func TestUnMarshal(t *testing.T) {
 	now := types.Timestamp{Time: time.Now().UTC()}
 	resource := "/cluster/node/ptp"
-	_type := "ptp_status_type"
+	_type := string(ptp.PtpStateChange)
 	version := "v1"
 	id := "ABC-1234"
 
@@ -57,7 +59,7 @@ func TestUnMarshal(t *testing.T) {
 							Resource:  resource,
 							DataType:  event.NOTIFICATION,
 							ValueType: event.ENUMERATION,
-							Value:     event.FREERUN,
+							Value:     string(ptp.FREERUN),
 						},
 						{
 							Resource:  resource,
@@ -104,7 +106,7 @@ func TestUnMarshal(t *testing.T) {
 							Resource:  resource,
 							DataType:  event.NOTIFICATION,
 							ValueType: event.ENUMERATION,
-							Value:     event.FREERUN,
+							Value:     string(ptp.FREERUN),
 						},
 						{
 							Resource:  resource,
@@ -117,6 +119,25 @@ func TestUnMarshal(t *testing.T) {
 			},
 			wantErr: nil,
 		},
+		"struct Data unSupportedValueType": {
+			body: mustJSONMarshal(t, map[string]interface{}{
+				"data": map[string]interface{}{
+					"resource": resource,
+					"values": []interface{}{
+						map[string]interface{}{
+							"resource":  resource,
+							"dataType":  "notification",
+							"value":     "FREERUN",
+							"valueType": "foo"}},
+					"version": version,
+				},
+				"id":         id,
+				"time":       now.Format(time.RFC3339Nano),
+				"type":       _type,
+				"dataSchema": nil,
+			}),
+			wantErr: fmt.Errorf("value type foo is not supported"),
+		},
 	}
 
 	for n, tc := range testCases {
@@ -125,7 +146,7 @@ func TestUnMarshal(t *testing.T) {
 			err := json.Unmarshal(tc.body, got)
 
 			if tc.wantErr != nil || err != nil {
-				if diff := cmp.Diff(tc.wantErr, err); diff != "" {
+				if diff := cmp.Diff(tc.wantErr.Error(), err.Error()); diff != "" {
 					t.Errorf("unexpected error (-want, +got) = %v", diff)
 				}
 				return

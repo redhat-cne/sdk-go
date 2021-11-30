@@ -20,6 +20,7 @@ import (
 	ce "github.com/cloudevents/sdk-go/v2"
 	"github.com/google/uuid"
 	cneevent "github.com/redhat-cne/sdk-go/pkg/event"
+	"github.com/redhat-cne/sdk-go/pkg/event/ptp"
 	cnepubsub "github.com/redhat-cne/sdk-go/pkg/pubsub"
 	"github.com/redhat-cne/sdk-go/pkg/types"
 	cneeventv1 "github.com/redhat-cne/sdk-go/v1/event"
@@ -36,7 +37,7 @@ var (
 	uriLocation = "http://localhost:9090/event/subscription/1234"
 	endPointURI = "http://localhost:8080/event/ack/event"
 	resource    = "/cluster/node/ptp"
-	_type       = "ptp_status_type"
+	_type       = string(ptp.PtpStateChange)
 	version     = "v1"
 	id          = uuid.New().String()
 	data        cneevent.Data
@@ -49,7 +50,7 @@ func setup() {
 		Resource:  resource,
 		DataType:  cneevent.NOTIFICATION,
 		ValueType: cneevent.ENUMERATION,
-		Value:     cneevent.ACQUIRING_SYNC,
+		Value:     ptp.ACQUIRING_SYNC,
 	}
 	data.SetVersion(version) //nolint:errcheck
 	data.AppendValues(value) //nolint:errcheck
