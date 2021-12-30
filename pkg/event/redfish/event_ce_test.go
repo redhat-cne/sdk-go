@@ -98,6 +98,7 @@ func TestEvent_NewCloudEvent(t *testing.T) {
 				e.SetDataContentType(cneevent.ApplicationJSON)
 				e.SetTime(now.Time)
 				e.SetType(_type)
+				e.SetSource(pubsub.GetResource())
 				e.SetData(data)
 				return &e
 			}(),
@@ -152,6 +153,7 @@ func TestEvent_GetCloudNativeEvents(t *testing.T) {
 				e.SetDataContentType(cneevent.ApplicationJSON)
 				e.SetTime(now.Time)
 				e.SetType(_type)
+				e.SetSource(pubsub.GetResource())
 				e.SetData(data)
 				return &e
 			}(),
