@@ -33,6 +33,7 @@ func TestMarshal(t *testing.T) {
 	schemaURL := "http://example.com/schema"
 	resource := "/cluster/node/ptp"
 	_type := string(ptp.PtpStateChange)
+	_source := "/cluster/node/example.com/ptp/clock_realtime"
 	version := "v1"
 	data := event.Data{}
 	value := []event.DataValue{{
@@ -69,6 +70,7 @@ func TestMarshal(t *testing.T) {
 				_ = e.SetDataSchema(schemaURL)
 				e.Time = &now
 				e.SetType(_type)
+				e.SetSource(_source)
 				e.SetData(data)
 
 				return e
@@ -92,6 +94,7 @@ func TestMarshal(t *testing.T) {
 				"id":         "",
 				"time":       now.Format(time.RFC3339Nano),
 				"type":       _type,
+				"source":     _source,
 				"dataSchema": schemaURL,
 			},
 		},

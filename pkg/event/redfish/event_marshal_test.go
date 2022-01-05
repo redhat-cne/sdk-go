@@ -58,6 +58,7 @@ func TestMarshal(t *testing.T) {
 	now := types.Timestamp{Time: time.Now().UTC()}
 	schemaURL := "http://example.com/schema"
 	_type := string(redfish.Alert)
+	_source := "/cluster/node/nodename/redfish/event"
 	version := "v1"
 	data := event.Data{}
 	value := event.DataValue{
@@ -81,6 +82,7 @@ func TestMarshal(t *testing.T) {
 				_ = e.SetDataSchema(schemaURL)
 				e.Time = &now
 				e.SetType(_type)
+				e.SetSource(_source)
 				e.SetData(data)
 				return e
 			}(),
@@ -101,6 +103,7 @@ func TestMarshal(t *testing.T) {
 				"id":         "",
 				"time":       now.Format(time.RFC3339Nano),
 				"type":       _type,
+				"source":     _source,
 				"dataSchema": schemaURL,
 			},
 		},

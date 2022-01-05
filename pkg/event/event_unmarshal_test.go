@@ -16,6 +16,7 @@ func TestUnMarshal(t *testing.T) {
 	now := types.Timestamp{Time: time.Now().UTC()}
 	resource := "/cluster/node/ptp"
 	_type := string(ptp.PtpStateChange)
+	_source := "/cluster/node/example.com/ptp/clock_realtime"
 	version := "v1"
 	id := "ABC-1234"
 
@@ -45,11 +46,13 @@ func TestUnMarshal(t *testing.T) {
 				"id":         id,
 				"time":       now.Format(time.RFC3339Nano),
 				"type":       _type,
+				"source":     _source,
 				"dataSchema": nil,
 			}),
 			want: &event.Event{
 				ID:         id,
 				Type:       _type,
+				Source:     _source,
 				Time:       &now,
 				DataSchema: nil,
 				Data: &event.Data{
@@ -91,11 +94,13 @@ func TestUnMarshal(t *testing.T) {
 				"id":         id,
 				"time":       now.Format(time.RFC3339Nano),
 				"type":       _type,
+				"source":     _source,
 				"dataSchema": nil,
 			}),
 			want: &event.Event{
 				ID:         id,
 				Type:       _type,
+				Source:     _source,
 				Time:       &now,
 				DataSchema: nil,
 				Data: &event.Data{
@@ -134,6 +139,7 @@ func TestUnMarshal(t *testing.T) {
 				"id":         id,
 				"time":       now.Format(time.RFC3339Nano),
 				"type":       _type,
+				"source":     _source,
 				"dataSchema": nil,
 			}),
 			wantErr: fmt.Errorf("value type foo is not supported"),

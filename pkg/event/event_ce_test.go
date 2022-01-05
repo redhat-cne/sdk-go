@@ -38,6 +38,7 @@ var (
 	endPointURI = "http://localhost:8080/event/ack/event"
 	resource    = "/cluster/node/ptp"
 	_type       = string(ptp.PtpStateChange)
+	_source     = "/cluster/node/example.com/ptp/clock_realtime"
 	version     = "v1"
 	id          = uuid.New().String()
 	data        cneevent.Data
@@ -73,10 +74,10 @@ func TestEvent_NewCloudEvent(t *testing.T) {
 		"struct Data v1": {
 			cneEvent: func() *cneevent.Event {
 				e := cneeventv1.CloudNativeEvent()
-
 				e.SetDataContentType(cneevent.ApplicationJSON)
 				e.SetTime(now.Time)
 				e.SetType(_type)
+				e.SetSource(_source)
 				e.SetData(data)
 				return &e
 			}(),
@@ -131,6 +132,7 @@ func TestEvent_GetCloudNativeEvents(t *testing.T) {
 				e.SetDataContentType(cneevent.ApplicationJSON)
 				e.SetTime(now.Time)
 				e.SetType(_type)
+				e.SetSource(pubsub.GetResource())
 				e.SetData(data)
 				return &e
 			}(),
