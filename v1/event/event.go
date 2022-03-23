@@ -111,6 +111,7 @@ func GetCloudNativeEvents(ce cloudevents.Event) (e event.Event, err error) {
 	e.SetTime(ce.Time())
 	e.SetType(ce.Type())
 	e.SetSource(ce.Source())
+	e.SetID(ce.ID())
 	e.SetData(data)
 	return
 }
