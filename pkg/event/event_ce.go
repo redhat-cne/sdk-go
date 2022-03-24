@@ -29,7 +29,6 @@ func (e *Event) NewCloudEvent(ps *pubsub.PubSub) (*cloudevent.Event, error) {
 	ce.SetTime(e.GetTime())
 	ce.SetType(e.Type)
 	ce.SetDataContentType(cloudevent.ApplicationJSON)
-	ce.SetSubject(e.Source)   // subject is set to source of the event object
 	ce.SetSource(ps.Resource) // bus address
 	ce.SetSpecVersion(cloudevent.VersionV03)
 	ce.SetID(uuid.New().String())
@@ -51,9 +50,7 @@ func (e *Event) GetCloudNativeEvents(ce *cloudevent.Event) (err error) {
 	e.SetDataContentType(ApplicationJSON)
 	e.SetTime(ce.Time())
 	e.SetType(ce.Type())
-	e.SetSource(ce.Subject())
+	e.SetSource(ce.Source())
 	e.SetData(data)
-	e.SetID(ce.ID())
-
 	return
 }
