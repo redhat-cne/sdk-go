@@ -120,7 +120,7 @@ func TestDeleteSender(t *testing.T) {
 	// create a listener
 	in <- &channel.DataChan{
 		Address: addr,
-		Type:    channel.SENDER,
+		Type:    channel.PUBLISHER,
 	}
 	time.Sleep(250 * time.Millisecond)
 	assert.Equal(t, 1, len(server.Senders))
@@ -129,7 +129,7 @@ func TestDeleteSender(t *testing.T) {
 	in <- &channel.DataChan{
 		Address: addr,
 		Status:  channel.DELETE,
-		Type:    channel.SENDER,
+		Type:    channel.PUBLISHER,
 	}
 	time.Sleep(250 * time.Millisecond)
 
@@ -156,7 +156,7 @@ func TestDeleteListener(t *testing.T) {
 	// create a listener
 	in <- &channel.DataChan{
 		Address:             addr,
-		Type:                channel.LISTENER,
+		Type:                channel.SUBSCRIBER,
 		Status:              channel.NEW,
 		ProcessEventFn:      func(e interface{}) error { return nil },
 		OnReceiveOverrideFn: func(e cloudevents.Event, dataChan *channel.DataChan) error { return nil },
@@ -167,7 +167,7 @@ func TestDeleteListener(t *testing.T) {
 	in <- &channel.DataChan{
 		Address: addr,
 		Status:  channel.DELETE,
-		Type:    channel.LISTENER,
+		Type:    channel.SUBSCRIBER,
 	}
 	// read data
 	time.Sleep(250 * time.Millisecond)
@@ -198,7 +198,7 @@ func TestSendSuccessStatus(t *testing.T) {
 	in <- &channel.DataChan{
 		Address:             fmt.Sprintf("%s/%s", addr, "status"),
 		Status:              channel.NEW,
-		Type:                channel.LISTENER,
+		Type:                channel.SUBSCRIBER,
 		ProcessEventFn:      func(e interface{}) error { return nil },
 		OnReceiveOverrideFn: func(e cloudevents.Event, dataChan *channel.DataChan) error { return nil },
 	}
@@ -206,7 +206,7 @@ func TestSendSuccessStatus(t *testing.T) {
 	// create a sender
 	in <- &channel.DataChan{
 		Address: fmt.Sprintf("%s/%s", addr, "status"),
-		Type:    channel.SENDER,
+		Type:    channel.PUBLISHER,
 	}
 
 	// ping for status, this will  send the  status check ping to the address
@@ -245,7 +245,7 @@ func TestSendFailureStatus(t *testing.T) {
 	in <- &channel.DataChan{
 		Address:        fmt.Sprintf("%s/%s", addr, "status"),
 		Status:         channel.NEW,
-		Type:           channel.LISTENER,
+		Type:           channel.SUBSCRIBER,
 		ProcessEventFn: func(e interface{}) error { return fmt.Errorf("EVENT PROCESS ERROR") },
 		OnReceiveOverrideFn: func(e cloudevents.Event, dataChan *channel.DataChan) error {
 			return fmt.Errorf("STATUS RECEEIVE ERROR")
@@ -255,7 +255,7 @@ func TestSendFailureStatus(t *testing.T) {
 	// create a sender
 	in <- &channel.DataChan{
 		Address: fmt.Sprintf("%s/%s", addr, "status"),
-		Type:    channel.SENDER,
+		Type:    channel.PUBLISHER,
 	}
 
 	// ping for status, this will  send the  status check ping to the address
@@ -290,13 +290,13 @@ func TestSendEvent(t *testing.T) {
 	// create a sender
 	in <- &channel.DataChan{
 		Address: addr,
-		Type:    channel.SENDER,
+		Type:    channel.PUBLISHER,
 	}
 
 	// create a listener
 	in <- &channel.DataChan{
 		Address: addr,
-		Type:    channel.LISTENER,
+		Type:    channel.SUBSCRIBER,
 	}
 
 	// send data
@@ -320,7 +320,7 @@ func TestSendEvent(t *testing.T) {
 	in <- &channel.DataChan{
 		Address:             fmt.Sprintf("%s/%s", addr, "status"),
 		Status:              channel.NEW,
-		Type:                channel.LISTENER,
+		Type:                channel.SUBSCRIBER,
 		ProcessEventFn:      func(e interface{}) error { return nil },
 		OnReceiveOverrideFn: func(e cloudevents.Event, dataChan *channel.DataChan) error { return nil },
 	}
@@ -328,7 +328,7 @@ func TestSendEvent(t *testing.T) {
 	// create a sender
 	in <- &channel.DataChan{
 		Address: fmt.Sprintf("%s/%s", addr, "status"),
-		Type:    channel.SENDER,
+		Type:    channel.PUBLISHER,
 	}
 
 	// ping for status, this will  send the  status check ping to the address
