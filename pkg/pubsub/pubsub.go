@@ -47,7 +47,7 @@ type PubSub struct {
 func (ps *PubSub) String() string {
 	b := strings.Builder{}
 	b.WriteString("  endpointURI: " + ps.GetEndpointURI() + "\n")
-	b.WriteString("  URILocation: " + ps.GetURILocation() + "\n")
+	b.WriteString("  HealthEndPoint: " + ps.GetURILocation() + "\n")
 	b.WriteString("  ID: " + ps.GetID() + "\n")
 	b.WriteString("  Resource: " + ps.GetResource() + "\n")
 	return b.String()

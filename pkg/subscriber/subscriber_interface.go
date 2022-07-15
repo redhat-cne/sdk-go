@@ -1,4 +1,10 @@
-// Copyright 2020 The Cloud Native Events Authors
+package subscriber
+
+import (
+	"github.com/redhat-cne/sdk-go/pkg/store"
+)
+
+// Copyright 2022 The Cloud Native Events Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,19 +18,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pubsub
-
 // Reader is the interface for reading through an event from attributes.
 type Reader interface {
-	// GetResource returns event.GetResource()
-	GetResource() string
-	// GetEndpointUri returns event.GetEndpointUri()
-	GetEndpointURI() string
+	// GetClientID returns event.GetResource()
+	GetClientID() string
 	// HealthEndPoint returns event.GetUriLocation()
 	GetURILocation() string
-	GetID() string
+	GetStatus() Status
 	// String returns a pretty-printed representation of the PubSub.
 	String() string
+	GetSubStore() *store.PubSubStore
 }
 
 // Writer is the interface for writing through an event onto attributes.
@@ -32,11 +35,11 @@ type Reader interface {
 // internally and exposes errors with a call to Writer.Validate().
 type Writer interface {
 	// Resource performs event.SetResource()
-	SetResource(string) error
-	// EndpointURI [erforms] event.SetEndpointURI()
-	SetEndpointURI(string) error
+	SetClientID(string)
+
 	// HealthEndPoint performs event.SetURILocation()
 	SetURILocation(string) error
 	// SetID performs event.SetID.
-	SetID(string)
+	SetStatus(status Status)
+	setSubStore(store store.PubSubStore)
 }
