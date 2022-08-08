@@ -17,11 +17,10 @@ import (
 )
 
 var (
-	storePath            = "./subscribers"
-	clientID             = "123e4567-e89b-12d3-a456-426614174000"
-	clientHealthEndPoint = &types.URI{URL: url.URL{Scheme: "http", Host: "localhost:8080", Path: "/event"}}
-	subscriptionOneID    = "123e4567-e89b-12d3-a456-426614174001"
-	subscriptionTwoID    = "123e4567-e89b-12d3-a456-426614174002"
+	storePath         = "./subscribers"
+	clientID          = "123e4567-e89b-12d3-a456-426614174000"
+	subscriptionOneID = "123e4567-e89b-12d3-a456-426614174001"
+	subscriptionTwoID = "123e4567-e89b-12d3-a456-426614174002"
 
 	subscriptionOne = &pubsub.PubSub{
 		ID:          subscriptionOneID,
@@ -43,7 +42,7 @@ var (
 			RWMutex: sync.RWMutex{},
 			Store:   map[string]*pubsub.PubSub{subscriptionOneID: subscriptionOne},
 		},
-		EndPointURI: &types.URI{URL: url.URL{Scheme: "http", Host: "localhost:8080", Path: "/helathz"}},
+		EndPointURI: &types.URI{URL: url.URL{Scheme: "http", Host: "localhost:8080", Path: "/health"}},
 		Status:      1,
 	}
 
@@ -53,7 +52,7 @@ var (
 			RWMutex: sync.RWMutex{},
 			Store:   map[string]*pubsub.PubSub{subscriptionOneID: subscriptionOne, subscriptionTwoID: subscriptionTwo},
 		},
-		EndPointURI: &types.URI{URL: url.URL{Scheme: "http", Host: "localhost:8080", Path: "/helathz"}},
+		EndPointURI: &types.URI{URL: url.URL{Scheme: "http", Host: "localhost:8080", Path: "/health"}},
 		Status:      1,
 	}
 
