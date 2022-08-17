@@ -171,7 +171,7 @@ func (p *API) CreateSubscription(clientID string, sub subscriber.Subscriber) (su
 		log.Errorf("error writing to a store %v\n", err)
 		return nil, err
 	}
-	log.Infof("subscriptionOne persisted into a file %s", fmt.Sprintf("%s/%s  - content %s", p.storeFilePath, fmt.Sprintf("%s.json", clientID), subscriptionClient.String()))
+	log.Infof("subscription persisted into a file %s", fmt.Sprintf("%s/%s  - content %s", p.storeFilePath, fmt.Sprintf("%s.json", clientID), subscriptionClient.String()))
 	// store the publisher
 
 	return subscriptionClient, nil
