@@ -112,7 +112,7 @@ func (h *Server) Start(wg *sync.WaitGroup) error {
 
 			if obj.Action == channel.NEW {
 				if _, ok := h.Sender[obj.GetEndPointURI()]; !ok { // we have a sender object
-					log.Infof("(1)subscriber not found for the following address %s by %s ,will attempt to create", e.Source(), obj.GetEndPointURI())
+					log.Infof("(1)subscriber not found for the following address %s by %s, will attempt to create", e.Source(), obj.GetEndPointURI())
 					if err := h.NewSender(obj.GetEndPointURI()); err != nil {
 						log.Errorf("(1)error creating subscriber %v for address %s", err, obj.GetEndPointURI())
 						localmetrics.UpdateSenderCreatedCount(obj.GetEndPointURI(), localmetrics.FAILED, 1)
@@ -261,13 +261,13 @@ func (h *Server) RegisterPublishers(publisherURL ...*types.URI) {
 		var found = false
 		for _, p2 := range h.Publishers {
 			if p2.String() == p1.String() {
-				log.Infof("publisher %s already exists ,skipping registration", p1)
+				log.Infof("publisher %s already exists, skipping registration", p1)
 				found = true
 				break
 			}
 		}
 		if !found {
-			log.Infof("publisher %s does not exists,registering", p1)
+			log.Infof("publisher %s does not exists, registering", p1)
 			publishers = append(publishers, p1)
 		}
 	}
@@ -359,19 +359,19 @@ func (h *Server) HTTPProcessor(wg *sync.WaitGroup) {
 
 					if len(h.Publishers) > 0 {
 						if err := Post(fmt.Sprintf("%s/subscription", h.Publishers[0]), *ce); err != nil {
-							log.Errorf("(1)error creating  eror: %v at  %s with data %s=%s", err, h.Publishers[0], ce.String(), ce.Data())
+							log.Errorf("(1)error creating: %v at  %s with data %s=%s", err, h.Publishers[0], ce.String(), ce.Data())
 							log.Errorf("Data sent Address := %s ", d.Address)
 							localmetrics.UpdateSenderCreatedCount(d.Address, localmetrics.ACTIVE, -1)
 							d.Status = channel.FAILED
 							h.DataOut <- d
 						} else {
-							log.Infof("successfully created subscriptionf for %s", d.Address)
+							log.Infof("successfully created subscription for %s", d.Address)
 							localmetrics.UpdateSenderCreatedCount(d.Address, localmetrics.ACTIVE, 1)
 							d.Status = channel.SUCCESS
 							h.DataOut <- d
 						}
 					} else {
-						log.Errorf("no publishere endpoint found to request for subscription %s", d.Address)
+						log.Errorf("no publisher endpoint found to request for subscription %s", d.Address)
 						d.Status = channel.FAILED
 						h.DataOut <- d
 					}
