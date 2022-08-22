@@ -12,61 +12,63 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package amqp_test
+package http_test
 
 import (
 	"testing"
 
 	"github.com/redhat-cne/sdk-go/pkg/channel"
-	api "github.com/redhat-cne/sdk-go/v1/amqp"
+	api "github.com/redhat-cne/sdk-go/v1/http"
 	"github.com/stretchr/testify/assert"
 )
 
 var (
+	storePath         = "."
 	outChan           = make(chan *channel.DataChan, 1)
 	address           = "test/test"
-	s                 = "amqp://localhost:5672"
+	port              = 8086
+	serverAddress     = "http://localhost:8086"
 	in                = make(chan *channel.DataChan)
 	out               = make(chan *channel.DataChan)
-	close             = make(chan struct{})
-	globalInstance, _ = api.GetAMQPInstance(s, in, out, close)
+	closeCh           = make(chan struct{})
+	globalInstance, _ = api.GetHTTPInstance(serverAddress, port, storePath, in, out, closeCh, nil, nil)
 )
 
 func TestAPI_GetAPIInstance(t *testing.T) {
-	localInstance, err := api.GetAMQPInstance(s, in, out, close)
+	localInstance, err := api.GetHTTPInstance(serverAddress, port, storePath, in, out, closeCh, nil, nil)
 	if err != nil {
-		t.Skipf("ampq.Dial(%#v): %v", localInstance, err)
+		t.Skipf("tcp.Dial(%#v): %v", localInstance, err)
 	}
 	assert.Equal(t, &globalInstance, &localInstance)
+	close(closeCh)
 }
 
-func TestCreateSender(t *testing.T) {
-	sender := &channel.DataChan{
+func TestCreateSubscription(t *testing.T) {
+	subscriber := &channel.DataChan{
 		Address: address,
 		Status:  channel.NEW,
-		Type:    channel.PUBLISHER,
+		Type:    channel.SUBSCRIBER,
 	}
-	outChan <- sender
+	outChan <- subscriber
 	data := <-outChan
-	assert.Equal(t, sender, data)
+	assert.Equal(t, subscriber, data)
 }
 
-func TestDeleteSender(t *testing.T) {
-	sender := &channel.DataChan{
-		Address: address,
-		Status:  channel.DELETE,
-		Type:    channel.PUBLISHER,
-	}
-	outChan <- sender
-	data := <-outChan
-	assert.Equal(t, sender, data)
-}
-
-func TestDeleteListener(t *testing.T) {
-	sender := &channel.DataChan{
+func TestDeleteSubscription(t *testing.T) {
+	subscriber := &channel.DataChan{
 		Address: address,
 		Status:  channel.DELETE,
 		Type:    channel.SUBSCRIBER,
+	}
+	outChan <- subscriber
+	data := <-outChan
+	assert.Equal(t, subscriber, data)
+}
+
+func TestStatusPing(t *testing.T) {
+	sender := &channel.DataChan{
+		Address: address,
+		Type:    channel.STATUS,
 	}
 	outChan <- sender
 	data := <-outChan
