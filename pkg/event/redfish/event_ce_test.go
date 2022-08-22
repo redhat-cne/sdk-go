@@ -81,7 +81,6 @@ func setup() {
 	_ = pubsub.SetURILocation(uriLocation)
 	_ = pubsub.SetEndpointURI(endPointURI)
 	pubsub.SetID(id)
-
 }
 
 func TestEvent_NewCloudEvent(t *testing.T) {
@@ -175,7 +174,6 @@ func TestEvent_GetCloudNativeEvents(t *testing.T) {
 				require.Error(t, err, *tc.wantErr)
 			}
 			assertCNEJsonEquals(t, tc.want, gotBytes)
-
 		})
 	}
 }

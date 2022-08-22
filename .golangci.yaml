@@ -6,7 +6,6 @@ run:
   skip-dirs:
     - vendor
     - .go
-    - pkg/event
     - pkg/util/wait
 
 output:
@@ -17,12 +16,12 @@ output:
 linters-settings:
   gocyclo:
     # minimal code complexity to report, 30 by default (but we recommend 10-20)
-    min-complexity: 7
+    min-complexity: 30
   govet:
     check-shadowing: false
   goconst:
     min-len: 3
-    min-occurrences: 2
+    min-occurrences: 4
 
 linters:
   disable-all: true
@@ -32,7 +31,7 @@ linters:
     - dogsled
     - errcheck
     - goconst
-    #- gocyclo
+    - gocyclo
     - goimports
     - revive
     - gosec

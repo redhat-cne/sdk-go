@@ -18,9 +18,8 @@ import (
 	jsoniter "github.com/json-iterator/go"
 )
 
-func readEventRecord(iter *jsoniter.Iterator) ([]EventRecord, error) {
+func readEventRecord(iter *jsoniter.Iterator) []EventRecord {
 	var result []EventRecord
-	var err error
 	for iter.ReadArray() {
 		e := EventRecord{}
 		for eField := iter.ReadObject(); eField != ""; eField = iter.ReadObject() {
@@ -62,8 +61,7 @@ func readEventRecord(iter *jsoniter.Iterator) ([]EventRecord, error) {
 		}
 		result = append(result, e)
 	}
-
-	return result, err
+	return result
 }
 
 // readJSONFromIterator allows you to read the bytes reader as an event
@@ -92,10 +90,7 @@ func readJSONFromIterator(out *Event, iter *jsoniter.Iterator) error {
 		case "Oem":
 			out.Oem = iter.SkipAndReturnBytes()
 		case "Events":
-			e, err := readEventRecord(iter)
-			if err != nil {
-				return err
-			}
+			e := readEventRecord(iter)
 			out.Events = e
 		default:
 			iter.Skip()
