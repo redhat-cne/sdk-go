@@ -44,7 +44,6 @@ func TestAPI_GetAPIInstance(t *testing.T) {
 }
 
 func TestCreateSubscription(t *testing.T) {
-
 	subscriber := &channel.DataChan{
 		Address: address,
 		Status:  channel.NEW,

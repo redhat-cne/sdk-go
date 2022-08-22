@@ -160,5 +160,4 @@ func clean() {
 
 func TestTeardown(t *testing.T) {
 	_ = os.Remove(fmt.Sprintf("%s/%s.json", storePath, clientID))
-
 }

@@ -138,16 +138,6 @@ func createClient(t *testing.T, clientS *ceHttp.Server, closeCh chan struct{}, w
 	}
 
 	<-closeCh
-
-	/*
-		s.SetType(channel.STATUS.String())
-		log.Infof("sending STATUS request")
-		if e2 := clientS.Post(serverAddress, s); e2 != nil {
-			log.Infof("failed to ping for status %s", e2.Error())
-		} else {
-			log.Infof("ping was successfull ")
-		}
-	*/
 }
 func TestSubscribeCreated(t *testing.T) {
 	in := make(chan *channel.DataChan, 10)
@@ -173,9 +163,7 @@ func TestSubscribeCreated(t *testing.T) {
 	d := <-eventChannel
 	assert.Equal(t, channel.SUBSCRIBER, d.Type)
 	assert.Equal(t, channel.SUCCESS, d.Status)
-
 	close(closeCh)
-
 }
 
 func TestSendEvent(t *testing.T) {
@@ -311,7 +299,6 @@ func TestHealth(t *testing.T) {
 	status, urlErr = ceHttp.GET(fmt.Sprintf("%s/health", serverAddress.String()))
 	assert.Nil(t, urlErr)
 	assert.Equal(t, http.StatusOK, status)
-
 }
 func TestTeardown(t *testing.T) {
 	_ = os.Remove(fmt.Sprintf("./%s.json", clientClientID.String()))

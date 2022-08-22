@@ -68,7 +68,6 @@ func readEventRecord(iter *jsoniter.Iterator) ([]EventRecord, error) {
 
 // readJSONFromIterator allows you to read the bytes reader as an event
 func readJSONFromIterator(out *Event, iter *jsoniter.Iterator) error {
-
 	for key := iter.ReadObject(); key != ""; key = iter.ReadObject() {
 		// Check if we have some error in our error cache
 		if iter.Error != nil {

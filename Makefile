@@ -16,9 +16,12 @@ build:test
 	make lint
 
 lint:
-	golint `go list ./... | grep -v vendor`
 	golangci-lint run
 test:
 	go test ./...  -coverprofile=cover.out
+
+# For GitHub Actions CI
+gha:
+	go test ./... --tags=unittests -coverprofile=cover.out
 
 
