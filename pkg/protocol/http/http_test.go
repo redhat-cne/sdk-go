@@ -31,9 +31,9 @@ var (
 	serverClientID, _ = uuid.Parse("d73555b4-b01e-4802-89f1-f058f215a1f8")
 	clientClientID, _ = uuid.Parse("5202d2c4-f652-4974-b24d-1934f0d819e3")
 	subscriptionOneID = "123e4567-e89b-12d3-a456-426614174001"
-	serverAddress     = types.ParseURI("http://localhost:8086")
+	serverAddress     = types.ParseURI("http://localhost:8089")
 	clientAddress     = types.ParseURI("http://localhost:8087")
-	hostPort          = 8086
+	hostPort          = 8089
 	clientPort        = 8087
 
 	subscriptionOne = &pubsub.PubSub{
@@ -219,7 +219,6 @@ func TestSendEvent(t *testing.T) {
 
 	time.Sleep(250 * time.Millisecond)
 	close(closeCh)
-	//close(closeClient)
 }
 
 func TestSendSuccessStatus(t *testing.T) {
@@ -274,7 +273,6 @@ func TestSendSuccessStatus(t *testing.T) {
 	err = json.Unmarshal(e.Data(), &dd)
 	assert.Nil(t, err)
 	assert.Equal(t, dd.Version, "1.0")
-
 	close(closeCh)
 	//waitTimeout(&wg, timeout)
 }
@@ -296,10 +294,70 @@ func TestHealth(t *testing.T) {
 	assert.Nil(t, err)
 	server.HTTPProcessor(&wg)
 	time.Sleep(2 * time.Second)
-	status, urlErr = ceHttp.GET(fmt.Sprintf("%s/health", serverAddress.String()))
+	status, urlErr = ceHttp.Get(fmt.Sprintf("%s/health", serverAddress.String()))
 	assert.Nil(t, urlErr)
 	assert.Equal(t, http.StatusOK, status)
+	close(closeCh)
 }
+
+func TestSender(t *testing.T) {
+	in := make(chan *channel.DataChan)
+	out := make(chan *channel.DataChan)
+	closeCh := make(chan struct{})
+
+	server, err := ceHttp.InitServer(serverAddress.String(), hostPort, storePath, in, out, closeCh, nil, nil)
+	if err != nil {
+		t.Skipf("http failed(%#v): %v", server, err)
+	}
+
+	wg := sync.WaitGroup{}
+	// Start the server and channel processor
+	err = server.Start(&wg)
+	assert.Nil(t, err)
+	server.HTTPProcessor(&wg)
+	time.Sleep(2 * time.Second)
+	err = server.NewSender(serverClientID, serverAddress.String())
+	assert.Nil(t, err)
+	sender := server.GetSender(serverClientID, ceHttp.HEALTH)
+	assert.NotNil(t, sender)
+	e := CloudEvents()
+	err = sender.Send(e)
+	assert.Nil(t, err)
+	close(closeCh)
+}
+
+func TestPing(t *testing.T) {
+	in := make(chan *channel.DataChan)
+	out := make(chan *channel.DataChan)
+	closeCh := make(chan struct{})
+
+	server, err := ceHttp.InitServer(serverAddress.String(), hostPort, storePath, in, out, closeCh, nil, nil)
+	if err != nil {
+		t.Skipf("http failed(%#v): %v", server, err)
+	}
+
+	wg := sync.WaitGroup{}
+	// Start the server and channel processor
+	err = server.Start(&wg)
+	server.RegisterPublishers(serverAddress)
+	assert.Nil(t, err)
+	server.HTTPProcessor(&wg)
+	time.Sleep(2 * time.Second)
+	err = server.NewSender(serverClientID, serverAddress.String())
+	assert.Nil(t, err)
+
+	// send event
+	in <- &channel.DataChan{
+		Address: subscriptionOne.Resource,
+		Status:  channel.NEW,
+		Type:    channel.STATUS,
+	}
+	d := <-out // a client needs to break out or else it will be holding it forever
+	assert.Equal(t, channel.STATUS, d.Type)
+
+	close(closeCh)
+}
+
 func TestTeardown(t *testing.T) {
 	_ = os.Remove(fmt.Sprintf("./%s.json", clientClientID.String()))
 }
