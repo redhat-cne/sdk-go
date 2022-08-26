@@ -8,6 +8,8 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/google/uuid"
+
 	"github.com/redhat-cne/sdk-go/pkg/pubsub"
 	"github.com/redhat-cne/sdk-go/pkg/store"
 	"github.com/redhat-cne/sdk-go/pkg/subscriber"
@@ -18,7 +20,7 @@ import (
 
 var (
 	storePath         = "./subscribers"
-	clientID          = "123e4567-e89b-12d3-a456-426614174000"
+	clientID, _       = uuid.Parse("123e4567-e89b-12d3-a456-426614174000")
 	subscriptionOneID = "123e4567-e89b-12d3-a456-426614174001"
 	subscriptionTwoID = "123e4567-e89b-12d3-a456-426614174002"
 
