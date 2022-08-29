@@ -65,7 +65,7 @@ type Server struct {
 	subscriberAPI *subscriberApi.API
 	//close on true
 	CloseCh                 <-chan struct{}
-	ClientID                uuid.UUID
+	clientID                uuid.UUID
 	httpServer              *http.Server
 	statusReceiveOverrideFn func(e cloudevents.Event, dataChan *channel.DataChan) error
 	processEventFn          func(e interface{}) error
@@ -88,7 +88,11 @@ func InitServer(serviceName string, port int, storePath string, dataIn <-chan *c
 		subscriberAPI:           subscriberApi.GetAPIInstance(storePath),
 		statusReceiveOverrideFn: onStatusReceiveOverrideFn,
 		processEventFn:          processEventFn,
-		ClientID:                uuid.New(), //TODO: Persists this UUID to save so when restarts uses same UUID
+		clientID: func(serviceName string) uuid.UUID {
+			var namespace = uuid.NameSpaceURL
+			var url = []byte(serviceName)
+			return uuid.NewMD5(namespace, url)
+		}(serviceName),
 	}
 	return &server, nil
 }
@@ -257,9 +261,9 @@ func (h *Server) Shutdown() {
 	h.httpServer.Close()
 }
 
-// SetClientID ...
-func (h *Server) SetClientID(clientID uuid.UUID) {
-	h.ClientID = clientID
+// ClientID ...
+func (h *Server) ClientID() uuid.UUID {
+	return h.clientID
 }
 
 // RegisterPublishers this will register publisher
@@ -346,7 +350,7 @@ func (h *Server) HTTPProcessor(wg *sync.WaitGroup) {
 			case d := <-h.DataIn: //skips publisher object processing
 				if d.Type == channel.SUBSCRIBER { // Listener  means subscriber aka sender
 					// Post it to the address that has been specified : to target URL
-					subs := subscriber.New(h.ClientID)
+					subs := subscriber.New(h.clientID)
 					//Self URL
 					_ = subs.SetEndPointURI(h.ServiceName)
 					obj := pubsub.PubSub{ // all we need is ID and  resource address
@@ -415,7 +419,7 @@ func (h *Server) HTTPProcessor(wg *sync.WaitGroup) {
 					//TODO: change to Get status for all events
 					// current implementation expects to have a resource address
 					// Post it to the address that has been specified : to target URL
-					subs := subscriber.New(h.ClientID)
+					subs := subscriber.New(h.clientID)
 					//Self URL
 					_ = subs.SetEndPointURI(h.ServiceName)
 					obj := pubsub.PubSub{}
