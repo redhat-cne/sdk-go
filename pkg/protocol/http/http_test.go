@@ -27,14 +27,24 @@ import (
 func strptr(s string) *string { return &s }
 
 var (
-	storePath         = "."
-	serverClientID, _ = uuid.Parse("d73555b4-b01e-4802-89f1-f058f215a1f8")
-	clientClientID, _ = uuid.Parse("5202d2c4-f652-4974-b24d-1934f0d819e3")
+	storePath = "."
+
 	subscriptionOneID = "123e4567-e89b-12d3-a456-426614174001"
 	serverAddress     = types.ParseURI("http://localhost:8089")
 	clientAddress     = types.ParseURI("http://localhost:8087")
 	hostPort          = 8089
 	clientPort        = 8087
+	serverClientID    = func(serviceName string) uuid.UUID {
+		var namespace = uuid.NameSpaceURL
+		var url = []byte(serviceName)
+		return uuid.NewMD5(namespace, url)
+	}(serverAddress.String())
+
+	clientClientID = func(serviceName string) uuid.UUID {
+		var namespace = uuid.NameSpaceURL
+		var url = []byte(serviceName)
+		return uuid.NewMD5(namespace, url)
+	}(clientAddress.String())
 
 	subscriptionOne = &pubsub.PubSub{
 		ID:       subscriptionOneID,
@@ -109,10 +119,7 @@ func createClient(t *testing.T, clientS *ceHttp.Server, closeCh chan struct{}, w
 	var err error
 	assert.Nil(t, clientS)
 	clientS, err = ceHttp.InitServer(clientAddress.String(), clientPort, storePath, in, clientOutChannel, closeCh, nil, nil)
-	if err != nil {
-		log.Infof("error creating client ")
-	}
-	clientS.ClientID = clientClientID
+	assert.Nil(t, err)
 	clientS.RegisterPublishers(serverAddress)
 	wg := sync.WaitGroup{}
 	time.Sleep(250 * time.Millisecond)
@@ -145,10 +152,7 @@ func TestSubscribeCreated(t *testing.T) {
 	closeCh := make(chan struct{})
 	eventChannel := make(chan *channel.DataChan, 10)
 	server, err := ceHttp.InitServer(serverAddress.String(), hostPort, storePath, in, out, closeCh, nil, nil)
-	if err != nil {
-		t.Skipf("http failed(%#v): %v", server, err)
-	}
-	server.ClientID = serverClientID
+	assert.Nil(t, err)
 
 	wg := sync.WaitGroup{}
 	// Start the server and channel proceesor
@@ -176,9 +180,7 @@ func TestSendEvent(t *testing.T) {
 	clientOutChannel := make(chan *channel.DataChan)
 	closeCh := make(chan struct{})
 	server, err := ceHttp.InitServer(serverAddress.String(), hostPort, storePath, in, out, closeCh, nil, nil)
-	if err != nil {
-		t.Skipf("http failed(%#v): %v", server, err)
-	}
+	assert.Nil(t, err)
 	wg := sync.WaitGroup{}
 	// Start the server and channel proceesor
 	err = server.Start(&wg)
@@ -241,9 +243,7 @@ func TestSendSuccessStatus(t *testing.T) {
 		}
 		return nil
 	}, nil)
-	if err != nil {
-		t.Skipf("http failed(%#v): %v", server, err)
-	}
+	assert.Nil(t, err)
 	wg := sync.WaitGroup{}
 	// Start the server and channel proceesor
 	err = server.Start(&wg)
@@ -284,9 +284,7 @@ func TestHealth(t *testing.T) {
 	var status int
 	var urlErr error
 	server, err := ceHttp.InitServer(serverAddress.String(), hostPort, storePath, in, out, closeCh, nil, nil)
-	if err != nil {
-		t.Skipf("http failed(%#v): %v", server, err)
-	}
+	assert.Nil(t, err)
 
 	wg := sync.WaitGroup{}
 	// Start the server and channel proceesor
@@ -306,10 +304,7 @@ func TestSender(t *testing.T) {
 	closeCh := make(chan struct{})
 
 	server, err := ceHttp.InitServer(serverAddress.String(), hostPort, storePath, in, out, closeCh, nil, nil)
-	if err != nil {
-		t.Skipf("http failed(%#v): %v", server, err)
-	}
-
+	assert.Nil(t, err)
 	wg := sync.WaitGroup{}
 	// Start the server and channel processor
 	err = server.Start(&wg)
@@ -332,9 +327,7 @@ func TestPing(t *testing.T) {
 	closeCh := make(chan struct{})
 
 	server, err := ceHttp.InitServer(serverAddress.String(), hostPort, storePath, in, out, closeCh, nil, nil)
-	if err != nil {
-		t.Skipf("http failed(%#v): %v", server, err)
-	}
+	assert.Nil(t, err)
 
 	wg := sync.WaitGroup{}
 	// Start the server and channel processor
