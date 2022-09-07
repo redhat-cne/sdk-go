@@ -143,7 +143,6 @@ func createClient(t *testing.T, clientS *ceHttp.Server, closeCh chan struct{}, w
 			Type:    channel.STATUS,
 		}
 	}
-
 	<-closeCh
 }
 func TestSubscribeCreated(t *testing.T) {
@@ -257,18 +256,22 @@ func TestSendSuccessStatus(t *testing.T) {
 	time.Sleep(500 * time.Millisecond)
 	assert.Equal(t, 1, len(server.Sender))
 	// read what client put in out channel
-	d := <-clientOutChannel
-	assert.Equal(t, channel.SUBSCRIBER, d.Type)
-	assert.Equal(t, channel.SUCCESS, d.Status)
-	// read Status
-	d = <-clientOutChannel
-	assert.Equal(t, channel.EVENT, d.Type)
-	assert.Equal(t, channel.NEW, d.Status)
+	select {
+	case d := <-clientOutChannel:
+		assert.Equal(t, channel.SUBSCRIBER, d.Type)
+		assert.Equal(t, channel.SUCCESS, d.Status)
+	case <-time.After(1 * time.Second):
+		log.Infof("timeout reading out channel ")
+	}
+
+	select {
+	case d := <-clientOutChannel:
+		assert.Equal(t, channel.EVENT, d.Type)
+		assert.Equal(t, channel.NEW, d.Status)
+	case <-time.After(1 * time.Second):
+		log.Infof("timeout reading out channel")
+	}
 	<-out
-	// read event
-	log.Info("waiting for event channel from the client when it received the event")
-	d = <-clientOutChannel // a client needs to break out or else it will be holding it forever
-	assert.Equal(t, channel.STATUS, d.Type)
 	dd := cneevent.Data{}
 	err = json.Unmarshal(e.Data(), &dd)
 	assert.Nil(t, err)
@@ -325,8 +328,10 @@ func TestPing(t *testing.T) {
 	in := make(chan *channel.DataChan)
 	out := make(chan *channel.DataChan)
 	closeCh := make(chan struct{})
-
-	server, err := ceHttp.InitServer(serverAddress.String(), hostPort, storePath, in, out, closeCh, nil, nil)
+	onStatusReceiveOverrideFn := func(e event.Event, d *channel.DataChan) error {
+		return nil
+	}
+	server, err := ceHttp.InitServer(serverAddress.String(), hostPort, storePath, in, out, closeCh, onStatusReceiveOverrideFn, nil)
 	assert.Nil(t, err)
 
 	wg := sync.WaitGroup{}
@@ -338,15 +343,21 @@ func TestPing(t *testing.T) {
 	time.Sleep(2 * time.Second)
 	err = server.NewSender(serverClientID, serverAddress.String())
 	assert.Nil(t, err)
-
-	// send event
+	// send status ping
 	in <- &channel.DataChan{
-		Address: subscriptionOne.Resource,
-		Status:  channel.NEW,
-		Type:    channel.STATUS,
+		Address:  subscriptionOne.Resource,
+		ClientID: serverClientID,
+		Status:   channel.NEW,
+		Type:     channel.STATUS,
 	}
-	d := <-out // a client needs to break out or else it will be holding it forever
-	assert.Equal(t, channel.STATUS, d.Type)
+	select {
+	case d := <-out:
+		assert.Equal(t, channel.STATUS, d.Type)
+		assert.Equal(t, channel.SUCCESS, d.Status)
+		assert.Equal(t, serverClientID, server.ClientID())
+	case <-time.After(1 * time.Second):
+		log.Infof("timeout reading out channel ")
+	}
 
 	close(closeCh)
 }
