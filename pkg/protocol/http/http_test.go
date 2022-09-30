@@ -3,6 +3,7 @@ package http_test
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -59,6 +60,25 @@ var (
 	_type        = string(ptp.PtpStateChange)
 )
 
+// CloudEvents return cloud events objects
+func CloudEvents() cloudevents.Event {
+	e := cloudevents.Event{
+		Context: cloudevents.EventContextV1{
+			Type:       _type,
+			Source:     ceSource,
+			ID:         "full-event",
+			Time:       &ceTimestamp,
+			DataSchema: &ceSchema,
+			Subject:    strptr("topic"),
+		}.AsV1(),
+	}
+	cne := CloudNativeEvents()
+
+	_ = e.SetData(cloudevents.ApplicationJSON, cne.Data)
+
+	return e
+}
+
 // CloudNativeEvents generates cloud events for testing
 func CloudNativeEvents() cneevent.Event {
 	data := cneevent.Data{}
@@ -84,37 +104,8 @@ func CloudNativeEvents() cneevent.Event {
 	return cne
 }
 
-//CloudEvents return cloud events objects
-func CloudEvents() cloudevents.Event {
-	data := cneevent.Data{}
-	value := cneevent.DataValue{
-		Resource:  subscriptionOne.Resource,
-		DataType:  cneevent.NOTIFICATION,
-		ValueType: cneevent.ENUMERATION,
-		Value:     ptp.ACQUIRING_SYNC,
-	}
-	data.SetVersion("1.0")   //nolint:errcheck
-	data.AppendValues(value) //nolint:errcheck
-
-	e := cloudevents.Event{
-		Context: cloudevents.EventContextV1{
-			Type:       _type,
-			Source:     ceSource,
-			ID:         "full-event",
-			Time:       &ceTimestamp,
-			DataSchema: &ceSchema,
-			Subject:    strptr("topic"),
-		}.AsV1(),
-	}
-	cne := CloudNativeEvents()
-
-	_ = e.SetData(cloudevents.ApplicationJSON, cne.Data)
-
-	return e
-}
-
 // client  registers with server and ask for status , also receive any event that was generated
-func createClient(t *testing.T, clientS *ceHttp.Server, closeCh chan struct{}, withStatus bool, clientOutChannel chan *channel.DataChan) {
+func createClient(t *testing.T, clientS *ceHttp.Server, closeCh chan struct{}, clientOutChannel chan *channel.DataChan) {
 	in := make(chan *channel.DataChan, 10)
 	var err error
 	assert.Nil(t, clientS)
@@ -135,14 +126,7 @@ func createClient(t *testing.T, clientS *ceHttp.Server, closeCh chan struct{}, w
 		Type:    channel.SUBSCRIBER,
 	}
 	time.Sleep(250 * time.Millisecond)
-	if withStatus {
-		// ping for status, this will  send the  status check ping to the address
-		in <- &channel.DataChan{
-			Address: subscriptionOne.Resource,
-			Status:  channel.NEW,
-			Type:    channel.STATUS,
-		}
-	}
+
 	<-closeCh
 }
 func TestSubscribeCreated(t *testing.T) {
@@ -159,7 +143,7 @@ func TestSubscribeCreated(t *testing.T) {
 	assert.Nil(t, err)
 	server.HTTPProcessor(&wg)
 	var clientS *ceHttp.Server
-	go createClient(t, clientS, closeCh, false, eventChannel)
+	go createClient(t, clientS, closeCh, eventChannel)
 	time.Sleep(500 * time.Millisecond)
 	<-out
 	assert.Equal(t, 1, len(server.Sender))
@@ -187,7 +171,7 @@ func TestSendEvent(t *testing.T) {
 	server.HTTPProcessor(&wg)
 	time.Sleep(500 * time.Millisecond)
 	var clientS *ceHttp.Server
-	go createClient(t, clientS, closeCh, false, clientOutChannel)
+	go createClient(t, clientS, closeCh, clientOutChannel)
 	//  read what server has in outChannel
 	<-out
 	time.Sleep(500 * time.Millisecond)
@@ -222,13 +206,12 @@ func TestSendEvent(t *testing.T) {
 	close(closeCh)
 }
 
-func TestSendSuccessStatus(t *testing.T) {
+func TestSendSuccess(t *testing.T) {
 	//time.Sleep(250 * time.Millisecond)
 
 	//closeClient := make(chan struct{})
 	//createClient(clientAddress, closeClient)
 
-	e := CloudEvents()
 	in := make(chan *channel.DataChan)
 	out := make(chan *channel.DataChan)
 	clientOutChannel := make(chan *channel.DataChan)
@@ -244,38 +227,17 @@ func TestSendSuccessStatus(t *testing.T) {
 	}, nil)
 	assert.Nil(t, err)
 	wg := sync.WaitGroup{}
-	// Start the server and channel proceesor
+	// Start the server and channel processor
 	err = server.Start(&wg)
 	assert.Nil(t, err)
 	server.HTTPProcessor(&wg)
 
 	// create a sender
 	var clientS *ceHttp.Server
-	go createClient(t, clientS, closeCh, true, clientOutChannel)
-	<-out
+	go createClient(t, clientS, closeCh, clientOutChannel)
 	time.Sleep(500 * time.Millisecond)
-	assert.Equal(t, 1, len(server.Sender))
-	// read what client put in out channel
-	select {
-	case d := <-clientOutChannel:
-		assert.Equal(t, channel.SUBSCRIBER, d.Type)
-		assert.Equal(t, channel.SUCCESS, d.Status)
-	case <-time.After(1 * time.Second):
-		log.Infof("timeout reading out channel ")
-	}
-
-	select {
-	case d := <-clientOutChannel:
-		assert.Equal(t, channel.EVENT, d.Type)
-		assert.Equal(t, channel.NEW, d.Status)
-	case <-time.After(1 * time.Second):
-		log.Infof("timeout reading out channel")
-	}
 	<-out
-	dd := cneevent.Data{}
-	err = json.Unmarshal(e.Data(), &dd)
-	assert.Nil(t, err)
-	assert.Equal(t, dd.Version, "1.0")
+	assert.Equal(t, 1, len(server.Sender))
 	close(closeCh)
 	//waitTimeout(&wg, timeout)
 }
@@ -324,11 +286,13 @@ func TestSender(t *testing.T) {
 	close(closeCh)
 }
 
-func TestPing(t *testing.T) {
+func TestStatus(t *testing.T) {
 	in := make(chan *channel.DataChan)
 	out := make(chan *channel.DataChan)
 	closeCh := make(chan struct{})
 	onStatusReceiveOverrideFn := func(e event.Event, d *channel.DataChan) error {
+		ce := CloudEvents()
+		d.Data = &ce
 		return nil
 	}
 	server, err := ceHttp.InitServer(serverAddress.String(), hostPort, storePath, in, out, closeCh, onStatusReceiveOverrideFn, nil)
@@ -344,20 +308,30 @@ func TestPing(t *testing.T) {
 	err = server.NewSender(serverClientID, serverAddress.String())
 	assert.Nil(t, err)
 	// send status ping
-	in <- &channel.DataChan{
-		Address:  subscriptionOne.Resource,
-		ClientID: serverClientID,
-		Status:   channel.NEW,
-		Type:     channel.STATUS,
+	hClient := &http.Client{
+		Transport: &http.Transport{
+			MaxIdleConnsPerHost: 20,
+		},
+		Timeout: 10 * time.Second,
 	}
-	select {
-	case d := <-out:
-		assert.Equal(t, channel.STATUS, d.Type)
-		assert.Equal(t, channel.SUCCESS, d.Status)
-		assert.Equal(t, serverClientID, server.ClientID())
-	case <-time.After(1 * time.Second):
-		log.Infof("timeout reading out channel ")
+	requestURL := fmt.Sprintf("%s/%s/%s/CurrentState", serverAddress.String(), subscriptionOne.Resource, clientClientID)
+	log.Printf(requestURL)
+	req, err := http.NewRequest("GET", requestURL, nil)
+	assert.Nil(t, err)
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := hClient.Do(req)
+	assert.Nil(t, err)
+	defer resp.Body.Close()
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	assert.Nil(t, err)
+	ce := cloudevents.Event{}
+	err = json.Unmarshal(bodyBytes, &ce)
+	log.Info(string(bodyBytes))
+	if e, ok := err.(*json.SyntaxError); ok {
+		log.Infof("syntax error at byte offset %d", e.Offset)
 	}
+
+	assert.Nil(t, err)
 
 	close(closeCh)
 }
