@@ -3,7 +3,7 @@ package http_test
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -322,7 +322,7 @@ func TestStatus(t *testing.T) {
 	resp, err := hClient.Do(req)
 	assert.Nil(t, err)
 	defer resp.Body.Close()
-	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	bodyBytes, err := io.ReadAll(resp.Body)
 	assert.Nil(t, err)
 	ce := cloudevents.Event{}
 	err = json.Unmarshal(bodyBytes, &ce)
