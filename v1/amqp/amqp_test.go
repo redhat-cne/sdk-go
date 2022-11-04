@@ -44,7 +44,7 @@ func TestCreateSender(t *testing.T) {
 	sender := &channel.DataChan{
 		Address: address,
 		Status:  channel.NEW,
-		Type:    channel.SENDER,
+		Type:    channel.PUBLISHER,
 	}
 	outChan <- sender
 	data := <-outChan
@@ -55,7 +55,7 @@ func TestDeleteSender(t *testing.T) {
 	sender := &channel.DataChan{
 		Address: address,
 		Status:  channel.DELETE,
-		Type:    channel.SENDER,
+		Type:    channel.PUBLISHER,
 	}
 	outChan <- sender
 	data := <-outChan
@@ -66,7 +66,7 @@ func TestDeleteListener(t *testing.T) {
 	sender := &channel.DataChan{
 		Address: address,
 		Status:  channel.DELETE,
-		Type:    channel.LISTENER,
+		Type:    channel.SUBSCRIBER,
 	}
 	outChan <- sender
 	data := <-outChan
