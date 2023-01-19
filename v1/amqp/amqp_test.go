@@ -16,6 +16,7 @@ package amqp_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/redhat-cne/sdk-go/pkg/channel"
 	api "github.com/redhat-cne/sdk-go/v1/amqp"
@@ -29,11 +30,12 @@ var (
 	in                = make(chan *channel.DataChan)
 	out               = make(chan *channel.DataChan)
 	close             = make(chan struct{})
-	globalInstance, _ = api.GetAMQPInstance(s, in, out, close)
+	timeout           = 1 * time.Second
+	globalInstance, _ = api.GetAMQPInstance(s, in, out, close, timeout)
 )
 
 func TestAPI_GetAPIInstance(t *testing.T) {
-	localInstance, err := api.GetAMQPInstance(s, in, out, close)
+	localInstance, err := api.GetAMQPInstance(s, in, out, close, timeout)
 	if err != nil {
 		t.Skipf("ampq.Dial(%#v): %v", localInstance, err)
 	}
