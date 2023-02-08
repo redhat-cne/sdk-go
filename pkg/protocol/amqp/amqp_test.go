@@ -72,7 +72,7 @@ func CloudNativeEvents() cneevent.Event {
 	return cne
 }
 
-//CloudEvents return cloud events objects
+// CloudEvents return cloud events objects
 func CloudEvents() cloudevents.Event {
 	data := cneevent.Data{}
 	value := cneevent.DataValue{
