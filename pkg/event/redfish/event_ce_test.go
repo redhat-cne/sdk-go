@@ -34,7 +34,7 @@ import (
 
 var (
 	now         = types.Timestamp{Time: time.Now().UTC()}
-	uriLocation = "http://localhost:8089/api/cloudNotifications/v1/subscriptions/da42fb86-819e-47c5-84a3-5512d5a3c732"
+	uriLocation = "http://localhost:8089/api/ocloudNotifications/v1/subscriptions/da42fb86-819e-47c5-84a3-5512d5a3c732"
 	endPointURI = "http://localhost:9089/event"
 	resource    = "/cluster/node/nodename/redfish/event"
 	_source     = "/cluster/node/nodename/redfish/event/fan"
