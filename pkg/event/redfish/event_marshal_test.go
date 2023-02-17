@@ -51,6 +51,12 @@ var (
 		},
 		"Id":   "5e004f5a-e3d1-11eb-ae9c-3448edf18a38",
 		"Name": "Event Array",
+		"Oem": map[string]interface{}{
+			"Dell": map[string]interface{}{
+				"@odata.type":    "#DellEvent.v1_0_0.DellEvent",
+				"ServerHostname": "",
+			},
+		},
 	}
 )
 

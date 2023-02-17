@@ -63,6 +63,7 @@ var (
 		Events:       []redfish.EventRecord{EVENT_RECORD_TMP0100},
 		ID:           "5e004f5a-e3d1-11eb-ae9c-3448edf18a38",
 		Name:         "Event Array",
+		Oem:          []byte(`{"Dell":{"@odata.type":"#DellEvent.v1_0_0.DellEvent","ServerHostname":""}}`),
 	}
 )
 
