@@ -20,6 +20,7 @@ import (
 	"github.com/redhat-cne/sdk-go/pkg/event/ptp"
 	ceHttp "github.com/redhat-cne/sdk-go/pkg/protocol/http"
 	"github.com/redhat-cne/sdk-go/pkg/pubsub"
+	"github.com/redhat-cne/sdk-go/pkg/subscriber"
 	"github.com/redhat-cne/sdk-go/pkg/types"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -330,12 +331,147 @@ func TestStatus(t *testing.T) {
 	if e, ok := err.(*json.SyntaxError); ok {
 		log.Infof("syntax error at byte offset %d", e.Offset)
 	}
-
 	assert.Nil(t, err)
-
 	close(closeCh)
 }
 
+func TestPostSubscription(t *testing.T) {
+	in := make(chan *channel.DataChan)
+	out := make(chan *channel.DataChan)
+	closeCh := make(chan struct{})
+	server, err := ceHttp.InitServer(serverAddress.String(), hostPort, storePath, in, out, closeCh, nil, nil)
+	assert.Nil(t, err)
+
+	wg := sync.WaitGroup{}
+	// Start the server and channel proceesor
+	err = server.Start(&wg)
+	assert.Nil(t, err)
+	server.HTTPProcessor(&wg)
+	time.Sleep(2 * time.Second)
+	subs := subscriber.New(clientClientID)
+	//Self URL
+	_ = subs.SetEndPointURI(clientAddress.String())
+	obj := pubsub.PubSub{ // all we need is ID and  resource address
+		ID:       subscriptionOneID,
+		Resource: subscriptionOne.Resource,
+	}
+	go func() {
+		select {
+		case <-closeCh:
+			return
+		case <-in:
+			return
+		}
+	}()
+	// create a subscriber model
+	subs.AddSubscription(obj)
+	subs.Action = channel.NEW
+	ce, _ := subs.CreateCloudEvents()
+	ce.SetSubject(channel.NEW.String())
+	ce.SetSource(subscriptionOne.Resource)
+
+	err = ceHttp.Post(fmt.Sprintf("%s/subscription", serverAddress.String()), *ce)
+	assert.Nil(t, err)
+
+	subs.Action = channel.DELETE
+	ce, _ = subs.CreateCloudEvents()
+	ce.SetSubject(channel.DELETE.String())
+	log.Infof("`deleting` subscriber for clientID %s", clientAddress)
+	err = ceHttp.Post(fmt.Sprintf("%s/subscription", serverAddress.String()), *ce)
+	if err != nil {
+		log.Infof("error %s", err.Error())
+	}
+
+	assert.Nil(t, err)
+	close(closeCh)
+}
+
+func TestStaleSubscribers(t *testing.T) {
+	type DeleteAssert struct {
+		Type   channel.Type
+		Status channel.Status
+	}
+	in := make(chan *channel.DataChan)
+	out := make(chan *channel.DataChan)
+	closeCh := make(chan struct{})
+	done := make(chan DeleteAssert, 2)
+	server, err := ceHttp.InitServer(serverAddress.String(), hostPort, storePath, in, out, closeCh, nil, nil)
+	assert.Nil(t, err)
+
+	wg := sync.WaitGroup{}
+	// Start the server and channel proceesor
+	err = server.Start(&wg)
+	assert.Nil(t, err)
+	server.HTTPProcessor(&wg)
+	time.Sleep(2 * time.Second)
+	subs := subscriber.New(clientClientID)
+	//Self URL
+	_ = subs.SetEndPointURI(clientAddress.String())
+	obj := pubsub.PubSub{ // all we need is ID and  resource address
+		ID:       subscriptionOneID,
+		Resource: subscriptionOne.Resource,
+	}
+	go func() {
+		for {
+			select {
+			case <-closeCh:
+				break
+			case o := <-out:
+				if o.Status == channel.DELETE && o.Type == channel.SUBSCRIBER {
+					done <- DeleteAssert{
+						Type:   o.Type,
+						Status: o.Status,
+					}
+					break
+				}
+			case <-time.After(3 * time.Second):
+				done <- DeleteAssert{
+					Type:   channel.SUBSCRIBER,
+					Status: channel.NEW,
+				}
+				break
+			}
+		}
+	}()
+	// create a subscriber model
+	subs.AddSubscription(obj)
+	subs.Action = channel.NEW
+	ce, _ := subs.CreateCloudEvents()
+	ce.SetSubject(channel.NEW.String())
+	ce.SetSource(subscriptionOne.Resource)
+
+	// create subscription with server
+	err = ceHttp.Post(fmt.Sprintf("%s/subscription", serverAddress.String()), *ce)
+	assert.Nil(t, err)
+	// now send 10 events to check dead client
+	e := CloudEvents()
+	// Generate events
+	for i := 0; i < 20; i++ {
+		in <- &channel.DataChan{
+			Address: subscriptionOne.Resource,
+			Data:    &e,
+			Status:  channel.NEW,
+			Type:    channel.EVENT,
+		}
+		time.Sleep(500 * time.Millisecond)
+	}
+	d := <-done
+	assert.Equal(t, channel.SUBSCRIBER, d.Type)
+	assert.Equal(t, channel.DELETE, d.Status)
+	// send for main thread  to delete subscriber
+	assert.Equal(t, 1, len(server.Sender))
+	server.HTTPProcessor(&wg)
+	in <- &channel.DataChan{
+		ClientID: clientClientID,
+		Data:     &e,
+		Status:   d.Status,
+		Type:     d.Type,
+	}
+	assert.Equal(t, 1, len(server.Sender))
+	time.Sleep(5 * time.Second)
+	assert.Equal(t, 0, len(server.Sender))
+	close(closeCh)
+}
 func TestTeardown(t *testing.T) {
 	_ = os.Remove(fmt.Sprintf("./%s.json", clientClientID.String()))
 }

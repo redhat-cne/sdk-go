@@ -28,75 +28,75 @@ These metrics describe the status of the cloud native events, publisher and subs
 
 All these metrics are prefixed with `cne_`
 
-| Name                                                  | Description                                              | Type    |
-|-------------------------------------------------------|----------------------------------------------------------|---------|
-| cne_amqp_events_received          | Metric to get number of events received  by the transport.   | Gauge |
-| cne_amqp_events_published     | Metric to get number of events published by the transport.  | Gauge   |
-| cne_amqp_connection_reset     | Metric to get number of connection resets.  | Gauge   |
-| cne_amqp_sender     | Metric to get number of sender created.  | Gauge   |
-| cne_amqp_receiver     | Metric to get number of receiver created.  | Gauge   |
-| cne_amqp_status_check_published | Metric to get number of status check published by the transport | Gauge |
+| Name                        | Description                                              | Type    |
+|-----------------------------|----------------------------------------------------------|---------|
+| cne_transport_events_received | Metric to get number of events received  by the transport.   | Gauge |
+| cne_transport_events_published       | Metric to get number of events published by the transport.  | Gauge   |
+| cne_transport_connection_reset   | Metric to get number of connection resets.  | Gauge   |
+| cne_transport_sender             | Metric to get number of sender created.  | Gauge   |
+| cne_transport_receiver           | Metric to get number of receiver created.  | Gauge   |
+| cne_transport_status_check_published | Metric to get number of status check published by the transport | Gauge |
 
-`cne_amqp_events_received` -  The number of events received by the amqp protocol, and their status by address.
+`cne_transport_events_received` -  The number of events received by the transport protocol, and their status by address.
 
 Example
-```json 
-# HELP cne_amqp_events_received Metric to get number of events received  by the transport
-# TYPE cne_amqp_events_received gauge
-cne_amqp_events_received{address="/news-service/finance",status="success"} 8
-cne_amqp_events_received{address="/news-service/sports",status="success"} 8
+``` 
+# HELP cne_transport_events_received Metric to get number of events received  by the transport
+# TYPE cne_transport_events_received gauge
+cne_transport_events_received{address="/news-service/finance",status="success"} 8
+cne_transport_events_received{address="/news-service/sports",status="success"} 8
 ```
 
-`cne_amqp_events_published` -  This metrics indicates number of events that were published via amqp , grouped by address and status.
+`cne_transport_events_published` -  This metrics indicates number of events that were published via transport , grouped by address and status.
 
 Example
-```json
-# HELP cne_amqp_events_published Metric to get number of events published by the transport
-# TYPE cne_amqp_events_published gauge
-cne_amqp_events_published{address="/news-service/finance",status="connection reset"} 1
-cne_amqp_events_published{address="/news-service/finance",status="success"} 8
-cne_amqp_events_published{address="/news-service/sports",status="connection reset"} 1
-cne_amqp_events_published{address="/news-service/sports",status="success"} 8
+```
+# HELP cne_transport_events_published Metric to get number of events published by the transport
+# TYPE cne_transport_events_published gauge
+cne_transport_events_published{address="/news-service/finance",status="connection reset"} 1
+cne_transport_events_published{address="/news-service/finance",status="success"} 8
+cne_transport_events_published{address="/news-service/sports",status="connection reset"} 1
+cne_transport_events_published{address="/news-service/sports",status="success"} 8
 ```
 
-`cne_amqp_connection_reset` -  This metrics indicates number of types amqp connection was reset
+`cne_transport_connection_reset` -  This metrics indicates number of types transport connection was reset
 
 Example
-```json
-# HELP cne_amqp_connection_reset Metric to get number of connection resets
-# TYPE cne_amqp_connection_reset gauge
-cne_amqp_connection_reset 1
+```
+# HELP cne_transport_connection_reset Metric to get number of connection resets
+# TYPE cne_transport_connection_reset gauge
+cne_transport_connection_reset 1
 ```
 
-`cne_amqp_sender` -  This metrics indicates number of amqp sender objects were created , grouped by address and status.
+`cne_transport_sender` -  This metrics indicates number of transport sender objects were created , grouped by address and status.
 
 Example
-```json
-# HELP cne_amqp_sender Metric to get number of sender active
-# TYPE cne_amqp_sender gauge
-cne_amqp_sender{address="/news-service/finance",status="active"} 1
-cne_amqp_sender{address="/news-service/sports",status="active"} 1
+```
+# HELP cne_transport_sender Metric to get number of sender active
+# TYPE cne_transport_sender gauge
+cne_transport_sender{address="/news-service/finance",status="active"} 1
+cne_transport_sender{address="/news-service/sports",status="active"} 1
 ```
 
-`cne_amqp_receiver` -  This metrics indicates number of amqp receiver objects were created, grouped by address and status.
+`cne_transport_receiver` -  This metrics indicates number of transport receiver objects were created, grouped by address and status.
 
 Example
-```json
-# HELP cne_amqp_receiver Metric to get number of receiver active
-# TYPE cne_amqp_receiver gauge
-cne_amqp_receiver{address="/news-service/finance",status="active"} 1
-cne_amqp_receiver{address="/news-service/sports",status="active"} 1
+```
+# HELP cne_transport_receiver Metric to get number of receiver active
+# TYPE cne_transport_receiver gauge
+cne_transport_receiver{address="/news-service/finance",status="active"} 1
+cne_transport_receiver{address="/news-service/sports",status="active"} 1
 ```
 
-`cne_amqp_status_check_published` -  This metrics indicates status check that were published via amqp , grouped by address and status.
+`cne_transport_status_check_published` -  This metrics indicates status check that were published via transport , grouped by address and status.
 
 Example
-```json
-# HELP cne_amqp_status_check_published  Metric to get number of status check published by the transport
-# TYPE cne_amqp_status_check_published gauge
-cne_amqp_status_check_published{address="/news-service/finance/status",status="failed"} 1
-cne_amqp_status_check_published{address="/news-service/sports/status",status="connection reset"} 1
-cne_amqp_status_check_published{address="/news-service/sports/status",status="success"} 1
+```
+# HELP cne_transport_status_check_published  Metric to get number of status check published by the transport
+# TYPE cne_transport_status_check_published gauge
+cne_transport_status_check_published{address="/news-service/finance/status",status="failed"} 1
+cne_transport_status_check_published{address="/news-service/sports/status",status="connection reset"} 1
+cne_transport_status_check_published{address="/news-service/sports/status",status="success"} 1
 ```
 
 

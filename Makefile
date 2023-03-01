@@ -24,4 +24,11 @@ test:
 gha:
 	go test ./... --tags=unittests -coverprofile=cover.out
 
+fmt: ## Go fmt your code
+	hack/gofmt.sh
 
+fmt-code: ## Run go fmt against code.
+	go fmt ./...
+
+vet: ## Run go vet against code.
+	go vet ./...

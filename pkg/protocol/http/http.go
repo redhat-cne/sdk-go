@@ -3,11 +3,13 @@ package http
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/redhat-cne/sdk-go/pkg/errorhandler"
@@ -31,7 +33,7 @@ import (
 )
 
 var (
-	cancelTimeout            = 500 * time.Millisecond
+	cancelTimeout            = 2000 * time.Millisecond
 	retryTimeout             = 500 * time.Millisecond
 	RequestReadHeaderTimeout = 2 * time.Second
 )
@@ -153,6 +155,7 @@ func (h *Server) Start(wg *sync.WaitGroup) error {
 					log.Infof("deleting subscribers")
 					_ = h.subscriberAPI.DeleteClient(obj.ClientID)
 					h.DeleteSender(obj.ClientID)
+					out.Status = channel.SUCCESS
 					localmetrics.UpdateSenderCreatedCount(obj.GetEndPointURI(), localmetrics.ACTIVE, -1)
 				}
 			}
@@ -369,6 +372,16 @@ func (h *Server) HTTPProcessor(wg *sync.WaitGroup) {
 			select {
 			case d := <-h.DataIn: //skips publisher object processing
 				if d.Type == channel.SUBSCRIBER { // Listener  means subscriber aka sender
+					if d.Status == channel.DELETE {
+						log.Infof("Deleting client %s", d.ClientID)
+						if dErr := h.subscriberAPI.DeleteClient(d.ClientID); dErr == nil {
+							h.DeleteSender(d.ClientID)
+							localmetrics.UpdateSenderCreatedCount(d.Address, localmetrics.ACTIVE, -1)
+						} else {
+							log.Errorf("Failed to delete subscriber %s", d.Address)
+						}
+						continue
+					}
 					// Post it to the address that has been specified : to target URL
 					subs := subscriber.New(h.clientID)
 					//Self URL
@@ -520,9 +533,14 @@ func (h *Server) SendTo(wg *sync.WaitGroup, clientID uuid.UUID, clientAddress, r
 			log.Infof("event genrated %s", e.String())
 			return
 		}
+
 		wg.Add(1)
 		go func(h *Server, clientAddress, resourceAddress string, eventType channel.Type, e *cloudevents.Event, wg *sync.WaitGroup, sender *Protocol) {
 			defer wg.Done()
+			if h.subscriberAPI.SubscriberMarkedForDelete(clientID) {
+				log.Infof("not posting event, subscriber %s is marked for delete due to inactivity ", clientAddress)
+				return
+			}
 			if sender == nil {
 				localmetrics.UpdateEventCreatedCount(clientAddress, localmetrics.FAILED, 1)
 				return
@@ -532,21 +550,24 @@ func (h *Server) SendTo(wg *sync.WaitGroup, clientID uuid.UUID, clientAddress, r
 				if eventType == channel.EVENT {
 					localmetrics.UpdateEventCreatedCount(clientAddress, localmetrics.FAILED, 1)
 				}
+				// has subscriber failed to connect for n times delete the subscribers
+				if h.subscriberAPI.IncFailCountToFail(clientID) {
+					h.DataOut <- &channel.DataChan{
+						ClientID: clientID,
+						Address:  clientAddress,
+						Data:     e,
+						Status:   channel.DELETE,
+						Type:     channel.SUBSCRIBER,
+					}
+				} else {
+					log.Errorf("client %s not responding, waiting %d times before marking to delete subscriber",
+						clientAddress, h.subscriberAPI.FailCountThreshold()-h.subscriberAPI.GetFailCount(clientID))
+				}
 				h.DataOut <- &channel.DataChan{
 					Address: resourceAddress,
 					Data:    e,
 					Status:  channel.FAILED,
 					Type:    eventType,
-				}
-				// has subscriber failed to connect for n times delete the subscribers
-				if h.subscriberAPI.IncFailCountToFail(clientID) {
-					log.Errorf("client %s not responding, deleting subscription  ", clientAddress)
-					h.DataOut <- &channel.DataChan{
-						Address: clientAddress,
-						Data:    e,
-						Status:  channel.DELETE,
-						Type:    channel.SUBSCRIBER,
-					}
 				}
 				log.Errorf("connection lost addressing %s", clientAddress)
 			} else {
@@ -671,7 +692,7 @@ func (c *Protocol) Send(e cloudevents.Event) error {
 	e.SetDataContentType(cloudevents.ApplicationJSON)
 	ctx := cloudevents.ContextWithTarget(sendCtx, c.Protocol.Target.String())
 	result := c.Client.Send(ctx, e)
-	if cloudevents.IsUndelivered(result) {
+	if cloudevents.IsUndelivered(result) || errors.Is(result, syscall.ECONNREFUSED) {
 		log.Errorf("failed to send to address %s with %s", c.Protocol.Target.String(), result)
 		return fmt.Errorf("failed to send to address %s with error %s", c.Protocol.Target.String(), result.Error())
 	} else if !cloudevents.IsACK(result) {
@@ -688,8 +709,7 @@ func (c *Protocol) Send(e cloudevents.Event) error {
 		log.Infof("Sent with status code %d, result: %v", httpResult.StatusCode, result)
 		return fmt.Errorf(httpResult.Format, httpResult.Args...)
 	}
-	log.Printf("Send did not return an HTTP response: %s", result)
-	return fmt.Errorf("send did not return an HTTP response: %s", result)
+	return nil
 }
 
 // Get ... getter method
@@ -748,23 +768,10 @@ func Post(address string, e cloudevents.Event) error {
 	e.SetDataContentType(cloudevents.ApplicationJSON)
 	ctx := cloudevents.ContextWithTarget(sendCtx, address)
 	result := c.Send(ctx, e)
-	if cloudevents.IsUndelivered(result) {
+	// With current implementation of cloudevents we cannot get ack on delivered of not
+	if cloudevents.IsUndelivered(result) || errors.Is(result, syscall.ECONNREFUSED) {
 		log.Errorf("failed to send to address %s with %s", address, result)
 		return result
-	} else if !cloudevents.IsACK(result) {
-		log.Printf("sent: not accepted : %t", cloudevents.IsACK(result))
-		return result
 	}
-	var httpResult *cehttp.Result
-
-	if cloudevents.ResultAs(result, &httpResult) {
-		if httpResult.StatusCode == http.StatusOK {
-			log.Infof("sent with status code %d::%v", httpResult.StatusCode, result)
-			return nil
-		}
-		log.Printf("Sent with status code %d, result: %v", httpResult.StatusCode, result)
-		return fmt.Errorf(httpResult.Format, httpResult.Args...)
-	}
-	log.Printf("Send did not return an HTTP response: %s", result)
-	return fmt.Errorf("send did not return an HTTP response: %s", result)
+	return nil
 }
