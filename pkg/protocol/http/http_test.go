@@ -20,7 +20,6 @@ import (
 	"github.com/redhat-cne/sdk-go/pkg/event/ptp"
 	ceHttp "github.com/redhat-cne/sdk-go/pkg/protocol/http"
 	"github.com/redhat-cne/sdk-go/pkg/pubsub"
-	"github.com/redhat-cne/sdk-go/pkg/subscriber"
 	"github.com/redhat-cne/sdk-go/pkg/types"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -31,12 +30,13 @@ func strptr(s string) *string { return &s }
 var (
 	storePath = "."
 
-	subscriptionOneID = "123e4567-e89b-12d3-a456-426614174001"
-	serverAddress     = types.ParseURI("http://localhost:8089")
-	clientAddress     = types.ParseURI("http://localhost:8087")
-	hostPort          = 8089
-	clientPort        = 8087
-	serverClientID    = func(serviceName string) uuid.UUID {
+	subscriptionOneID      = "123e4567-e89b-12d3-a456-426614174001"
+	subscriptionNotFoundID = "223e4567-e89b-12d3-a456-426614174001"
+	serverAddress          = types.ParseURI("http://localhost:8089")
+	clientAddress          = types.ParseURI("http://localhost:8087")
+	hostPort               = 8089
+	clientPort             = 8087
+	serverClientID         = func(serviceName string) uuid.UUID {
 		var namespace = uuid.NameSpaceURL
 		var url = []byte(serviceName)
 		return uuid.NewMD5(namespace, url)
@@ -50,7 +50,12 @@ var (
 
 	subscriptionOne = &pubsub.PubSub{
 		ID:       subscriptionOneID,
-		Resource: "test/test/1",
+		Resource: "/test/test/1",
+	}
+
+	subscriptionNotFound = &pubsub.PubSub{
+		ID:       subscriptionNotFoundID,
+		Resource: "/test/test/2",
 	}
 )
 var (
@@ -287,7 +292,66 @@ func TestSender(t *testing.T) {
 	close(closeCh)
 }
 
-func TestStatus(t *testing.T) {
+func TestStatusWithSubscription(t *testing.T) {
+	in := make(chan *channel.DataChan)
+	out := make(chan *channel.DataChan)
+	eventChannel := make(chan *channel.DataChan, 10)
+	closeCh := make(chan struct{})
+	onStatusReceiveOverrideFn := func(e event.Event, d *channel.DataChan) error {
+		ce := CloudEvents()
+		d.Data = &ce
+		return nil
+	}
+	server, err := ceHttp.InitServer(serverAddress.String(), hostPort, storePath, in, out, closeCh, onStatusReceiveOverrideFn, nil)
+	assert.Nil(t, err)
+
+	wg := sync.WaitGroup{}
+	// Start the server and channel processor
+	err = server.Start(&wg)
+	server.RegisterPublishers(serverAddress)
+	assert.Nil(t, err)
+	server.HTTPProcessor(&wg)
+	time.Sleep(2 * time.Second)
+	// create client and create subscription
+	var clientS *ceHttp.Server
+	go createClient(t, clientS, closeCh, eventChannel)
+	time.Sleep(500 * time.Millisecond)
+	<-out
+	assert.Equal(t, 1, len(server.Sender))
+	d := <-eventChannel
+	assert.Equal(t, channel.SUBSCRIBER, d.Type)
+	assert.Equal(t, channel.SUCCESS, d.Status)
+
+	// send status ping
+	hClient := &http.Client{
+		Transport: &http.Transport{
+			MaxIdleConnsPerHost: 20,
+		},
+		Timeout: 10 * time.Second,
+	}
+	requestURL := fmt.Sprintf("%s/%s/%s/CurrentState", serverAddress.String(), subscriptionOne.Resource, clientClientID)
+	log.Printf(requestURL)
+	req, err := http.NewRequest("GET", requestURL, nil)
+	assert.Nil(t, err)
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := hClient.Do(req)
+	assert.Equal(t, resp.StatusCode, http.StatusOK)
+	assert.Nil(t, err)
+	defer resp.Body.Close()
+	bodyBytes, err := io.ReadAll(resp.Body)
+	assert.Nil(t, err)
+	ce := cloudevents.Event{}
+	err = json.Unmarshal(bodyBytes, &ce)
+	log.Info(string(bodyBytes))
+	if e, ok := err.(*json.SyntaxError); ok {
+		log.Infof("syntax error at byte offset %d", e.Offset)
+	}
+	assert.Nil(t, err)
+
+	close(closeCh)
+}
+
+func TestStatusWithOutSubscription(t *testing.T) {
 	in := make(chan *channel.DataChan)
 	out := make(chan *channel.DataChan)
 	closeCh := make(chan struct{})
@@ -306,8 +370,7 @@ func TestStatus(t *testing.T) {
 	assert.Nil(t, err)
 	server.HTTPProcessor(&wg)
 	time.Sleep(2 * time.Second)
-	err = server.NewSender(serverClientID, serverAddress.String())
-	assert.Nil(t, err)
+
 	// send status ping
 	hClient := &http.Client{
 		Transport: &http.Transport{
@@ -315,163 +378,21 @@ func TestStatus(t *testing.T) {
 		},
 		Timeout: 10 * time.Second,
 	}
-	requestURL := fmt.Sprintf("%s/%s/%s/CurrentState", serverAddress.String(), subscriptionOne.Resource, clientClientID)
+	requestURL := fmt.Sprintf("%s/%s/%s/CurrentState", serverAddress.String(), subscriptionNotFound.Resource, clientClientID)
 	log.Printf(requestURL)
 	req, err := http.NewRequest("GET", requestURL, nil)
 	assert.Nil(t, err)
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := hClient.Do(req)
 	assert.Nil(t, err)
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
 	defer resp.Body.Close()
 	bodyBytes, err := io.ReadAll(resp.Body)
 	assert.Nil(t, err)
-	ce := cloudevents.Event{}
-	err = json.Unmarshal(bodyBytes, &ce)
 	log.Info(string(bodyBytes))
-	if e, ok := err.(*json.SyntaxError); ok {
-		log.Infof("syntax error at byte offset %d", e.Offset)
-	}
-	assert.Nil(t, err)
 	close(closeCh)
 }
 
-func TestPostSubscription(t *testing.T) {
-	in := make(chan *channel.DataChan)
-	out := make(chan *channel.DataChan)
-	closeCh := make(chan struct{})
-	server, err := ceHttp.InitServer(serverAddress.String(), hostPort, storePath, in, out, closeCh, nil, nil)
-	assert.Nil(t, err)
-
-	wg := sync.WaitGroup{}
-	// Start the server and channel proceesor
-	err = server.Start(&wg)
-	assert.Nil(t, err)
-	server.HTTPProcessor(&wg)
-	time.Sleep(2 * time.Second)
-	subs := subscriber.New(clientClientID)
-	//Self URL
-	_ = subs.SetEndPointURI(clientAddress.String())
-	obj := pubsub.PubSub{ // all we need is ID and  resource address
-		ID:       subscriptionOneID,
-		Resource: subscriptionOne.Resource,
-	}
-	go func() {
-		select {
-		case <-closeCh:
-			return
-		case <-in:
-			return
-		}
-	}()
-	// create a subscriber model
-	subs.AddSubscription(obj)
-	subs.Action = channel.NEW
-	ce, _ := subs.CreateCloudEvents()
-	ce.SetSubject(channel.NEW.String())
-	ce.SetSource(subscriptionOne.Resource)
-
-	err = ceHttp.Post(fmt.Sprintf("%s/subscription", serverAddress.String()), *ce)
-	assert.Nil(t, err)
-
-	subs.Action = channel.DELETE
-	ce, _ = subs.CreateCloudEvents()
-	ce.SetSubject(channel.DELETE.String())
-	log.Infof("`deleting` subscriber for clientID %s", clientAddress)
-	err = ceHttp.Post(fmt.Sprintf("%s/subscription", serverAddress.String()), *ce)
-	if err != nil {
-		log.Infof("error %s", err.Error())
-	}
-
-	assert.Nil(t, err)
-	close(closeCh)
-}
-
-func TestStaleSubscribers(t *testing.T) {
-	type DeleteAssert struct {
-		Type   channel.Type
-		Status channel.Status
-	}
-	in := make(chan *channel.DataChan)
-	out := make(chan *channel.DataChan)
-	closeCh := make(chan struct{})
-	done := make(chan DeleteAssert, 2)
-	server, err := ceHttp.InitServer(serverAddress.String(), hostPort, storePath, in, out, closeCh, nil, nil)
-	assert.Nil(t, err)
-
-	wg := sync.WaitGroup{}
-	// Start the server and channel proceesor
-	err = server.Start(&wg)
-	assert.Nil(t, err)
-	server.HTTPProcessor(&wg)
-	time.Sleep(2 * time.Second)
-	subs := subscriber.New(clientClientID)
-	//Self URL
-	_ = subs.SetEndPointURI(clientAddress.String())
-	obj := pubsub.PubSub{ // all we need is ID and  resource address
-		ID:       subscriptionOneID,
-		Resource: subscriptionOne.Resource,
-	}
-	go func() {
-		for {
-			select {
-			case <-closeCh:
-				break
-			case o := <-out:
-				if o.Status == channel.DELETE && o.Type == channel.SUBSCRIBER {
-					done <- DeleteAssert{
-						Type:   o.Type,
-						Status: o.Status,
-					}
-					break
-				}
-			case <-time.After(3 * time.Second):
-				done <- DeleteAssert{
-					Type:   channel.SUBSCRIBER,
-					Status: channel.NEW,
-				}
-				break
-			}
-		}
-	}()
-	// create a subscriber model
-	subs.AddSubscription(obj)
-	subs.Action = channel.NEW
-	ce, _ := subs.CreateCloudEvents()
-	ce.SetSubject(channel.NEW.String())
-	ce.SetSource(subscriptionOne.Resource)
-
-	// create subscription with server
-	err = ceHttp.Post(fmt.Sprintf("%s/subscription", serverAddress.String()), *ce)
-	assert.Nil(t, err)
-	// now send 10 events to check dead client
-	e := CloudEvents()
-	// Generate events
-	for i := 0; i < 20; i++ {
-		in <- &channel.DataChan{
-			Address: subscriptionOne.Resource,
-			Data:    &e,
-			Status:  channel.NEW,
-			Type:    channel.EVENT,
-		}
-		time.Sleep(500 * time.Millisecond)
-	}
-	d := <-done
-	assert.Equal(t, channel.SUBSCRIBER, d.Type)
-	assert.Equal(t, channel.DELETE, d.Status)
-	// send for main thread  to delete subscriber
-	assert.Equal(t, 1, len(server.Sender))
-	server.HTTPProcessor(&wg)
-	in <- &channel.DataChan{
-		ClientID: clientClientID,
-		Data:     &e,
-		Status:   d.Status,
-		Type:     d.Type,
-	}
-	assert.Equal(t, 1, len(server.Sender))
-	time.Sleep(5 * time.Second)
-	assert.Equal(t, 0, len(server.Sender))
-	close(closeCh)
-}
 func TestTeardown(t *testing.T) {
 	_ = os.Remove(fmt.Sprintf("./%s.json", clientClientID.String()))
 }
