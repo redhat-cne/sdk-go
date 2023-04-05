@@ -27,7 +27,6 @@ linters:
   disable-all: true
   enable: # NOTE: please keep this list alphabetically sorted
     - bodyclose
-    - deadcode
     - dogsled
     - errcheck
     - goconst
@@ -40,12 +39,10 @@ linters:
     - ineffassign
     - megacheck
     - misspell
-    - structcheck
     - typecheck
     - unconvert
     - unparam
     - unused
-    - varcheck
     - whitespace
   fast: false
 
@@ -67,6 +64,3 @@ issues:
     - linters:
         - gosec
       text: "G107: Potential HTTP request made with variable url"
-
-
-
