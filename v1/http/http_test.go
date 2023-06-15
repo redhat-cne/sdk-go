@@ -23,19 +23,20 @@ import (
 )
 
 var (
-	storePath         = "."
-	outChan           = make(chan *channel.DataChan, 1)
-	address           = "test/test"
-	port              = 8086
-	serverAddress     = "http://localhost:8086"
-	in                = make(chan *channel.DataChan)
-	out               = make(chan *channel.DataChan)
-	closeCh           = make(chan struct{})
-	globalInstance, _ = api.GetHTTPInstance(serverAddress, port, storePath, in, out, closeCh, nil, nil)
+	storePath     = "."
+	outChan       = make(chan *channel.DataChan, 1)
+	address       = "test/test"
+	port          = 8086
+	serverAddress = "http://localhost:8086"
+	in            = make(chan *channel.DataChan)
+	out           = make(chan *channel.DataChan)
+	closeCh       = make(chan struct{})
+	// tlsConfig         = tls.Config{}
+	globalInstance, _ = api.GetHTTPInstance(serverAddress, port, nil, storePath, in, out, closeCh, nil, nil)
 )
 
 func TestAPI_GetAPIInstance(t *testing.T) {
-	localInstance, err := api.GetHTTPInstance(serverAddress, port, storePath, in, out, closeCh, nil, nil)
+	localInstance, err := api.GetHTTPInstance(serverAddress, port, nil, storePath, in, out, closeCh, nil, nil)
 	if err != nil {
 		t.Skipf("tcp.Dial(%#v): %v", localInstance, err)
 	}
