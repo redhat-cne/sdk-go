@@ -15,7 +15,6 @@
 package http
 
 import (
-	"crypto/tls"
 	"fmt"
 	"net/http"
 	"path"
@@ -46,10 +45,10 @@ type HTTP struct {
 }
 
 // GetHTTPInstance get event instance
-func GetHTTPInstance(serviceName string, port int, tls *tls.Config, storePath string, dataIn <-chan *channel.DataChan, dataOut chan<- *channel.DataChan,
+func GetHTTPInstance(serviceName string, port int, storePath string, dataIn <-chan *channel.DataChan, dataOut chan<- *channel.DataChan,
 	closeCh <-chan struct{}, onStatusReceiveOverrideFn func(e cloudevents.Event, dataChan *channel.DataChan) error, processEventFn func(e interface{}) error) (*HTTP, error) {
 	once.Do(func() {
-		server, err := cneHTTP.InitServer(serviceName, port, tls, storePath, dataIn, dataOut, closeCh, onStatusReceiveOverrideFn, processEventFn)
+		server, err := cneHTTP.InitServer(serviceName, port, storePath, dataIn, dataOut, closeCh, onStatusReceiveOverrideFn, processEventFn)
 		if err == nil {
 			instance = &HTTP{
 				server: server,
