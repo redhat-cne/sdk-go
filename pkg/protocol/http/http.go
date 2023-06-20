@@ -2,7 +2,6 @@ package http
 
 import (
 	"context"
-	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -24,6 +23,7 @@ import (
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	httpClient "github.com/cloudevents/sdk-go/v2/client"
 	cehttp "github.com/cloudevents/sdk-go/v2/protocol/http"
+	httpP "github.com/cloudevents/sdk-go/v2/protocol/http"
 	"github.com/google/uuid"
 	"github.com/redhat-cne/sdk-go/pkg/channel"
 	"github.com/redhat-cne/sdk-go/pkg/localmetrics"
@@ -42,7 +42,7 @@ var (
 // Protocol ...
 type Protocol struct {
 	protocol.Binder
-	Protocol *cehttp.Protocol
+	Protocol *httpP.Protocol
 }
 type ServiceResourcePath string
 
@@ -61,7 +61,6 @@ type Server struct {
 	Publishers    []*types.URI
 	ServiceName   string
 	Port          int
-	TLS           *tls.Config
 	DataIn        <-chan *channel.DataChan
 	DataOut       chan<- *channel.DataChan
 	Client        httpClient.Client
@@ -77,14 +76,13 @@ type Server struct {
 }
 
 // InitServer initialize http configurations
-func InitServer(serviceName string, port int, tls *tls.Config, storePath string, dataIn <-chan *channel.DataChan,
+func InitServer(serviceName string, port int, storePath string, dataIn <-chan *channel.DataChan,
 	dataOut chan<- *channel.DataChan, closeCh <-chan struct{},
 	onStatusReceiveOverrideFn func(e cloudevents.Event, dataChan *channel.DataChan) error,
-	processEventFn func(e interface{}) error, options ...bool) (*Server, error) {
+	processEventFn func(e interface{}) error) (*Server, error) {
 	server := Server{
 		Sender:                  map[uuid.UUID]map[ServiceResourcePath]*Protocol{},
 		Port:                    port,
-		TLS:                     tls,
 		DataIn:                  dataIn,
 		ServiceName:             serviceName,
 		DataOut:                 dataOut,
@@ -94,18 +92,11 @@ func InitServer(serviceName string, port int, tls *tls.Config, storePath string,
 		subscriberAPI:           subscriberApi.GetAPIInstance(storePath),
 		statusReceiveOverrideFn: onStatusReceiveOverrideFn,
 		processEventFn:          processEventFn,
-		httpServer: &http.Server{
-			ReadHeaderTimeout: time.Duration(time.Duration.Seconds(10)),
-		},
 		clientID: func(serviceName string) uuid.UUID {
 			var namespace = uuid.NameSpaceURL
 			var url = []byte(serviceName)
 			return uuid.NewMD5(namespace, url)
 		}(serviceName),
-	}
-	// If testing, can't use instance API singletone
-	if len(options) > 0 && options[0] {
-		server.subscriberAPI = subscriberApi.GetNewAPIInstance(storePath)
 	}
 	log.Infof(" registering publishing http service for client id %s", server.clientID.String())
 	return &server, nil
@@ -118,13 +109,6 @@ func (h *Server) Start(wg *sync.WaitGroup) error {
 	if err != nil {
 		log.Errorf("failed to create handler: %s", err.Error())
 		return err
-	}
-	if h.TLS != nil {
-		h.httpServer.TLSConfig = h.TLS.Clone()
-		transport := http.Transport{
-			TLSClientConfig: h.TLS.Clone(),
-		}
-		p.Client.Transport = &transport
 	}
 	subscriptionHandler, err := cloudevents.NewHTTPReceiveHandler(ctx, p, func(e cloudevents.Event) {
 		eventType := channel.SUBSCRIBER
@@ -304,17 +288,13 @@ func (h *Server) Start(wg *sync.WaitGroup) error {
 	wg.Add(1)
 	log.Infof("starting  publisher/subscriber http transporter %d", h.Port)
 	go wait.Until(func() {
-		h.httpServer.ReadHeaderTimeout = RequestReadHeaderTimeout
-		h.httpServer.Addr = fmt.Sprintf(":%d", h.Port)
-		h.httpServer.Handler = r
-		h.ReloadSubsFromStore()
-		if h.TLS != nil {
-			log.Info("starting TLS server")
-			err = h.httpServer.ListenAndServeTLS("", "")
-		} else {
-			log.Info("starting http server")
-			err = h.httpServer.ListenAndServe()
+		h.httpServer = &http.Server{
+			ReadHeaderTimeout: RequestReadHeaderTimeout,
+			Addr:              fmt.Sprintf(":%d", h.Port),
+			Handler:           r,
 		}
+		h.ReloadSubsFromStore()
+		err := h.httpServer.ListenAndServe()
 		if err != nil {
 			log.Errorf("restarting due to error with http messaging server %s\n", err.Error())
 		}
@@ -378,7 +358,7 @@ func (h *Server) SetProcessEventFn(fn func(e interface{}) error) {
 	h.processEventFn = fn
 }
 
-// httpProcessor ...
+// HTTPProcessor ...
 //Server the web Server listens  on data and do either create subscribers and acts as publisher
 /*
 //create a  status ping
@@ -624,7 +604,7 @@ func (h *Server) SendTo(wg *sync.WaitGroup, clientID uuid.UUID, clientAddress, r
 }
 
 // NewClient ...
-func (h *Server) NewClient(host string, connOption []cehttp.Option) (httpClient.Client, error) {
+func (h *Server) NewClient(host string, connOption []httpP.Option) (httpClient.Client, error) {
 	//--
 	c, err2 := cloudevents.NewClientHTTP(cloudevents.WithTarget(host))
 	if err2 != nil {
@@ -676,7 +656,7 @@ func (h *Server) NewSender(clientID uuid.UUID, address string) error {
 	h.SetSender(clientID, l)
 	for _, s := range []ServiceResourcePath{DEFAULT, HEALTH, EVENT} {
 		l[s] = &Protocol{}
-		//server.NewClient(host, []cehttp.Option{})
+		//server.NewClient(host, []httpP.Option{})
 		targetURL := fmt.Sprintf("%s%s", address, s)
 		protocol, err := cloudevents.NewHTTP(cloudevents.WithTarget(targetURL))
 		if err != nil {

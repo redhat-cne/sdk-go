@@ -53,18 +53,6 @@ func New() subscriber.Subscriber {
 // GetAPIInstance get event instance
 func GetAPIInstance(storeFilePath string) *API {
 	once.Do(func() {
-		instance = GetNewAPIInstance(storeFilePath)
-	})
-	return instance
-}
-
-// GetNewAPIInstance get event instance
-// Get a new API instance using the provided storage path.
-// This is only to be called directly in testing, where HTTP and HTTPS are
-// running simultaneously using different storage paths.
-// In production running it is always wrapped by `once.Do()`
-func GetNewAPIInstance(storeFilePath string) *API {
-	func() {
 		instance = &API{
 			transportEnabled: true,
 			SubscriberStore: &SubscriberStore.Store{
@@ -75,7 +63,7 @@ func GetNewAPIInstance(storeFilePath string) *API {
 		}
 		hasDir(storeFilePath)
 		instance.ReloadStore()
-	}()
+	})
 	return instance
 }
 

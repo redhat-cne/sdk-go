@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"path"
 	"sync"
 	"testing"
 	"time"
@@ -29,15 +28,15 @@ import (
 func strptr(s string) *string { return &s }
 
 var (
-	storePath              = "."
+	storePath = "."
+
 	subscriptionOneID      = "123e4567-e89b-12d3-a456-426614174001"
 	subscriptionNotFoundID = "223e4567-e89b-12d3-a456-426614174001"
 	serverAddress          = types.ParseURI("http://localhost:8089")
 	clientAddress          = types.ParseURI("http://localhost:8087")
 	hostPort               = 8089
 	clientPort             = 8087
-
-	serverClientID = func(serviceName string) uuid.UUID {
+	serverClientID         = func(serviceName string) uuid.UUID {
 		var namespace = uuid.NameSpaceURL
 		var url = []byte(serviceName)
 		return uuid.NewMD5(namespace, url)
@@ -53,9 +52,10 @@ var (
 		ID:       subscriptionOneID,
 		Resource: "/test/test/1",
 	}
+
 	subscriptionNotFound = &pubsub.PubSub{
 		ID:       subscriptionNotFoundID,
-		Resource: "/test/test/3",
+		Resource: "/test/test/2",
 	}
 )
 var (
@@ -115,7 +115,7 @@ func createClient(t *testing.T, clientS *ceHttp.Server, closeCh chan struct{}, c
 	in := make(chan *channel.DataChan, 10)
 	var err error
 	assert.Nil(t, clientS)
-	clientS, err = ceHttp.InitServer(clientAddress.String(), clientPort, nil, storePath, in, clientOutChannel, closeCh, nil, nil, true)
+	clientS, err = ceHttp.InitServer(clientAddress.String(), clientPort, storePath, in, clientOutChannel, closeCh, nil, nil)
 	assert.Nil(t, err)
 	clientS.RegisterPublishers(serverAddress)
 	wg := sync.WaitGroup{}
@@ -135,17 +135,16 @@ func createClient(t *testing.T, clientS *ceHttp.Server, closeCh chan struct{}, c
 
 	<-closeCh
 }
-
 func TestSubscribeCreated(t *testing.T) {
 	in := make(chan *channel.DataChan, 10)
 	out := make(chan *channel.DataChan, 10)
 	closeCh := make(chan struct{})
 	eventChannel := make(chan *channel.DataChan, 10)
-	server, err := ceHttp.InitServer(serverAddress.String(), hostPort, nil, storePath, in, out, closeCh, nil, nil, true)
+	server, err := ceHttp.InitServer(serverAddress.String(), hostPort, storePath, in, out, closeCh, nil, nil)
 	assert.Nil(t, err)
 
 	wg := sync.WaitGroup{}
-	// Start the server and channel processor
+	// Start the server and channel proceesor
 	err = server.Start(&wg)
 	assert.Nil(t, err)
 	server.HTTPProcessor(&wg)
@@ -169,7 +168,7 @@ func TestSendEvent(t *testing.T) {
 	out := make(chan *channel.DataChan, 10)
 	clientOutChannel := make(chan *channel.DataChan)
 	closeCh := make(chan struct{})
-	server, err := ceHttp.InitServer(serverAddress.String(), hostPort, nil, storePath, in, out, closeCh, nil, nil, true)
+	server, err := ceHttp.InitServer(serverAddress.String(), hostPort, storePath, in, out, closeCh, nil, nil)
 	assert.Nil(t, err)
 	wg := sync.WaitGroup{}
 	// Start the server and channel proceesor
@@ -223,7 +222,7 @@ func TestSendSuccess(t *testing.T) {
 	out := make(chan *channel.DataChan)
 	clientOutChannel := make(chan *channel.DataChan)
 	closeCh := make(chan struct{})
-	server, err := ceHttp.InitServer(serverAddress.String(), hostPort, nil, storePath, in, out, closeCh, func(e cloudevents.Event, dataChan *channel.DataChan) error {
+	server, err := ceHttp.InitServer(serverAddress.String(), hostPort, storePath, in, out, closeCh, func(e cloudevents.Event, dataChan *channel.DataChan) error {
 		dataChan.Address = clientAddress.String()
 		e.SetType(channel.EVENT.String())
 		if err := ceHttp.Post(fmt.Sprintf("%s/event", clientAddress), e); err != nil {
@@ -231,7 +230,7 @@ func TestSendSuccess(t *testing.T) {
 			return err
 		}
 		return nil
-	}, nil, true)
+	}, nil)
 	assert.Nil(t, err)
 	wg := sync.WaitGroup{}
 	// Start the server and channel processor
@@ -255,7 +254,7 @@ func TestHealth(t *testing.T) {
 	closeCh := make(chan struct{})
 	var status int
 	var urlErr error
-	server, err := ceHttp.InitServer(serverAddress.String(), hostPort, nil, storePath, in, out, closeCh, nil, nil, true)
+	server, err := ceHttp.InitServer(serverAddress.String(), hostPort, storePath, in, out, closeCh, nil, nil)
 	assert.Nil(t, err)
 
 	wg := sync.WaitGroup{}
@@ -275,7 +274,7 @@ func TestSender(t *testing.T) {
 	out := make(chan *channel.DataChan)
 	closeCh := make(chan struct{})
 
-	server, err := ceHttp.InitServer(serverAddress.String(), hostPort, nil, storePath, in, out, closeCh, nil, nil, true)
+	server, err := ceHttp.InitServer(serverAddress.String(), hostPort, storePath, in, out, closeCh, nil, nil)
 	assert.Nil(t, err)
 	wg := sync.WaitGroup{}
 	// Start the server and channel processor
@@ -303,7 +302,7 @@ func TestStatusWithSubscription(t *testing.T) {
 		d.Data = &ce
 		return nil
 	}
-	server, err := ceHttp.InitServer(serverAddress.String(), hostPort, nil, storePath, in, out, closeCh, onStatusReceiveOverrideFn, nil, true)
+	server, err := ceHttp.InitServer(serverAddress.String(), hostPort, storePath, in, out, closeCh, onStatusReceiveOverrideFn, nil)
 	assert.Nil(t, err)
 
 	wg := sync.WaitGroup{}
@@ -361,7 +360,7 @@ func TestStatusWithOutSubscription(t *testing.T) {
 		d.Data = &ce
 		return nil
 	}
-	server, err := ceHttp.InitServer(serverAddress.String(), hostPort, nil, storePath, in, out, closeCh, onStatusReceiveOverrideFn, nil, true)
+	server, err := ceHttp.InitServer(serverAddress.String(), hostPort, storePath, in, out, closeCh, onStatusReceiveOverrideFn, nil)
 	assert.Nil(t, err)
 
 	wg := sync.WaitGroup{}
@@ -395,5 +394,5 @@ func TestStatusWithOutSubscription(t *testing.T) {
 }
 
 func TestTeardown(t *testing.T) {
-	_ = os.Remove(fmt.Sprintf("./%s.json", path.Join(storePath, clientClientID.String())))
+	_ = os.Remove(fmt.Sprintf("./%s.json", clientClientID.String()))
 }
