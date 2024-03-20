@@ -29,13 +29,13 @@ var (
 	s                 = "amqp://localhost:5672"
 	in                = make(chan *channel.DataChan)
 	out               = make(chan *channel.DataChan)
-	close             = make(chan struct{})
+	closeCh           = make(chan struct{})
 	timeout           = 1 * time.Second
-	globalInstance, _ = api.GetAMQPInstance(s, in, out, close, timeout)
+	globalInstance, _ = api.GetAMQPInstance(s, in, out, closeCh, timeout)
 )
 
 func TestAPI_GetAPIInstance(t *testing.T) {
-	localInstance, err := api.GetAMQPInstance(s, in, out, close, timeout)
+	localInstance, err := api.GetAMQPInstance(s, in, out, closeCh, timeout)
 	if err != nil {
 		t.Skipf("ampq.Dial(%#v): %v", localInstance, err)
 	}

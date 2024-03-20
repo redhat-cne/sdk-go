@@ -218,6 +218,6 @@ func clean() {
 	_ = globalInstance.DeleteAllSubscriptions(clientID)
 }
 
-func TestTeardown(t *testing.T) {
+func TestTeardown(*testing.T) {
 	_ = os.Remove(fmt.Sprintf("%s/%s.json", storePath, clientID))
 }

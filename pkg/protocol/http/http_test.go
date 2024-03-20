@@ -393,6 +393,6 @@ func TestStatusWithOutSubscription(t *testing.T) {
 	close(closeCh)
 }
 
-func TestTeardown(t *testing.T) {
+func TestTeardown(*testing.T) {
 	_ = os.Remove(fmt.Sprintf("./%s.json", clientClientID.String()))
 }

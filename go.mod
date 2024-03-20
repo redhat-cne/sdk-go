@@ -1,13 +1,13 @@
 module github.com/redhat-cne/sdk-go
 
-go 1.19
+go 1.21
 
 require (
 	github.com/Azure/go-amqp v0.17.5
-	github.com/cloudevents/sdk-go/protocol/amqp/v2 v2.13.0
-	github.com/cloudevents/sdk-go/v2 v2.13.0
+	github.com/cloudevents/sdk-go/protocol/amqp/v2 v2.15.2
+	github.com/cloudevents/sdk-go/v2 v2.15.2
 	github.com/google/go-cmp v0.5.8
-	github.com/google/uuid v1.3.0
+	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.0
 	github.com/json-iterator/go v1.1.12
 	github.com/pkg/errors v0.9.1
