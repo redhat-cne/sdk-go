@@ -195,7 +195,7 @@ func clean() {
 	_ = globalInstance.DeleteAllSubscriptions()
 	_ = globalInstance.DeleteAllPublishers()
 }
-func TestTeardown(t *testing.T) {
+func TestTeardown(*testing.T) {
 	_ = os.Remove("./pub.json")
 	_ = os.Remove("./sub.json")
 }
