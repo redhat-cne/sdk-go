@@ -3,8 +3,6 @@ module github.com/redhat-cne/sdk-go
 go 1.21
 
 require (
-	github.com/Azure/go-amqp v0.17.5
-	github.com/cloudevents/sdk-go/protocol/amqp/v2 v2.15.2
 	github.com/cloudevents/sdk-go/v2 v2.15.2
 	github.com/google/go-cmp v0.5.8
 	github.com/google/uuid v1.6.0
