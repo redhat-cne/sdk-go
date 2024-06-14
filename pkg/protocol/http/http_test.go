@@ -297,7 +297,7 @@ func TestStatusWithSubscription(t *testing.T) {
 	out := make(chan *channel.DataChan)
 	eventChannel := make(chan *channel.DataChan, 10)
 	closeCh := make(chan struct{})
-	onStatusReceiveOverrideFn := func(e event.Event, d *channel.DataChan) error {
+	onStatusReceiveOverrideFn := func(_ event.Event, d *channel.DataChan) error {
 		ce := CloudEvents()
 		d.Data = &ce
 		return nil
@@ -355,7 +355,7 @@ func TestStatusWithOutSubscription(t *testing.T) {
 	in := make(chan *channel.DataChan)
 	out := make(chan *channel.DataChan)
 	closeCh := make(chan struct{})
-	onStatusReceiveOverrideFn := func(e event.Event, d *channel.DataChan) error {
+	onStatusReceiveOverrideFn := func(_ event.Event, d *channel.DataChan) error {
 		ce := CloudEvents()
 		d.Data = &ce
 		return nil
