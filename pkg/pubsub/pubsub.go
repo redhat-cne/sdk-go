@@ -33,16 +33,16 @@ import (
 // PubSub request model
 type PubSub struct {
 	// ID of the pub/sub; is updated on successful creation of publisher/subscription.
-	ID string `json:"id" omit:"empty"`
+	ID string `json:"SubscriptionId" omit:"empty"`
 	// EndPointURI - A URI describing the event action link.
 	// +required
-	EndPointURI *types.URI `json:"endpointUri" example:"http://localhost:9090/ack/event" omit:"empty"`
+	EndPointURI *types.URI `json:"EndpointUri" example:"http://localhost:9090/ack/event" omit:"empty"`
 
 	// URILocation - A URI describing the producer/subscription get link.
-	URILocation *types.URI `json:"uriLocation" omit:"empty"`
+	URILocation *types.URI `json:"UriLocation" omit:"empty"`
 	// Resource - The type of the Resource.
 	// +required
-	Resource string `json:"resource" example:"/east-edge-10/vdu3/o-ran-sync/sync-group/sync-status/sync-state"`
+	Resource string `json:"ResourceAddress" example:"/east-edge-10/vdu3/o-ran-sync/sync-group/sync-status/sync-state"`
 }
 
 // String returns a pretty-printed representation of the Event.
