@@ -46,10 +46,10 @@ func TestUnMarshal(t *testing.T) {
 					"resource": resource,
 					"values": []interface{}{
 						map[string]interface{}{
-							"resource":  resource,
-							"dataType":  event.NOTIFICATION,
-							"value":     JSON_EVENT_TMP0100,
-							"valueType": event.REDFISH_EVENT}},
+							"ResourceAddress": resource,
+							"data_type":       event.NOTIFICATION,
+							"value":           JSON_EVENT_TMP0100,
+							"value_type":      event.REDFISH_EVENT}},
 					"version": version,
 				},
 				"id":         id,

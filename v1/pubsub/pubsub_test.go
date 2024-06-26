@@ -30,10 +30,12 @@ var (
 	storePath = "."
 
 	publisher = pubsub.PubSub{
+		Version:     "1.0",
 		EndPointURI: &types.URI{URL: url.URL{Scheme: "http", Host: "localhost:8080", Path: "/post/event"}},
 		Resource:    "test/test",
 	}
 	subscription = pubsub.PubSub{
+		Version:     "1.0",
 		EndPointURI: &types.URI{URL: url.URL{Scheme: "http", Host: "localhost:8080", Path: "/get/event"}},
 		Resource:    "test/test",
 	}

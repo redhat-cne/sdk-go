@@ -32,15 +32,15 @@ func TestUnMarshal(t *testing.T) {
 					"resource": resource,
 					"values": []interface{}{
 						map[string]interface{}{
-							"resource":  resource,
-							"dataType":  "notification",
-							"value":     "FREERUN",
-							"valueType": "enumeration"},
+							"ResourceAddress": resource,
+							"data_type":       "notification",
+							"value":           "FREERUN",
+							"value_type":      "enumeration"},
 						map[string]interface{}{
-							"resource":  resource,
-							"dataType":  "metric",
-							"value":     "10.63",
-							"valueType": "decimal64.3"}},
+							"ResourceAddress": resource,
+							"data_type":       "metric",
+							"value":           "10.63",
+							"value_type":      "decimal64.3"}},
 					"version": version,
 				},
 				"id":         id,
@@ -80,15 +80,15 @@ func TestUnMarshal(t *testing.T) {
 				"data": map[string]interface{}{
 					"values": []interface{}{
 						map[string]interface{}{
-							"resource":  resource,
-							"dataType":  "notification",
-							"value":     "FREERUN",
-							"valueType": "enumeration"},
+							"ResourceAddress": resource,
+							"data_type":       "notification",
+							"value":           "FREERUN",
+							"value_type":      "enumeration"},
 						map[string]interface{}{
-							"resource":  resource,
-							"dataType":  "metric",
-							"value":     "64.3",
-							"valueType": "decimal64.3"}},
+							"ResourceAddress": resource,
+							"data_type":       "metric",
+							"value":           "64.3",
+							"value_type":      "decimal64.3"}},
 					"version": version,
 				},
 				"id":         id,
@@ -130,10 +130,10 @@ func TestUnMarshal(t *testing.T) {
 					"resource": resource,
 					"values": []interface{}{
 						map[string]interface{}{
-							"resource":  resource,
-							"dataType":  "notification",
-							"value":     "FREERUN",
-							"valueType": "foo"}},
+							"ResourceAddress": resource,
+							"data_type":       "notification",
+							"value":           "FREERUN",
+							"value_type":      "foo"}},
 					"version": version,
 				},
 				"id":         id,
