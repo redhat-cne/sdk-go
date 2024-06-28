@@ -80,15 +80,15 @@ func TestMarshal(t *testing.T) {
 				"data": map[string]interface{}{
 					"values": []interface{}{
 						map[string]interface{}{
-							"resource":  resource,
-							"dataType":  "notification",
-							"value":     "FREERUN",
-							"valueType": "enumeration"},
+							"ResourceAddress": resource,
+							"data_type":       "notification",
+							"value":           "FREERUN",
+							"value_type":      "enumeration"},
 						map[string]interface{}{
-							"resource":  resource,
-							"dataType":  "metric",
-							"value":     "10.7",
-							"valueType": "decimal64.3"}},
+							"ResourceAddress": resource,
+							"data_type":       "metric",
+							"value":           "10.7",
+							"value_type":      "decimal64.3"}},
 					"version": "v1",
 				},
 				"id":         "",

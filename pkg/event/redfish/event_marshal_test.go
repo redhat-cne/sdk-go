@@ -97,11 +97,11 @@ func TestMarshal(t *testing.T) {
 				"data": map[string]interface{}{
 					"values": []interface{}{
 						map[string]interface{}{
-							"resource": resource,
-							"dataType": event.NOTIFICATION,
+							"ResourceAddress": resource,
+							"data_type":       event.NOTIFICATION,
 							// NOTE: Marshal results in compact JSON format without whitespaces
-							"value":     JSON_EVENT_TMP0100,
-							"valueType": event.REDFISH_EVENT,
+							"value":      JSON_EVENT_TMP0100,
+							"value_type": event.REDFISH_EVENT,
 						},
 					},
 					"version": "v1",

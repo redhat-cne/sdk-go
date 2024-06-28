@@ -25,6 +25,7 @@ var (
 	subscriptionTwoID = "123e4567-e89b-12d3-a456-426614174002"
 
 	subscriptionOne = &pubsub.PubSub{
+		Version:     "1.0",
 		ID:          subscriptionOneID,
 		EndPointURI: &types.URI{URL: url.URL{Scheme: "http", Host: "localhost:8080", Path: "/event"}},
 		Resource:    "test/test/1",
@@ -32,6 +33,7 @@ var (
 	}
 
 	subscriptionTwo = &pubsub.PubSub{
+		Version:     "1.0",
 		ID:          subscriptionTwoID,
 		EndPointURI: &types.URI{URL: url.URL{Scheme: "http", Host: "localhost:8080", Path: "/event"}},
 		Resource:    "test/test/2",
