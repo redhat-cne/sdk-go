@@ -134,7 +134,7 @@ func TestAPI_DeleteAllSubscriptions(t *testing.T) {
 	b, e := globalInstance.GetSubscriptionsFromFile(clientID)
 	assert.Nil(t, e)
 	assert.Len(t, b, 0)
-	assert.Len(t, globalInstance.GetSubscriptions(clientID), 0)
+	assert.Len(t, globalInstance.GetSubscriptionsFromClientID(clientID), 0)
 }
 
 func TestAPI_DeleteSubscription(t *testing.T) {
@@ -145,7 +145,7 @@ func TestAPI_DeleteSubscription(t *testing.T) {
 	assert.NotNil(t, s.SubStore.Store)
 	e = globalInstance.DeleteSubscription(clientID, subscriptionOne.ID)
 	assert.Nil(t, e)
-	delSub := globalInstance.GetSubscription(clientID, subscriptionOne.ID)
+	delSub, _ := globalInstance.GetSubscription(clientID, subscriptionOne.ID)
 	assert.Equal(t, delSub, pubsub.PubSub{})
 }
 
@@ -197,7 +197,7 @@ func Test_Concurrency(t *testing.T) {
 			s, e = globalInstance.CreateSubscription(cID, subscriberWithManyEventCheck)
 			assert.Nil(t, e)
 			assert.NotEmpty(t, s.ClientID)
-			assert.NotNil(t, globalInstance.GetSubscriptions(cID))
+			assert.NotNil(t, globalInstance.GetSubscriptionsFromClientID(cID))
 			store, ok := globalInstance.SubscriberStore.Get(cID)
 			assert.True(t, ok)
 			assert.Equal(t, 2, len(store.SubStore.Store))
