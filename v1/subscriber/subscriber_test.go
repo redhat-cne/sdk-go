@@ -28,7 +28,7 @@ var (
 		Version:     "1.0",
 		ID:          subscriptionOneID,
 		EndPointURI: &types.URI{URL: url.URL{Scheme: "http", Host: "localhost:8080", Path: "/event"}},
-		Resource:    "test/test/1",
+		Resource:    "/test/test/1",
 		URILocation: &types.URI{URL: url.URL{Scheme: "http", Host: "localhost:8080", Path: "/subscription"}},
 	}
 
@@ -36,7 +36,7 @@ var (
 		Version:     "1.0",
 		ID:          subscriptionTwoID,
 		EndPointURI: &types.URI{URL: url.URL{Scheme: "http", Host: "localhost:8080", Path: "/event"}},
-		Resource:    "test/test/2",
+		Resource:    "/test/test/2",
 		URILocation: &types.URI{URL: url.URL{Scheme: "http", Host: "localhost:8080", Path: "/subscription"}},
 	}
 

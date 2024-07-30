@@ -121,10 +121,10 @@ func (p *API) ClientCount() int {
 }
 
 // GetSubFromSubscriptionsStore get data from publisher store
-func (p *API) GetSubFromSubscriptionsStore(clientID uuid.UUID, address string) (pubsub.PubSub, error) {
+func (p *API) GetSubFromSubscriptionsStore(clientID uuid.UUID, resource string) (pubsub.PubSub, error) {
 	if subscriber, ok := p.HasClient(clientID); ok {
 		for _, sub := range subscriber.SubStore.Store {
-			if sub.GetResource() == address {
+			if sub.GetResource() == resource {
 				return pubsub.PubSub{
 					Version:     sub.Version,
 					ID:          sub.ID,
@@ -136,7 +136,7 @@ func (p *API) GetSubFromSubscriptionsStore(clientID uuid.UUID, address string) (
 		}
 	}
 
-	return pubsub.PubSub{}, fmt.Errorf("publisher not found for address %s", address)
+	return pubsub.PubSub{}, fmt.Errorf("publisher not found for address %s", resource)
 }
 
 // HasSubscription check if the subscriptionOne is already exists in the store/cache
@@ -276,7 +276,7 @@ func (p *API) GetClientIDByResource(resource string) (clientIDs []uuid.UUID) {
 	defer p.SubscriberStore.RUnlock()
 	for _, subs := range p.SubscriberStore.Store {
 		for _, sub := range subs.SubStore.Store {
-			if strings.Contains(sub.GetResource(), resource) {
+			if sub.GetResource() == resource {
 				clientIDs = append(clientIDs, subs.ClientID)
 			}
 		}
