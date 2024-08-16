@@ -129,7 +129,7 @@ func TestAPI_DeleteAllSubscriptions(t *testing.T) {
 	assert.Nil(t, e)
 	assert.NotEmpty(t, s.ClientID)
 	assert.NotNil(t, s.SubStore.Store)
-	e = globalInstance.DeleteAllSubscriptions(clientID)
+	_, e = globalInstance.DeleteAllSubscriptionsForClient(clientID)
 	assert.Nil(t, e)
 	b, e := globalInstance.GetSubscriptionsFromFile(clientID)
 	assert.Nil(t, e)
@@ -217,7 +217,7 @@ func Test_Concurrency(t *testing.T) {
 }
 
 func clean() {
-	_ = globalInstance.DeleteAllSubscriptions(clientID)
+	globalInstance.DeleteAllSubscriptionsForClient(clientID) //nolint
 }
 
 func TestTeardown(*testing.T) {
