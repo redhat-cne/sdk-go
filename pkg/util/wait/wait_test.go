@@ -27,7 +27,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/redhat-cne/sdk-go/pkg/util/clock"
+	"github.com/redhat-cne/sdk-go/v2/pkg/util/clock"
 )
 
 func TestUntil(t *testing.T) {

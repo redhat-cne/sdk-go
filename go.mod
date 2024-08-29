@@ -1,4 +1,4 @@
-module github.com/redhat-cne/sdk-go
+module github.com/redhat-cne/sdk-go/v2
 
 go 1.21
 

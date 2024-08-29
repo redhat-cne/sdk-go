@@ -12,24 +12,24 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/redhat-cne/sdk-go/pkg/pubsub"
+	"github.com/redhat-cne/sdk-go/v2/pkg/pubsub"
 
-	"github.com/redhat-cne/sdk-go/pkg/errorhandler"
+	"github.com/redhat-cne/sdk-go/v2/pkg/errorhandler"
 
 	"github.com/gorilla/mux"
-	"github.com/redhat-cne/sdk-go/pkg/types"
-	"github.com/redhat-cne/sdk-go/pkg/util/wait"
+	"github.com/redhat-cne/sdk-go/v2/pkg/types"
+	"github.com/redhat-cne/sdk-go/v2/pkg/util/wait"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	httpClient "github.com/cloudevents/sdk-go/v2/client"
 	cehttp "github.com/cloudevents/sdk-go/v2/protocol/http"
 	httpP "github.com/cloudevents/sdk-go/v2/protocol/http"
 	"github.com/google/uuid"
-	"github.com/redhat-cne/sdk-go/pkg/channel"
-	"github.com/redhat-cne/sdk-go/pkg/localmetrics"
-	"github.com/redhat-cne/sdk-go/pkg/protocol"
-	"github.com/redhat-cne/sdk-go/pkg/subscriber"
-	subscriberApi "github.com/redhat-cne/sdk-go/v1/subscriber"
+	"github.com/redhat-cne/sdk-go/v2/pkg/channel"
+	"github.com/redhat-cne/sdk-go/v2/pkg/localmetrics"
+	"github.com/redhat-cne/sdk-go/v2/pkg/protocol"
+	"github.com/redhat-cne/sdk-go/v2/pkg/subscriber"
+	subscriberApi "github.com/redhat-cne/sdk-go/v2/v1/subscriber"
 	log "github.com/sirupsen/logrus"
 )
 

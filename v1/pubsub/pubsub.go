@@ -24,9 +24,9 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/google/uuid"
-	"github.com/redhat-cne/sdk-go/pkg/pubsub"
-	"github.com/redhat-cne/sdk-go/pkg/store"
-	"github.com/redhat-cne/sdk-go/pkg/types"
+	"github.com/redhat-cne/sdk-go/v2/pkg/pubsub"
+	"github.com/redhat-cne/sdk-go/v2/pkg/store"
+	"github.com/redhat-cne/sdk-go/v2/pkg/types"
 )
 
 // API ... api methods  for publisher subscriber

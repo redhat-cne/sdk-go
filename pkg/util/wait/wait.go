@@ -24,7 +24,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/redhat-cne/sdk-go/pkg/util/clock"
+	"github.com/redhat-cne/sdk-go/v2/pkg/util/clock"
 	log "github.com/sirupsen/logrus"
 )
 

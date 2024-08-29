@@ -19,7 +19,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/redhat-cne/sdk-go/pkg/types"
+	"github.com/redhat-cne/sdk-go/v2/pkg/types"
 )
 
 var _ Writer = (*Event)(nil)

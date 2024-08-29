@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/redhat-cne/sdk-go/pkg/types"
+	"github.com/redhat-cne/sdk-go/v2/pkg/types"
 )
 
 const APISchemaVersion = "1.0"

@@ -17,8 +17,8 @@ package http_test
 import (
 	"testing"
 
-	"github.com/redhat-cne/sdk-go/pkg/channel"
-	api "github.com/redhat-cne/sdk-go/v1/http"
+	"github.com/redhat-cne/sdk-go/v2/pkg/channel"
+	api "github.com/redhat-cne/sdk-go/v2/v1/http"
 	"github.com/stretchr/testify/assert"
 )
 

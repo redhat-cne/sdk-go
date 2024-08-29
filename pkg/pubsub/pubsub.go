@@ -17,8 +17,8 @@ package pubsub
 import (
 	"strings"
 
-	"github.com/redhat-cne/sdk-go/pkg/common"
-	"github.com/redhat-cne/sdk-go/pkg/types"
+	"github.com/redhat-cne/sdk-go/v2/pkg/common"
+	"github.com/redhat-cne/sdk-go/v2/pkg/types"
 )
 
 // PubSub represents the canonical representation of a Cloud Native Event Publisher and Sender .

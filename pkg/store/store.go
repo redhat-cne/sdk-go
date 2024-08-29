@@ -17,7 +17,7 @@ package store
 import (
 	"sync"
 
-	"github.com/redhat-cne/sdk-go/pkg/pubsub"
+	"github.com/redhat-cne/sdk-go/v2/pkg/pubsub"
 )
 
 // PubSubStore  defines pub/sub store struct

@@ -9,17 +9,17 @@ import (
 	"sync"
 
 	"github.com/google/uuid"
-	"github.com/redhat-cne/sdk-go/pkg/channel"
-	"github.com/redhat-cne/sdk-go/pkg/types"
+	"github.com/redhat-cne/sdk-go/v2/pkg/channel"
+	"github.com/redhat-cne/sdk-go/v2/pkg/types"
 
 	"github.com/pkg/errors"
-	"github.com/redhat-cne/sdk-go/pkg/pubsub"
-	"github.com/redhat-cne/sdk-go/pkg/store"
+	"github.com/redhat-cne/sdk-go/v2/pkg/pubsub"
+	"github.com/redhat-cne/sdk-go/v2/pkg/store"
 
 	log "github.com/sirupsen/logrus"
 
-	SubscriberStore "github.com/redhat-cne/sdk-go/pkg/store/subscriber"
-	"github.com/redhat-cne/sdk-go/pkg/subscriber"
+	SubscriberStore "github.com/redhat-cne/sdk-go/v2/pkg/store/subscriber"
+	"github.com/redhat-cne/sdk-go/v2/pkg/subscriber"
 )
 
 // API ... api methods  for publisher subscriber

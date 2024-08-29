@@ -19,7 +19,7 @@ import (
 	"sync"
 
 	jsoniter "github.com/json-iterator/go"
-	"github.com/redhat-cne/sdk-go/pkg/common"
+	"github.com/redhat-cne/sdk-go/v2/pkg/common"
 )
 
 var iterPool = sync.Pool{

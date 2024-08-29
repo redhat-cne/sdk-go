@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/redhat-cne/sdk-go/pkg/subscriber"
+	"github.com/redhat-cne/sdk-go/v2/pkg/subscriber"
 )
 
 // Store  defines subscribers connection store struct

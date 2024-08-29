@@ -20,9 +20,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/redhat-cne/sdk-go/pkg/pubsub"
-	"github.com/redhat-cne/sdk-go/pkg/types"
-	api "github.com/redhat-cne/sdk-go/v1/pubsub"
+	"github.com/redhat-cne/sdk-go/v2/pkg/pubsub"
+	"github.com/redhat-cne/sdk-go/v2/pkg/types"
+	api "github.com/redhat-cne/sdk-go/v2/v1/pubsub"
 	"github.com/stretchr/testify/assert"
 )
 

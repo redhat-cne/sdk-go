@@ -2,8 +2,8 @@ package subscriber
 
 import (
 	"github.com/google/uuid"
-	"github.com/redhat-cne/sdk-go/pkg/pubsub"
-	"github.com/redhat-cne/sdk-go/pkg/store"
+	"github.com/redhat-cne/sdk-go/v2/pkg/pubsub"
+	"github.com/redhat-cne/sdk-go/v2/pkg/store"
 )
 
 // Copyright 2022 The Cloud Native Events Authors

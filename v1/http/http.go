@@ -24,12 +24,12 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/redhat-cne/sdk-go/pkg/types"
+	"github.com/redhat-cne/sdk-go/v2/pkg/types"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
-	"github.com/redhat-cne/sdk-go/pkg/channel"
-	"github.com/redhat-cne/sdk-go/pkg/errorhandler"
-	cneHTTP "github.com/redhat-cne/sdk-go/pkg/protocol/http"
+	"github.com/redhat-cne/sdk-go/v2/pkg/channel"
+	"github.com/redhat-cne/sdk-go/v2/pkg/errorhandler"
+	cneHTTP "github.com/redhat-cne/sdk-go/v2/pkg/protocol/http"
 	log "github.com/sirupsen/logrus"
 )
 

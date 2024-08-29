@@ -22,9 +22,9 @@ import (
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/google/uuid"
-	"github.com/redhat-cne/sdk-go/pkg/channel"
-	"github.com/redhat-cne/sdk-go/pkg/event"
-	"github.com/redhat-cne/sdk-go/pkg/pubsub"
+	"github.com/redhat-cne/sdk-go/v2/pkg/channel"
+	"github.com/redhat-cne/sdk-go/v2/pkg/event"
+	"github.com/redhat-cne/sdk-go/v2/pkg/pubsub"
 )
 
 // PublishCloudEventToLog ... publish event data to a log

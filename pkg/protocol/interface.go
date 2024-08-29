@@ -18,7 +18,7 @@ import (
 	"context"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
-	"github.com/redhat-cne/sdk-go/pkg/channel"
+	"github.com/redhat-cne/sdk-go/v2/pkg/channel"
 )
 
 // Binder ...protocol binder base struct

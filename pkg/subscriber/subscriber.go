@@ -20,11 +20,11 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/redhat-cne/sdk-go/pkg/channel"
+	"github.com/redhat-cne/sdk-go/v2/pkg/channel"
 
-	"github.com/redhat-cne/sdk-go/pkg/pubsub"
-	"github.com/redhat-cne/sdk-go/pkg/store"
-	"github.com/redhat-cne/sdk-go/pkg/types"
+	"github.com/redhat-cne/sdk-go/v2/pkg/pubsub"
+	"github.com/redhat-cne/sdk-go/v2/pkg/store"
+	"github.com/redhat-cne/sdk-go/v2/pkg/types"
 )
 
 // Status of the client connections

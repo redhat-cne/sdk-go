@@ -19,9 +19,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/redhat-cne/sdk-go/pkg/event"
-	"github.com/redhat-cne/sdk-go/pkg/event/redfish"
-	"github.com/redhat-cne/sdk-go/pkg/types"
+	"github.com/redhat-cne/sdk-go/v2/pkg/event"
+	"github.com/redhat-cne/sdk-go/v2/pkg/event/redfish"
+	"github.com/redhat-cne/sdk-go/v2/pkg/types"
 	"github.com/stretchr/testify/require"
 )
 

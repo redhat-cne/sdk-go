@@ -3,8 +3,8 @@ package subscriber
 import (
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/google/uuid"
-	"github.com/redhat-cne/sdk-go/pkg/channel"
-	"github.com/redhat-cne/sdk-go/pkg/store"
+	"github.com/redhat-cne/sdk-go/v2/pkg/channel"
+	"github.com/redhat-cne/sdk-go/v2/pkg/store"
 )
 
 var _ Reader = (*Subscriber)(nil)

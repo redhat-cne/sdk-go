@@ -20,7 +20,7 @@ import (
 
 	cloudevent "github.com/cloudevents/sdk-go/v2"
 	"github.com/google/uuid"
-	"github.com/redhat-cne/sdk-go/pkg/pubsub"
+	"github.com/redhat-cne/sdk-go/v2/pkg/pubsub"
 )
 
 // NewCloudEvent create new cloud event from cloud native events and pubsub

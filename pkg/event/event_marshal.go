@@ -20,7 +20,7 @@ import (
 	"io"
 
 	jsoniter "github.com/json-iterator/go"
-	"github.com/redhat-cne/sdk-go/pkg/event/redfish"
+	"github.com/redhat-cne/sdk-go/v2/pkg/event/redfish"
 )
 
 // WriteJSON writes the in event in the provided writer.

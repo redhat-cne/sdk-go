@@ -21,7 +21,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/redhat-cne/sdk-go/pkg/types"
+	"github.com/redhat-cne/sdk-go/v2/pkg/types"
 	"github.com/stretchr/testify/require"
 
 	"github.com/stretchr/testify/assert"

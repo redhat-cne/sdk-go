@@ -10,11 +10,11 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/redhat-cne/sdk-go/pkg/pubsub"
-	"github.com/redhat-cne/sdk-go/pkg/store"
-	"github.com/redhat-cne/sdk-go/pkg/subscriber"
-	"github.com/redhat-cne/sdk-go/pkg/types"
-	api "github.com/redhat-cne/sdk-go/v1/subscriber"
+	"github.com/redhat-cne/sdk-go/v2/pkg/pubsub"
+	"github.com/redhat-cne/sdk-go/v2/pkg/store"
+	"github.com/redhat-cne/sdk-go/v2/pkg/subscriber"
+	"github.com/redhat-cne/sdk-go/v2/pkg/types"
+	api "github.com/redhat-cne/sdk-go/v2/v1/subscriber"
 	"github.com/stretchr/testify/assert"
 )
 

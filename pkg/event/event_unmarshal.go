@@ -9,8 +9,8 @@ import (
 
 	jsoniter "github.com/json-iterator/go"
 
-	"github.com/redhat-cne/sdk-go/pkg/event/redfish"
-	"github.com/redhat-cne/sdk-go/pkg/types"
+	"github.com/redhat-cne/sdk-go/v2/pkg/event/redfish"
+	"github.com/redhat-cne/sdk-go/v2/pkg/types"
 )
 
 var iterPool = sync.Pool{
