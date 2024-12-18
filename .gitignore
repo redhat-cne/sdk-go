@@ -16,3 +16,8 @@
 # vendor/
 cover.out
 v1/subscriber/subscribers
+
+.idea
+.cache
+.dccache
+
