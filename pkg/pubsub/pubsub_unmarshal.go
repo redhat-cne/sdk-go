@@ -15,6 +15,7 @@
 package pubsub
 
 import (
+	"fmt"
 	"io"
 	"sync"
 
@@ -91,7 +92,12 @@ func readJSONFromIterator(out *PubSub, iterator *jsoniter.Iterator) error {
 	if iterator.Error != nil {
 		return iterator.Error
 	}
-
+	if endpointUri == "" {
+		return fmt.Errorf("mandatory field EndPointURI is not set")
+	}
+	if resource == "" {
+		return fmt.Errorf("mandatory field ResourceAddress is not set")
+	}
 	out.SetID(id)
 	out.SetEndpointURI(endpointUri) //nolint:errcheck
 	out.SetURILocation(uriLocation) //nolint:errcheck
