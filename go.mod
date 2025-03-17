@@ -1,6 +1,6 @@
 module github.com/redhat-cne/sdk-go
 
-go 1.22
+go 1.23
 
 require (
 	github.com/cloudevents/sdk-go/v2 v2.15.2
