@@ -72,12 +72,6 @@ func readJSONFromIterator(out *PubSub, iterator *jsoniter.Iterator) error {
 			uriLocation = iterator.ReadString()
 		case "ResourceAddress":
 			resource = iterator.ReadString()
-		case "id":
-			id = iterator.ReadString()
-		case "endpointUri":
-			endpointUri = iterator.ReadString()
-		case "uriLocation":
-			uriLocation = iterator.ReadString()
 		default:
 			iterator.Skip()
 		}
