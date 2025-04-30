@@ -158,8 +158,8 @@ func TestDeleteListener(t *testing.T) {
 		Address:             addr,
 		Type:                channel.SUBSCRIBER,
 		Status:              channel.NEW,
-		ProcessEventFn:      func(e interface{}) error { return nil },
-		OnReceiveOverrideFn: func(e cloudevents.Event, dataChan *channel.DataChan) error { return nil },
+		ProcessEventFn:      func(_ interface{}) error { return nil },
+		OnReceiveOverrideFn: func(_ cloudevents.Event, _ *channel.DataChan) error { return nil },
 	}
 	time.Sleep(250 * time.Millisecond)
 	assert.Equal(t, 1, len(server.Listeners))
@@ -199,8 +199,8 @@ func TestSendSuccessStatus(t *testing.T) {
 		Address:             fmt.Sprintf("%s/%s", addr, "status"),
 		Status:              channel.NEW,
 		Type:                channel.SUBSCRIBER,
-		ProcessEventFn:      func(e interface{}) error { return nil },
-		OnReceiveOverrideFn: func(e cloudevents.Event, dataChan *channel.DataChan) error { return nil },
+		ProcessEventFn:      func(_ interface{}) error { return nil },
+		OnReceiveOverrideFn: func(_ cloudevents.Event, _ *channel.DataChan) error { return nil },
 	}
 
 	// create a sender
@@ -246,8 +246,8 @@ func TestSendFailureStatus(t *testing.T) {
 		Address:        fmt.Sprintf("%s/%s", addr, "status"),
 		Status:         channel.NEW,
 		Type:           channel.SUBSCRIBER,
-		ProcessEventFn: func(e interface{}) error { return fmt.Errorf("EVENT PROCESS ERROR") },
-		OnReceiveOverrideFn: func(e cloudevents.Event, dataChan *channel.DataChan) error {
+		ProcessEventFn: func(_ interface{}) error { return fmt.Errorf("EVENT PROCESS ERROR") },
+		OnReceiveOverrideFn: func(_ cloudevents.Event, _ *channel.DataChan) error {
 			return fmt.Errorf("STATUS RECEEIVE ERROR")
 		},
 	}
@@ -321,8 +321,8 @@ func TestSendEvent(t *testing.T) {
 		Address:             fmt.Sprintf("%s/%s", addr, "status"),
 		Status:              channel.NEW,
 		Type:                channel.SUBSCRIBER,
-		ProcessEventFn:      func(e interface{}) error { return nil },
-		OnReceiveOverrideFn: func(e cloudevents.Event, dataChan *channel.DataChan) error { return nil },
+		ProcessEventFn:      func(_ interface{}) error { return nil },
+		OnReceiveOverrideFn: func(_ cloudevents.Event, _ *channel.DataChan) error { return nil },
 	}
 
 	// create a sender

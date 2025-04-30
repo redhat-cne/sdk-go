@@ -42,16 +42,6 @@ func (s *Subscriber) SetStatus(status Status) {
 // AddSubscription ...
 func (s *Subscriber) AddSubscription(subs ...pubsub.PubSub) {
 	for _, ss := range subs {
-<<<<<<< HEAD
-		newS := &pubsub.PubSub{
-			ID:          ss.GetID(),
-			EndPointURI: nil,
-			URILocation: nil,
-			Resource:    ss.Resource,
-		}
-		s.SubStore.Store[ss.GetID()] = newS
-=======
 		s.SubStore.Store[ss.GetID()] = &ss // #nosec G601
->>>>>>> 3b3960c (fix lint)
 	}
 }
