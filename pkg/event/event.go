@@ -23,7 +23,7 @@ import (
 	"github.com/redhat-cne/sdk-go/pkg/types"
 )
 
-const APISchemaVersion = "1.0"
+const APISchemaVersion = "2.0"
 
 // Event represents the canonical representation of a Cloud Native Event.
 // Event Json  payload is as follows,
