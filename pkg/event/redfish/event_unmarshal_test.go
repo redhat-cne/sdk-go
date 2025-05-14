@@ -31,7 +31,6 @@ import (
 func TestUnMarshal(t *testing.T) {
 	now := types.Timestamp{Time: time.Now().UTC()}
 	_type := string(redfish.Alert)
-	version := "v1"
 	id := "ABC-1234"
 
 	testCases := map[string]struct {
@@ -50,7 +49,6 @@ func TestUnMarshal(t *testing.T) {
 							"data_type":       event.NOTIFICATION,
 							"value":           JSON_EVENT_TMP0100,
 							"value_type":      event.REDFISH_EVENT}},
-					"version": version,
 				},
 				"id":         id,
 				"time":       now.Format(time.RFC3339Nano),
@@ -63,7 +61,6 @@ func TestUnMarshal(t *testing.T) {
 				Time:       &now,
 				DataSchema: nil,
 				Data: &event.Data{
-					Version: version,
 					Values: []event.DataValue{
 						{
 							Resource:  resource,

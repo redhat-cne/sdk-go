@@ -15,7 +15,6 @@
 package event
 
 import (
-	"fmt"
 	"regexp"
 )
 
@@ -53,7 +52,6 @@ const (
 // ```go
 //
 //	{
-//	  "version": "v1.0",
 //	  "values": [{
 //	    "ResourceAddress": "/sync/sync-status/sync-state",
 //	    "data_type": "notification",
@@ -70,9 +68,7 @@ const (
 //
 // ```
 type Data struct {
-	// example: 1.0
-	Version string      `json:"version" example:"1.0"`
-	Values  []DataValue `json:"values"`
+	Values []DataValue `json:"values"`
 }
 
 // DataValue
@@ -105,16 +101,6 @@ type DataValue struct {
 	Value interface{} `json:"value" example:"HOLDOVER"`
 }
 
-// SetVersion  ...
-func (d *Data) SetVersion(s string) error {
-	d.Version = s
-	if s == "" {
-		err := fmt.Errorf("version cannot be empty")
-		return err
-	}
-	return nil
-}
-
 // SetValues ...
 func (d *Data) SetValues(v []DataValue) {
 	d.Values = v
@@ -123,11 +109,6 @@ func (d *Data) SetValues(v []DataValue) {
 // AppendValues ...
 func (d *Data) AppendValues(v DataValue) {
 	d.Values = append(d.Values, v)
-}
-
-// GetVersion ...
-func (d *Data) GetVersion() string {
-	return d.Version
 }
 
 // GetValues ...

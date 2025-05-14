@@ -111,8 +111,6 @@ func writeJSONData(in *Data, writer io.Writer, stream *jsoniter.Stream) error {
 	if in != nil {
 		stream.WriteObjectStart()
 		data := in
-		stream.WriteObjectField("version")
-		stream.WriteString(data.GetVersion())
 		stream.WriteMore()
 		stream.WriteObjectField("values")
 		stream.WriteArrayStart()

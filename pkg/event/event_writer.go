@@ -74,9 +74,7 @@ func (e *Event) SetDataContentType(ct string) {
 
 // SetData ...
 func (e *Event) SetData(data Data) {
-	nData := Data{
-		Version: data.Version,
-	}
+	nData := Data{}
 
 	var nValues []DataValue
 

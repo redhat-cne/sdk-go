@@ -34,7 +34,6 @@ const APISchemaVersion = "1.0"
 //		"source": "/cluster/node/example.com/ptp/clock_realtime",
 //		"time": "2021-02-05T17:31:00Z",
 //		"data": {
-//			"version": "v1.0",
 //			"values": [{
 //				"ResourceAddress": "/sync/sync-status/sync-state",
 //				"data_type": "notification",
@@ -83,7 +82,6 @@ func (e Event) String() string {
 	}
 
 	b.WriteString("  data: \r\n")
-	b.WriteString("  version: " + e.Data.Version + "\r\n")
 	b.WriteString("  values: \r\n")
 	for _, v := range e.Data.Values {
 		b.WriteString("  value_type: " + string(v.ValueType) + "\r\n")

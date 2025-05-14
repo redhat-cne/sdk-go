@@ -39,7 +39,6 @@ var (
 	resource    = "/cluster/node/ptp"
 	_type       = string(ptp.PtpStateChange)
 	_source     = "/cluster/node/example.com/ptp/clock_realtime"
-	version     = "v1"
 	id          = uuid.New().String()
 	data        cneevent.Data
 	pubsub      cnepubsub.PubSub
@@ -53,7 +52,6 @@ func setup() {
 		ValueType: cneevent.ENUMERATION,
 		Value:     ptp.ACQUIRING_SYNC,
 	}
-	data.SetVersion(version) //nolint:errcheck
 	data.AppendValues(value) //nolint:errcheck
 	pubsub = cnepubsub.PubSub{}
 	_ = pubsub.SetResource(resource)

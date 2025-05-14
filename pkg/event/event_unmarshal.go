@@ -49,8 +49,7 @@ func ReadDataJSON(out *Data, reader io.Reader) error {
 func readDataJSONFromIterator(out *Data, iterator *jsoniter.Iterator) error {
 	var (
 		// Universally parseable fields.
-		version string
-		data    []DataValue
+		data []DataValue
 		// These fields require knowledge about the specversion to be parsed.
 		//schemaurl jsoniter.Any
 	)
@@ -63,8 +62,6 @@ func readDataJSONFromIterator(out *Data, iterator *jsoniter.Iterator) error {
 
 		// If no specversion ...
 		switch key {
-		case "version":
-			version = iterator.ReadString()
 		case "values":
 			data, _ = readDataValue(iterator)
 
@@ -76,7 +73,6 @@ func readDataJSONFromIterator(out *Data, iterator *jsoniter.Iterator) error {
 	if iterator.Error != nil {
 		return iterator.Error
 	}
-	out.Version = version
 	out.Values = data
 	return nil
 }
@@ -117,8 +113,6 @@ func readJSONFromIterator(out *Event, iterator *jsoniter.Iterator) error {
 			if err != nil {
 				return err
 			}
-		case "version":
-
 		case "values":
 		//case "DataSchema":
 		//schemaurl = iterator.ReadAny()
@@ -195,8 +189,7 @@ func readDataValue(iter *jsoniter.Iterator) ([]DataValue, error) {
 
 func readData(iter *jsoniter.Iterator) (*Data, error) {
 	data := &Data{
-		Version: "",
-		Values:  []DataValue{},
+		Values: []DataValue{},
 	}
 
 	for key := iter.ReadObject(); key != ""; key = iter.ReadObject() {
@@ -205,8 +198,6 @@ func readData(iter *jsoniter.Iterator) (*Data, error) {
 			return data, iter.Error
 		}
 		switch key {
-		case "version":
-			data.Version = iter.ReadString()
 		case "values":
 			values, err := readDataValue(iter)
 			if err != nil {

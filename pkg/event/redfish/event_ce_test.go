@@ -39,7 +39,6 @@ var (
 	resource    = "/cluster/node/nodename/redfish/event"
 	_source     = "/cluster/node/nodename/redfish/event/fan"
 	_type       = string(redfish.Alert)
-	version     = "v1"
 	id          = uuid.New().String()
 	data        cneevent.Data
 	pubsub      cnepubsub.PubSub
@@ -75,7 +74,6 @@ func setup() {
 		ValueType: cneevent.REDFISH_EVENT,
 		Value:     REDFISH_EVENT_TMP0100,
 	}
-	data.SetVersion(version) //nolint:errcheck
 	data.AppendValues(value) //nolint:errcheck
 	pubsub = cnepubsub.PubSub{}
 	_ = pubsub.SetResource(resource)

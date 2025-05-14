@@ -34,7 +34,6 @@ func TestMarshal(t *testing.T) {
 	resource := "/cluster/node/ptp"
 	_type := string(ptp.PtpStateChange)
 	_source := "/cluster/node/example.com/ptp/clock_realtime"
-	version := "v1"
 	data := event.Data{}
 	value := []event.DataValue{{
 		Resource:  resource,
@@ -47,7 +46,6 @@ func TestMarshal(t *testing.T) {
 		ValueType: event.DECIMAL,
 		Value:     10.7,
 	}}
-	data.SetVersion(version) //nolint:errcheck
 	data.Values = value      //nolint:errcheck
 	fmt.Print(data)
 
@@ -89,7 +87,6 @@ func TestMarshal(t *testing.T) {
 							"data_type":       "metric",
 							"value":           "10.7",
 							"value_type":      "decimal64.3"}},
-					"version": "v1",
 				},
 				"id":         "",
 				"time":       now.Format(time.RFC3339Nano),

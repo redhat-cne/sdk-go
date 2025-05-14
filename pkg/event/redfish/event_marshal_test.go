@@ -65,7 +65,6 @@ func TestMarshal(t *testing.T) {
 	schemaURL := "http://example.com/schema"
 	_type := string(redfish.Alert)
 	_source := "/cluster/node/nodename/redfish/event"
-	version := "v1"
 	data := event.Data{}
 	value := event.DataValue{
 		Resource:  resource,
@@ -73,7 +72,6 @@ func TestMarshal(t *testing.T) {
 		ValueType: event.REDFISH_EVENT,
 		Value:     REDFISH_EVENT_TMP0100,
 	}
-	data.SetVersion(version) //nolint:errcheck
 	data.AppendValues(value) //nolint:errcheck
 
 	testCases := map[string]struct {
@@ -104,7 +102,6 @@ func TestMarshal(t *testing.T) {
 							"value_type": event.REDFISH_EVENT,
 						},
 					},
-					"version": "v1",
 				},
 				"id":         "",
 				"time":       now.Format(time.RFC3339Nano),

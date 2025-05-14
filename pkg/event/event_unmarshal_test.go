@@ -17,7 +17,6 @@ func TestUnMarshal(t *testing.T) {
 	resource := "/cluster/node/ptp"
 	_type := string(ptp.PtpStateChange)
 	_source := "/cluster/node/example.com/ptp/clock_realtime"
-	version := "v1"
 	id := "ABC-1234"
 
 	testCases := map[string]struct {
@@ -41,7 +40,6 @@ func TestUnMarshal(t *testing.T) {
 							"data_type":       "metric",
 							"value":           "10.63",
 							"value_type":      "decimal64.3"}},
-					"version": version,
 				},
 				"id":         id,
 				"time":       now.Format(time.RFC3339Nano),
@@ -56,7 +54,6 @@ func TestUnMarshal(t *testing.T) {
 				Time:       &now,
 				DataSchema: nil,
 				Data: &event.Data{
-					Version: version,
 					Values: []event.DataValue{
 						{
 							Resource:  resource,
@@ -89,7 +86,6 @@ func TestUnMarshal(t *testing.T) {
 							"data_type":       "metric",
 							"value":           "64.3",
 							"value_type":      "decimal64.3"}},
-					"version": version,
 				},
 				"id":         id,
 				"time":       now.Format(time.RFC3339Nano),
@@ -105,7 +101,6 @@ func TestUnMarshal(t *testing.T) {
 				DataSchema: nil,
 				Data: &event.Data{
 
-					Version: version,
 					Values: []event.DataValue{
 						{
 							Resource:  resource,
@@ -134,7 +129,6 @@ func TestUnMarshal(t *testing.T) {
 							"data_type":       "notification",
 							"value":           "FREERUN",
 							"value_type":      "foo"}},
-					"version": version,
 				},
 				"id":         id,
 				"time":       now.Format(time.RFC3339Nano),
