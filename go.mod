@@ -9,7 +9,7 @@ require (
 	github.com/json-iterator/go v1.1.12
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.14.0
-	github.com/sirupsen/logrus v1.8.1
+	github.com/sirupsen/logrus v1.8.3
 	github.com/stretchr/testify v1.8.0
 )
 
